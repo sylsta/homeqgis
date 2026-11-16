@@ -6,7 +6,7 @@ authentication manager (QgsAuthConfigSelect), which encrypts them.
 
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtWidgets import (
-    QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
+    QCheckBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget,
 )
 from qgis.core import QgsSettings
@@ -24,6 +24,20 @@ KEY_CAMERA_WIDTH = "valetudo/camera_width"
 KEY_NOTIFY_DOCK = "valetudo/notify_dock"
 KEY_SSH_USER = "valetudo/ssh_user"
 KEY_SSH_PORT = "valetudo/ssh_port"
+
+# Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
+WIFI_DEFAULTS = {
+    "wifi_interval_s": (2.0, float),      # time between two readings
+    "wifi_min_step_cm": (20, int),        # ignore a reading closer than this to the last one
+    "wifi_max_pos_age_s": (3.0, float),   # ignore a reading if the position is older
+    "wifi_pixel_cm": (10, int),           # raster cell size
+    "wifi_idw_power": (2.0, float),       # IDW distance coefficient
+    "wifi_bad_dbm": (-80, int),           # red
+    "wifi_fair_dbm": (-67, int),          # yellow
+    "wifi_good_dbm": (-50, int),          # green
+    "wifi_opacity": (70, int),            # raster opacity, in %
+    "wifi_clip_rooms": (True, bool),      # clip the raster to the rooms
+}
 
 DEFAULT_CAMERA_PORT = 8555
 
@@ -47,6 +61,8 @@ def load_settings():
         "notify_dock": s.value(KEY_NOTIFY_DOCK, True, type=bool),
         "ssh_user": s.value(KEY_SSH_USER, "root", type=str) or "root",
         "ssh_port": s.value(KEY_SSH_PORT, 22, type=int),
+        **{key: s.value(f"valetudo/{key}", default, type=kind)
+           for key, (default, kind) in WIFI_DEFAULTS.items()},
     }
 
 
@@ -92,6 +108,31 @@ class SettingsDialog(QDialog):
         self.ssh_port.setRange(1, 65535)
         self.ssh_port.setValue(cfg["ssh_port"])
 
+        # Wi-Fi survey: one widget per WIFI_DEFAULTS key.
+        def spin(key, low, high, suffix, step=1, decimals=None):
+            box = QDoubleSpinBox() if decimals is not None else QSpinBox()
+            if decimals is not None:
+                box.setDecimals(decimals)
+            box.setRange(low, high)
+            box.setSingleStep(step)
+            box.setSuffix(suffix)
+            box.setValue(cfg[key])
+            return box
+
+        self.wifi = {
+            "wifi_interval_s": spin("wifi_interval_s", 0.5, 60, " s", 0.5, 1),
+            "wifi_min_step_cm": spin("wifi_min_step_cm", 0, 500, " cm", 5),
+            "wifi_max_pos_age_s": spin("wifi_max_pos_age_s", 0.5, 60, " s", 0.5, 1),
+            "wifi_pixel_cm": spin("wifi_pixel_cm", 1, 100, " cm"),
+            "wifi_idw_power": spin("wifi_idw_power", 0.5, 10, "", 0.5, 1),
+            "wifi_bad_dbm": spin("wifi_bad_dbm", -100, 0, " dBm"),
+            "wifi_fair_dbm": spin("wifi_fair_dbm", -100, 0, " dBm"),
+            "wifi_good_dbm": spin("wifi_good_dbm", -100, 0, " dBm"),
+            "wifi_opacity": spin("wifi_opacity", 0, 100, " %", 10),
+        }
+        self.wifi_clip = QCheckBox(tr("Clip the Wi-Fi map to the rooms"))
+        self.wifi_clip.setChecked(cfg["wifi_clip_rooms"])
+
         # Connection test: asks the robot who it is, with the values being edited.
         self.btn_test = QPushButton(tr("Test connection"))
         self.btn_test.clicked.connect(self._test_connection)
@@ -121,6 +162,22 @@ class SettingsDialog(QDialog):
 
         form = self._tab(tabs, tr("Notifications"))
         form.addRow(self.notify_dock)
+
+        form = self._tab(tabs, tr("Wi-Fi survey"))
+        wifi_labels = {
+            "wifi_interval_s": tr("Time between readings"),
+            "wifi_min_step_cm": tr("Minimum distance between points"),
+            "wifi_max_pos_age_s": tr("Maximum age of the robot position"),
+            "wifi_pixel_cm": tr("Map cell size"),
+            "wifi_idw_power": tr("IDW distance coefficient"),
+            "wifi_bad_dbm": tr("Bad signal (red)"),
+            "wifi_fair_dbm": tr("Fair signal (yellow)"),
+            "wifi_good_dbm": tr("Good signal (green)"),
+            "wifi_opacity": tr("Map opacity"),
+        }
+        for key, widget in self.wifi.items():
+            form.addRow(wifi_labels[key], widget)
+        form.addRow(self.wifi_clip)
 
         form = self._tab(tabs, tr("SSH"))
         form.addRow(tr("SSH user (reboot)"), self.ssh_user)
@@ -175,4 +232,7 @@ class SettingsDialog(QDialog):
         s.setValue(KEY_NOTIFY_DOCK, self.notify_dock.isChecked())
         s.setValue(KEY_SSH_USER, self.ssh_user.text().strip() or "root")
         s.setValue(KEY_SSH_PORT, self.ssh_port.value())
+        for key, widget in self.wifi.items():
+            s.setValue(f"valetudo/{key}", widget.value())
+        s.setValue("valetudo/wifi_clip_rooms", self.wifi_clip.isChecked())
         super().accept()

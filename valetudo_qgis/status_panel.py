@@ -556,7 +556,7 @@ class ValetudoPanel(QgsDockWidget):
         if "live" in act:
             self._map_row.addWidget(self._button(act["live"]))
         put(self._tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
-                               "reboot"])
+                               "reboot", "wifi_survey", "wifi_map"])
         self._update_rooms_button()
 
     def _update_dock_group(self, *_):

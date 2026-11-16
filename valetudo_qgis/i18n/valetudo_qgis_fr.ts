@@ -1165,5 +1165,101 @@ The robot only accepts a line that crosses the room from wall to wall.</source>
 
 Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</translation>
     </message>
+    <message>
+        <source>Record the robot's Wi-Fi signal where it goes; click again to stop and build the Wi-Fi map.</source>
+        <translation>Enregistre le signal Wi-Fi du robot partout où il passe ; cliquer à nouveau pour arrêter et construire la carte Wi-Fi.</translation>
+    </message>
+    <message>
+        <source>Build the Wi-Fi map again from the survey points (only the selected ones, if any).</source>
+        <translation>Reconstruit la carte Wi-Fi à partir des points du relevé (seulement les points sélectionnés, s'il y en a).</translation>
+    </message>
+    <message>
+        <source>Record Wi-Fi survey</source>
+        <translation>Relevé Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Build Wi-Fi map</source>
+        <translation>Construire la carte Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Recording the Wi-Fi signal: start a cleaning, then click “Record Wi-Fi survey” again when done.</source>
+        <translation>Enregistrement du signal Wi-Fi : lancez un nettoyage, puis cliquez à nouveau sur « Relevé Wi-Fi » à la fin.</translation>
+    </message>
+    <message>
+        <source>Record a Wi-Fi survey first.</source>
+        <translation>Faites d'abord un relevé Wi-Fi.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi thresholds must be in order: bad &lt; fair &lt; good (see the settings).</source>
+        <translation>Les seuils Wi-Fi doivent être dans l'ordre : mauvais &lt; moyen &lt; bon (voir les paramètres).</translation>
+    </message>
+    <message>
+        <source>Wi-Fi map built, but it could not be clipped to the rooms.</source>
+        <translation>Carte Wi-Fi construite, mais elle n'a pas pu être découpée selon les pièces.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi map built.</source>
+        <translation>Carte Wi-Fi construite.</translation>
+    </message>
+    <message>
+        <source>At least 3 Wi-Fi points are needed to build the map.</source>
+        <translation>Il faut au moins 3 points Wi-Fi pour construire la carte.</translation>
+    </message>
+    <message>
+        <source>Could not build the Wi-Fi map (details in the log).</source>
+        <translation>Impossible de construire la carte Wi-Fi (détails dans le journal).</translation>
+    </message>
+    <message>
+        <source>Wi-Fi survey: {n} point(s)</source>
+        <translation>Relevé Wi-Fi : {n} point(s)</translation>
+    </message>
+    <message>
+        <source>Clip the Wi-Fi map to the rooms</source>
+        <translation>Découper la carte Wi-Fi selon les pièces</translation>
+    </message>
+    <message>
+        <source>Wi-Fi survey</source>
+        <translation>Relevé Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Time between readings</source>
+        <translation>Intervalle entre deux mesures</translation>
+    </message>
+    <message>
+        <source>Minimum distance between points</source>
+        <translation>Distance minimale entre deux points</translation>
+    </message>
+    <message>
+        <source>Maximum age of the robot position</source>
+        <translation>Âge maximal de la position du robot</translation>
+    </message>
+    <message>
+        <source>Map cell size</source>
+        <translation>Taille des cellules de la carte</translation>
+    </message>
+    <message>
+        <source>IDW distance coefficient</source>
+        <translation>Coefficient de distance IDW</translation>
+    </message>
+    <message>
+        <source>Bad signal (red)</source>
+        <translation>Signal mauvais (rouge)</translation>
+    </message>
+    <message>
+        <source>Fair signal (yellow)</source>
+        <translation>Signal moyen (jaune)</translation>
+    </message>
+    <message>
+        <source>Good signal (green)</source>
+        <translation>Signal bon (vert)</translation>
+    </message>
+    <message>
+        <source>Map opacity</source>
+        <translation>Opacité de la carte</translation>
+    </message>
+    <message>
+        <source>Wi-Fi signal (dBm)</source>
+        <translation>Signal Wi-Fi (dBm)</translation>
+    </message>
 </context>
 </TS>

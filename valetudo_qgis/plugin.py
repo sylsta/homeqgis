@@ -30,6 +30,7 @@ from .status_panel import (
     dock_component_labels,
     dock_component_values,
 )
+from .wifi_survey import WifiSurvey, build_wifi_map, layer_names as wifi_layer_names
 
 KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
 MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
@@ -54,6 +55,7 @@ REQUIRED_CAPABILITY = {
     "mop_dry": "MopDockDryManualTriggerCapability",
     "edit_restrictions": "CombinedVirtualRestrictionsCapability",
     "send_restrictions": "CombinedVirtualRestrictionsCapability",
+    "wifi_survey": "WifiConfigurationCapability",
 }
 
 
@@ -82,6 +84,10 @@ def command_hints():
         "mop_dry": tr("Dry the mops in the dock."),
         "watch_boot": tr("Follow the robot's startup; the log is below."),
         "reboot": tr("Reboot the robot over SSH (asks first)."),
+        "wifi_survey": tr("Record the robot's Wi-Fi signal where it goes; "
+                          "click again to stop and build the Wi-Fi map."),
+        "wifi_map": tr("Build the Wi-Fi map again from the survey points "
+                       "(only the selected ones, if any)."),
     }
 
 
@@ -130,6 +136,7 @@ class ValetudoPlugin:
         self._dock_state = {}  # dock component -> last known value
         self._watch = None
         self._reboot = None
+        self.survey = None
 
     # ------------------------------------------------------------------
     # GUI setup / teardown
@@ -169,6 +176,11 @@ class ValetudoPlugin:
                          self.send_restrictions)
         self._new_action("watch_boot", tr("Watch robot boot"), self.watch_boot)
         self._new_action("reboot", tr("Reboot robot (SSH)…"), self.reboot_robot)
+        self._new_action("wifi_survey", tr("Record Wi-Fi survey"), self.toggle_wifi_survey,
+                         checkable=True)
+        self._new_action("wifi_map", tr("Build Wi-Fi map"), self.build_wifi_map)
+        self.survey = WifiSurvey(QgsProject.instance())
+        self.survey.sampleAdded.connect(self._on_wifi_sample)
         self.goto_emulator = GoToEmulator()
         self.goto_emulator.finished.connect(self._on_goto_finished)
         self.boot = BootMonitor()
@@ -237,6 +249,9 @@ class ValetudoPlugin:
             self.boot.stop()
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
+        if self.survey is not None:
+            self.survey.stop()
+            self.survey = None
         if self._watch is not None:
             self._watch.stop()
             self._watch = None
@@ -305,6 +320,10 @@ class ValetudoPlugin:
     def _drop_client(self):
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
+        if self.survey is not None and self.survey.is_running():
+            self.survey.stop()
+        if "wifi_survey" in self.act:
+            self.act["wifi_survey"].setChecked(False)
         if self.client:
             self.client.stop_polling()
             self.client.deleteLater()
@@ -420,6 +439,60 @@ class ValetudoPlugin:
             client.start_polling(load_settings()["interval_s"] * 1000)
         else:
             client.stop_polling()
+
+    # -- Wi-Fi survey -------------------------------------------------------------
+
+    def toggle_wifi_survey(self, checked):
+        if not checked:
+            self.survey.stop()
+            layer = self.survey.layer()
+            if layer is not None and layer.featureCount() >= 3:
+                self.build_wifi_map()
+            return
+        client = self._get_client()
+        if not client:
+            self.act["wifi_survey"].setChecked(False)
+            return
+        if not self.layers.exists():
+            client.fetch_map()   # points are only meaningful on top of the robot's map
+        self._prepare_project()
+        self.survey.start(client, load_settings())
+        self._message(tr("Recording the Wi-Fi signal: start a cleaning, then click "
+                         "“Record Wi-Fi survey” again when done."), Qgis.MessageLevel.Info)
+
+    def _on_wifi_sample(self, count):
+        if self.panel is not None:
+            self.panel.show_feedback(tr("Wi-Fi survey: {n} point(s)").format(n=count))
+
+    def build_wifi_map(self, *_):
+        points = self.survey.layer() if self.survey is not None else None
+        if points is None:
+            self._message(tr("Record a Wi-Fi survey first."), Qgis.MessageLevel.Info)
+            return
+        cfg = load_settings()
+        if not cfg["wifi_bad_dbm"] < cfg["wifi_fair_dbm"] < cfg["wifi_good_dbm"]:
+            self._message(tr("Wi-Fi thresholds must be in order: bad < fair < good "
+                             "(see the settings)."), Qgis.MessageLevel.Warning)
+            return
+        project = QgsProject.instance()
+        for lyr in project.mapLayersByName(wifi_layer_names()["map"]):
+            project.removeMapLayer(lyr.id())   # replace the previous map
+        try:
+            _raster, clipped = build_wifi_map(points, self.layers.layer("rooms"), cfg, project)
+        except ValueError:
+            self._message(tr("At least 3 Wi-Fi points are needed to build the map."),
+                          Qgis.MessageLevel.Warning)
+            return
+        except RuntimeError as exc:
+            QgsMessageLog.logMessage(str(exc), LOG_TAG, Qgis.MessageLevel.Warning)
+            self._message(tr("Could not build the Wi-Fi map (details in the log)."),
+                          Qgis.MessageLevel.Critical)
+            return
+        if cfg["wifi_clip_rooms"] and not clipped:
+            self._message(tr("Wi-Fi map built, but it could not be clipped to the rooms."),
+                          Qgis.MessageLevel.Warning)
+        else:
+            self._message(tr("Wi-Fi map built."), Qgis.MessageLevel.Success)
 
     def control(self, action):
         client = self._get_client()

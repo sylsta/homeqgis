@@ -96,6 +96,20 @@ persistent warning when the fresh water tank or the detergent is empty, the
 waste water tank or the dust bag is full, or a tank is missing; a short message
 confirms when it is OK again. Turn it off in the settings.
 
+**Wi-Fi survey** (Advanced tab): *Record Wi-Fi survey* reads the robot's Wi-Fi
+signal at regular intervals and stores it as a point at the robot's position (layer
+"Wi-Fi survey", fields `signal` in dBm, `frequency`, `ssid`, `time`). Start a
+cleaning, let the robot go everywhere, then click the button again: the points are
+interpolated (IDW) into the "Wi-Fi signal (dBm)" raster, clipped to the rooms and
+coloured with fixed thresholds (red / yellow / green), so that two surveys can be
+compared. Several recordings add to the same layer for a smoother map. *Build Wi-Fi
+map* rebuilds it, from the selected points only if some are selected (e.g. one Wi-Fi
+band). Every value (reading interval, minimum distance between points, maximum age of
+the position, cell size, IDW coefficient, thresholds, opacity, clipping) is in the
+settings, tab *Wi-Fi survey*. Check first in the Swagger UI that the robot's
+`WifiConfigurationCapability` returns a fresh `signal` at each call: if it is cached,
+use a longer reading interval.
+
 **Reboot robot (SSH)…** (Valetudo menu and status panel): Valetudo deliberately
 has no reboot API, so the plugin runs `ssh <user>@<robot> reboot` after a
 confirmation. It needs an SSH client and key-based login to the robot
@@ -131,6 +145,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `boot_monitor.py`            | Follows and times the robot's boot, stage by stage      |
 | `ssh_reboot.py`              | Robot reboot over SSH (key-based, non-blocking)         |
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
+| `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
 | `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
