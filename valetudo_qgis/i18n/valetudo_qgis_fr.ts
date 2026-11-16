@@ -1098,14 +1098,6 @@ Continuer ?</translation>
         <translation>Nettoyer</translation>
     </message>
     <message>
-        <source>Clean ticked rooms ({n})</source>
-        <translation>Nettoyer les pièces cochées ({n})</translation>
-    </message>
-    <message>
-        <source>Tick rooms in the list above, then click here.</source>
-        <translation>Cochez des pièces dans la liste ci-dessus, puis cliquez ici.</translation>
-    </message>
-    <message>
         <source>Advanced</source>
         <translation>Avancé</translation>
     </message>
@@ -1260,6 +1252,18 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
     <message>
         <source>Wi-Fi signal (dBm)</source>
         <translation>Signal Wi-Fi (dBm)</translation>
+    </message>
+    <message>
+        <source>Clean room(s)</source>
+        <translation>Nettoyer la/les pièce(s)</translation>
+    </message>
+    <message>
+        <source>Tick rooms above, then click here.</source>
+        <translation>Cochez des pièces ci-dessus, puis cliquez ici.</translation>
+    </message>
+    <message>
+        <source>Clean the {n} ticked room(s).</source>
+        <translation>Nettoyer la/les {n} pièce(s) cochée(s).</translation>
     </message>
 </context>
 </TS>

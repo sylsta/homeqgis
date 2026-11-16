@@ -19,7 +19,6 @@ from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QListWidget,
-    QListWidgetItem,
     QInputDialog,
     QMenu,
     QMessageBox,
@@ -371,14 +370,12 @@ class ValetudoPanel(QgsDockWidget):
         # enabled/checked state as the menu): quick buttons, then the command list.
         # -- Commands: direct buttons, grouped by what you want to do ------------------
         self.grp_clean, clean = self._group(root_layout, tr("Clean"))
-        self.rooms = QListWidget()
-        self.rooms.setMaximumHeight(110)
-        self.rooms.itemChanged.connect(self._on_room_toggled)
-        # Room editing lives in a right-click menu, so it adds no buttons.
-        self.rooms.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.rooms.customContextMenuRequested.connect(self._room_menu)
-        self.rooms.setToolTip(tr("Tick rooms to clean them. Right-click a room to rename, "
-                                 "join or split it."))
+        # Rooms as plain checkboxes, two per line; right-click one to edit it.
+        self.rooms = QWidget()
+        self._rooms_grid = QGridLayout(self.rooms)
+        self._rooms_grid.setContentsMargins(0, 0, 0, 0)
+        self._rooms_grid.setSpacing(2)
+        self._room_boxes = []
         self.rooms.setVisible(False)
         clean.addWidget(self.rooms, 0, 0, 1, 2)
         self.btn_rooms = QPushButton()
@@ -581,25 +578,30 @@ class ValetudoPanel(QgsDockWidget):
             return
         self._segments = rows
         self._checked_rooms &= {r[0] for r in rows}
-        self.rooms.blockSignals(True)
-        self.rooms.clear()
-        for seg_id, name in rows:
-            item = QListWidgetItem(name)
-            item.setData(Qt.ItemDataRole.UserRole, seg_id)
-            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked if seg_id in self._checked_rooms
-                               else Qt.CheckState.Unchecked)
-            self.rooms.addItem(item)
-        self.rooms.blockSignals(False)
+        self._clear_room_boxes()
+        tooltip = tr("Tick rooms to clean them. Right-click a room to rename, join or split it.")
+        for index, (seg_id, name) in enumerate(rows):
+            box = QCheckBox(name)
+            box.setChecked(seg_id in self._checked_rooms)
+            box.setToolTip(tooltip)
+            box.toggled.connect(lambda on, i=seg_id: self._on_room_toggled(i, on))
+            box.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            box.customContextMenuRequested.connect(
+                lambda pos, b=box, i=seg_id, n=name: self._room_menu(i, n, b.mapToGlobal(pos)))
+            self._rooms_grid.addWidget(box, index // 2, index % 2)
+            self._room_boxes.append(box)
         self.rooms.setVisible(bool(rows))
         self._update_rooms_button()
 
-    def _room_menu(self, pos):
-        item = self.rooms.itemAt(pos)
-        seg_id = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
-        if seg_id is None or self.client is None:
+    def _clear_room_boxes(self):
+        for box in self._room_boxes:
+            self._rooms_grid.removeWidget(box)
+            box.deleteLater()
+        self._room_boxes = []
+
+    def _room_menu(self, seg_id, name, global_pos):
+        if self.client is None:
             return
-        name = item.text()
         caps = self.capabilities
         can_rename = caps is None or "MapSegmentRenameCapability" in caps
         can_edit = caps is None or "MapSegmentEditCapability" in caps
@@ -622,7 +624,7 @@ class ValetudoPanel(QgsDockWidget):
             menu.addSeparator()
             note = menu.addAction(tr("Greyed out: not supported by this robot."))
             note.setEnabled(False)
-        menu.exec(self.rooms.viewport().mapToGlobal(pos))
+        menu.exec(global_pos)
 
     def _rename_room(self, seg_id, name):
         new_name, ok = QInputDialog.getText(self, tr("Rename room"), tr("New name:"), text=name)
@@ -640,9 +642,8 @@ class ValetudoPanel(QgsDockWidget):
             self._checked_rooms -= {seg_a, seg_b}
             self.client.join_segments(seg_a, seg_b)
 
-    def _on_room_toggled(self, item):
-        seg_id = item.data(Qt.ItemDataRole.UserRole)
-        if item.checkState() == Qt.CheckState.Checked:
+    def _on_room_toggled(self, seg_id, checked):
+        if checked:
             self._checked_rooms.add(seg_id)
         else:
             self._checked_rooms.discard(seg_id)
@@ -653,10 +654,10 @@ class ValetudoPanel(QgsDockWidget):
         supported = self.capabilities is None or "MapSegmentationCapability" in self.capabilities
         n = len(self._checked_rooms)
         self.btn_rooms.setVisible(bool(self._segments) and supported)
-        self.btn_rooms.setText(tr("Clean ticked rooms ({n})").format(n=n))
+        self.btn_rooms.setText(tr("Clean room(s)"))
         self.btn_rooms.setEnabled(self.client is not None and n > 0)
-        self.btn_rooms.setToolTip(tr("Tick rooms in the list above, then click here.")
-                                  if n == 0 else "")
+        self.btn_rooms.setToolTip(tr("Tick rooms above, then click here.") if n == 0
+                                  else tr("Clean the {n} ticked room(s).").format(n=n))
 
     def _clean_rooms(self, *_):
         ids = self.checked_room_ids()
@@ -693,7 +694,7 @@ class ValetudoPanel(QgsDockWidget):
                 box.setVisible(False)
             self.lbl_features.setText("—")
             self._segments, self._checked_rooms = [], set()
-            self.rooms.clear()
+            self._clear_room_boxes()
             self.rooms.setVisible(False)
             self._update_rooms_button()
             self.camera_light.setVisible(False)
