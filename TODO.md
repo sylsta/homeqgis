@@ -16,3 +16,5 @@ Domotique (MQTT et Home Assistant)
 Lancer le nettoyage quand tout le monde est sorti, et le mettre en pause quand quelqu’un rentre ou décroche le téléphone.
 Ajouter la carte en direct sur le tableau de bord (la carte lovelace-xiaomi-vacuum-map-card prend en charge Valetudo).
 Recevoir une alerte quand le sac de la station est plein ou quand une brosse arrive en fin de vie.
+
+password pour ssg raspeberry
