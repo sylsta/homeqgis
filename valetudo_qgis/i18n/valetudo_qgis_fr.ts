@@ -1329,5 +1329,57 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <source>Needs key-based SSH login to the robot (ssh-copy-id root@&lt;robot&gt;), as for the reboot.</source>
         <translation>Nécessite une connexion SSH par clé au robot (ssh-copy-id root@&lt;robot&gt;), comme pour le redémarrage.</translation>
     </message>
+    <message>
+        <source>SSH console</source>
+        <translation>Console SSH</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Connecter</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>Déconnecter</translation>
+    </message>
+    <message>
+        <source>Command, then Enter (↑ ↓: history)</source>
+        <translation>Commande, puis Entrée (↑ ↓ : historique)</translation>
+    </message>
+    <message>
+        <source>Runs on the robot, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work, use e.g. top -b -n 1. cd is kept from one command to the next, variables are not.</source>
+        <translation>S’exécute sur le robot, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas, utilisez par exemple top -b -n 1. cd est conservé d’une commande à l’autre, les variables ne le sont pas.</translation>
+    </message>
+    <message>
+        <source>Run</source>
+        <translation>Exécuter</translation>
+    </message>
+    <message>
+        <source>Stop the running command (reconnects).</source>
+        <translation>Arrêter la commande en cours (reconnexion).</translation>
+    </message>
+    <message>
+        <source>Command stopped.</source>
+        <translation>Commande arrêtée.</translation>
+    </message>
+    <message>
+        <source>(exit code {code})</source>
+        <translation>(code de sortie {code})</translation>
+    </message>
+    <message>
+        <source>Connected to {host}.</source>
+        <translation>Connecté à {host}.</translation>
+    </message>
+    <message>
+        <source>Running…</source>
+        <translation>Exécution…</translation>
+    </message>
+    <message>
+        <source>SSH session ended: {error}</source>
+        <translation>Session SSH terminée : {error}</translation>
+    </message>
+    <message>
+        <source>Not connected.</source>
+        <translation>Non connecté.</translation>
+    </message>
 </context>
 </TS>

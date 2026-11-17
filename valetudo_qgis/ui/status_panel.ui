@@ -784,6 +784,89 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_console">
+       <attribute name="title">
+        <string>SSH console</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="console_layout">
+        <item>
+         <layout class="QHBoxLayout" name="console_header" stretch="1,0,0">
+          <item>
+           <widget class="QLabel" name="lbl_console_status">
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_console_connect">
+            <property name="text">
+             <string>Connect</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_console_clear">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPlainTextEdit" name="txt_console">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="lineWrapMode">
+           <enum>QPlainTextEdit::NoWrap</enum>
+          </property>
+          <property name="maximumBlockCount">
+           <number>5000</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="console_input" stretch="0,1,0,0">
+          <item>
+           <widget class="QLabel" name="lbl_console_prompt">
+            <property name="text">
+             <string notr="true">#</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="edit_console">
+            <property name="placeholderText">
+             <string>Command, then Enter (↑ ↓: history)</string>
+            </property>
+            <property name="toolTip">
+             <string>Runs on the robot, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work, use e.g. top -b -n 1. cd is kept from one command to the next, variables are not.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_console_run">
+            <property name="text">
+             <string>Run</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_console_stop">
+            <property name="text">
+             <string>Stop</string>
+            </property>
+            <property name="toolTip">
+             <string>Stop the running command (reconnects).</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
