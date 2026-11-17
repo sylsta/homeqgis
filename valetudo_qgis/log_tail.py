@@ -13,6 +13,7 @@ import shutil
 
 from qgis.PyQt.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
+from . import ssh_auth
 from .ssh_reboot import CONNECT_TIMEOUT_S
 
 LOG_PATH = "/tmp/valetudo.log"
@@ -110,7 +111,8 @@ class LogTail(QObject):
         process.finished.connect(self._on_finished)
         self._process = process
         self.stateChanged.emit("connecting", host)
-        process.start(program, ssh_arguments(host, user, port, path))
+        process.start(program, ssh_auth.prepare(
+            process, ssh_arguments(host, user, port, path), host, user, port))
 
     def _on_stdout(self):
         if self._process is None:

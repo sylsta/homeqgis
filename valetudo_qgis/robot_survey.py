@@ -19,6 +19,7 @@ import shutil
 from qgis.PyQt.QtCore import QObject, QProcess, pyqtSignal
 
 from .ssh_reboot import CONNECT_TIMEOUT_S
+from . import ssh_auth
 
 SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "robot", "valetudo_wifi_survey.sh")
 SCRIPT_NAME = "valetudo_wifi_survey.sh"
@@ -132,10 +133,10 @@ class RobotSurvey(QObject):
         process.errorOccurred.connect(self._on_error)
         process.finished.connect(self._on_finished)
         self._process = process
-        process.start(program, [
+        process.start(program, ssh_auth.prepare(process, [
             "-T", "-o", "BatchMode=yes", "-o", f"ConnectTimeout={CONNECT_TIMEOUT_S}",
             "-p", str(int(port)), f"{user or 'root'}@{host}", command,
-        ])
+        ], host, user or "root", port))
         if stdin:
             process.write(stdin)
         process.closeWriteChannel()

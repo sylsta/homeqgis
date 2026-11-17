@@ -32,6 +32,7 @@ DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
 # The Home Assistant token is not a QgsSettings value: it is stored encrypted
 # in the QGIS authentication database under this key (see ha_token()).
 HA_TOKEN_SETTING = "valetudo/ha_token"
+HA_SSH_PASSWORD_SETTING = "valetudo/ha_ssh_password"   # same: encrypted, optional
 
 # Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
 WIFI_DEFAULTS = {
@@ -86,45 +87,59 @@ def load_settings():
     }
 
 
-def has_ha_token():
-    """True if a Home Assistant token is stored (nothing is decrypted)."""
+# -- secrets: stored encrypted in the QGIS authentication database ----------------
+
+def has_secret(key):
+    """True if a secret is stored under key (nothing is decrypted)."""
     try:
         from qgis.core import QgsApplication
-        return bool(QgsApplication.authManager().existsAuthSetting(HA_TOKEN_SETTING))
+        return bool(QgsApplication.authManager().existsAuthSetting(key))
     except Exception:
         return False
 
 
-def ha_token():
-    """The Home Assistant access token ("" if none, or if it cannot be decrypted)."""
+def secret(key):
+    """The secret stored under key ("" if none, or if it cannot be decrypted)."""
     try:
         from qgis.core import QgsApplication
         manager = QgsApplication.authManager()
-        # Without a stored token, do not decrypt anything: that would ask for
+        # Without a stored secret, do not decrypt anything: that would ask for
         # the master password for nothing.
-        if not manager.existsAuthSetting(HA_TOKEN_SETTING):
+        if not manager.existsAuthSetting(key):
             return ""
-        value = manager.authSetting(HA_TOKEN_SETTING, "", True)
+        value = manager.authSetting(key, "", True)
     except Exception:   # authentication database unavailable
         return ""
-    return str(value or "").strip()
+    return str(value or "")
 
 
-def set_ha_token(token):
-    """Store the token encrypted (QGIS asks for the master password if needed).
+def set_secret(key, value):
+    """Store value encrypted (QGIS asks for the master password if needed).
 
-    Returns False if it could not be stored. An empty token removes it.
+    Returns False if it could not be stored. An empty value removes it.
     """
     from qgis.core import QgsApplication
     manager = QgsApplication.authManager()
-    token = (token or "").strip()
     try:
-        if not token:
-            if manager.existsAuthSetting(HA_TOKEN_SETTING):
-                return bool(manager.removeAuthSetting(HA_TOKEN_SETTING))
+        if not value:
+            if manager.existsAuthSetting(key):
+                return bool(manager.removeAuthSetting(key))
             return True
         if not manager.setMasterPassword(True):   # asks once, if not yet set or verified
             return False
-        return bool(manager.storeAuthSetting(HA_TOKEN_SETTING, token, True))
+        return bool(manager.storeAuthSetting(key, value, True))
     except Exception:
         return False
+
+
+def has_ha_token():
+    return has_secret(HA_TOKEN_SETTING)
+
+
+def ha_token():
+    """The Home Assistant access token ("" if none)."""
+    return secret(HA_TOKEN_SETTING).strip()
+
+
+def set_ha_token(token):
+    return set_secret(HA_TOKEN_SETTING, (token or "").strip())

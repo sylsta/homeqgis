@@ -15,6 +15,8 @@ import shutil
 
 from qgis.PyQt.QtCore import QObject, QProcess, pyqtSignal
 
+from . import ssh_auth
+
 RESULTS = ("sent", "ssh_missing", "failed")
 REMOTE_COMMAND = "(sleep 1; reboot) </dev/null >/dev/null 2>&1 &"
 CONNECT_TIMEOUT_S = 10
@@ -55,7 +57,8 @@ class SshReboot(QObject):
         process.errorOccurred.connect(self._on_error)
         process.finished.connect(self._on_finished)
         self._process = process
-        process.start(program, ssh_arguments(host, user, port))
+        process.start(program, ssh_auth.prepare(
+            process, ssh_arguments(host, user, port), host, user, port))
 
     def _on_stderr(self):
         if self._process is not None:

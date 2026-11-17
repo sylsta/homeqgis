@@ -23,6 +23,7 @@ import shutil
 
 from qgis.PyQt.QtCore import QObject, QProcess, pyqtSignal
 
+from . import ssh_auth
 from .ssh_reboot import CONNECT_TIMEOUT_S
 
 DONE_MARKER = "__valetudo_qgis_done__"
@@ -103,7 +104,7 @@ class SshConsole(QObject):
         process.finished.connect(self._on_finished)
         self._process = process
         self._set_state("connecting", host)
-        process.start(program, ssh_arguments(*target))
+        process.start(program, ssh_auth.prepare(process, ssh_arguments(*target), *target))
         # Hidden first command: its marker says the login worked and gives the home dir.
         self._quiet = True
         process.write(wrap("true").encode("utf-8"))

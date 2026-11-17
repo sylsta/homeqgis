@@ -27,7 +27,8 @@ without restarting QGIS.
 
 ## Usage
 
-1. *Settings > Options > Valetudo* (or *Plugins > Valetudo > Settings…*, which opens
+1. When no robot is set, QGIS offers it at start-up: **Open settings…** in the
+   message bar. Otherwise: *Settings > Options > Valetudo* (or *Plugins > Valetudo > Settings…*, which opens
    that page): enter the robot address (e.g. `http://192.168.1.23`), click
    **Test connection**, then **OK**. As for every Options page, *Cancel* saves nothing.
 2. Open the **Valetudo panel** (the only toolbar button, or *Plugins > Valetudo*).
@@ -314,9 +315,13 @@ connection** reads the server's name and version.
 **Terminal** tab, *Home Assistant*: a console and a log on your Home Assistant
 server. Set its SSH address, user (`root` by default) and port in *Settings >
 Options > Valetudo*, tab *Home Assistant*; the switch is greyed out without an
-address. Login is by SSH key only: on Home Assistant OS, install the *Terminal &
-SSH* add-on, paste your public key (`~/.ssh/id_ed25519.pub`) in its
-`authorized_keys` option and set its SSH port in the add-on's *Network* settings.
+address. On Home Assistant OS, install the *Terminal & SSH* add-on and set its SSH
+port in the add-on's *Network* settings, then either paste your public key
+(`~/.ssh/id_ed25519.pub`) in its `authorized_keys` option, or set a password in
+its options and in the plugin's *SSH password* field. The password is stored
+encrypted in the QGIS authentication database, like the token, and handed to
+`ssh` through `SSH_ASKPASS` (OpenSSH 8.4 or newer): it never appears on a command
+line or in a file. Empty, the key is used.
 The *Log* runs a command rather than following a file, `ha core logs -n 200 -f` by
 default (Home Assistant OS keeps its log in the system journal); change it in the
 settings for another installation (e.g. `docker logs -f -n 200 homeassistant`).
@@ -344,6 +349,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `plugin.py`                  | Toolbar, menu, wiring between client and layers         |
 | `client.py`                  | Asynchronous HTTP calls to the Valetudo API             |
 | `ha_client.py`               | Calls to the Home Assistant REST API                    |
+| `ssh_auth.py`                | Optional SSH password (SSH_ASKPASS helper)              |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |
 | `camera.py`                  | H.264 stream decoding through an ffmpeg subprocess      |

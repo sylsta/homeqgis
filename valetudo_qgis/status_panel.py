@@ -47,7 +47,9 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import has_ha_token, ha_token, load_settings
+from .settings import (HA_SSH_PASSWORD_SETTING, has_ha_token, has_secret, ha_token,
+                       load_settings, secret)
+from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
 from .console_tab import ConsoleTab
 from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minutes
@@ -1316,12 +1318,20 @@ class ValetudoPanel(QgsDockWidget):
         cfg = load_settings()
         return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
 
-    @staticmethod
-    def _ha_ssh_target():
-        """(host, user, port) of the Home Assistant server over SSH, or None."""
+    def _ha_ssh_target(self):
+        """(host, user, port) of the Home Assistant server over SSH, or None.
+
+        Registers its SSH password, if one is stored (read once per target)."""
         cfg = load_settings()
-        return ((cfg["ha_ssh_host"], cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
-                if cfg["ha_ssh_host"] else None)
+        if not cfg["ha_ssh_host"]:
+            return None
+        target = (cfg["ha_ssh_host"], cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
+        if getattr(self, "_ha_ssh_password_for", None) != target:
+            password = (secret(HA_SSH_PASSWORD_SETTING)
+                        if has_secret(HA_SSH_PASSWORD_SETTING) else "")
+            ssh_auth.set_password(*target, password)
+            self._ha_ssh_password_for = target
+        return target
 
     def _update_pi_tab(self):
         """The Pi's details, card and terminal exist only when a Pi address is set;
@@ -1523,6 +1533,7 @@ class ValetudoPanel(QgsDockWidget):
 
     def settings_changed(self):
         """Called by the plugin after the Options page saved changes."""
+        self._ha_ssh_password_for = None   # the SSH password may have changed
         self._update_console()
         self._ha_token = None   # the token may have changed
         if self.isVisible():

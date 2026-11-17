@@ -20,7 +20,8 @@ from .settings import (
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
     KEY_HA_URL, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
-    WIFI_DEFAULTS, default_camera_url, ha_token, load_settings, set_ha_token,
+    HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, WIFI_DEFAULTS, default_camera_url,
+    load_settings, secret, set_secret,
 )
 from .ui_loader import load_ui
 
@@ -31,7 +32,7 @@ UI_WIDGETS = (
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
-    "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_log_command",
+    "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
 )
 
@@ -71,8 +72,12 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.ha_ssh_user.setText(cfg["ha_ssh_user"])
         self.ha_ssh_port.setValue(cfg["ha_ssh_port"])
         self.ha_log_command.setText(cfg["ha_log_command"])
-        self._ha_token_saved = ha_token()
-        self.ha_token.setText(self._ha_token_saved)
+        # Secrets (encrypted): field -> (storage key, value as last saved)
+        self._secrets = {self.ha_token: [HA_TOKEN_SETTING, secret(HA_TOKEN_SETTING).strip()],
+                         self.ha_ssh_password: [HA_SSH_PASSWORD_SETTING,
+                                                secret(HA_SSH_PASSWORD_SETTING)]}
+        for field, (_, value) in self._secrets.items():
+            field.setText(value)
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             if kind is bool:
@@ -166,22 +171,25 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_HA_SSH_USER, self.ha_ssh_user.text().strip() or "root")
         s.setValue(KEY_HA_SSH_PORT, self.ha_ssh_port.value())
         s.setValue(KEY_HA_LOG_COMMAND, self.ha_log_command.text().strip())
-        token = self.ha_token.text().strip()
-        token_changed = False
-        if token != self._ha_token_saved:
-            token_changed = set_ha_token(token)
-            if token_changed:
-                self._ha_token_saved = token
+        secrets_changed = False
+        for field, entry in self._secrets.items():
+            key, saved = entry
+            value = field.text().strip() if field is self.ha_token else field.text()
+            if value == saved:
+                continue
+            if set_secret(key, value):
+                entry[1] = value
+                secrets_changed = True
             else:
                 from qgis.utils import iface
                 iface.messageBar().pushWarning("Valetudo", tr(
-                    "The Home Assistant token was not saved: the QGIS master "
-                    "password is needed to store it encrypted."))
+                    "A Home Assistant token or password was not saved: the QGIS "
+                    "master password is needed to store it encrypted."))
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             s.setValue(f"valetudo/{key}", widget.isChecked() if kind is bool else widget.value())
         # OK is pressed for any Options page: only react when ours changed something.
-        if self._on_applied is not None and (token_changed or load_settings() != before):
+        if self._on_applied is not None and (secrets_changed or load_settings() != before):
             self._on_applied()
 
 

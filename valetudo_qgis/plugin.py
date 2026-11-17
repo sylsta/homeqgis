@@ -496,7 +496,12 @@ class ValetudoPlugin:
     def _start_live_at_start(self):
         """At QGIS start-up: connect quietly; _on_reachable() turns "Show on map" on."""
         cfg = load_settings()
-        if self._unloaded or not cfg["live_at_start"] or not cfg["url"]:
+        if self._unloaded:
+            return
+        if not cfg["url"]:
+            self._propose_settings()
+            return
+        if not cfg["live_at_start"]:
             return
         self._live_at_start = True
         QTimer.singleShot(LIVE_AT_START_WINDOW_MS,
@@ -687,6 +692,24 @@ class ValetudoPlugin:
         zones.startEditing()
         self.iface.setActiveLayer(zones)
         self._show_edit_bar()
+
+    def _propose_settings(self):
+        """No robot set yet (first start): offer to open the settings, once."""
+        bar = self.iface.messageBar()
+        item = bar.createMessage(
+            tr("Valetudo"), tr("No robot is set yet: enter its address in the settings."))
+        button = QPushButton(tr("Open settings…"), item)
+
+        def open_settings():
+            try:
+                bar.popWidget(item)
+            except RuntimeError:   # already closed
+                pass
+            self.configure()
+
+        button.clicked.connect(open_settings)
+        item.layout().addWidget(button)
+        bar.pushWidget(item, Qgis.MessageLevel.Info, 0)
 
     def _show_edit_bar(self):
         """Persistent bar while editing: what to do, Send to robot…, Discard changes."""
