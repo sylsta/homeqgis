@@ -52,7 +52,10 @@ def icon(name):
     if not path:
         return QIcon()
     if path.endswith(".svg"):
-        themed = _themed(path)
+        try:
+            themed = _themed(path)
+        except Exception:   # any rendering problem: the icon as drawn
+            themed = None
         if themed is not None:
             return themed
     return QIcon(path)
