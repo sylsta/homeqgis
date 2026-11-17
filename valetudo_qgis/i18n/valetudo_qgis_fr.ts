@@ -1975,5 +1975,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>System</source>
         <translation>Système</translation>
     </message>
+    <message>
+        <source>Start cleaning all rooms</source>
+        <translation>Nettoyer toutes les pièces</translation>
+    </message>
 </context>
 </TS>

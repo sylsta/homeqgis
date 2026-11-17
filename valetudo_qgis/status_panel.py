@@ -686,12 +686,14 @@ class ValetudoPanel(QgsDockWidget):
         act = getattr(self, "act", {})
         state = self._state
         if state in ACTIVE_STATES:
-            key, text, tip = "pause", "⏸ " + tr("Pause"), tr("Pause the current job.")
+            key, text, tip = "pause", tr("Pause"), tr("Pause the current job.")
         elif state == "paused":
-            key, text, tip = "start", "▶ " + tr("Resume"), tr("Resume the paused job.")
+            key, text, tip = "start", tr("Resume"), tr("Resume the paused job.")
         else:
-            key, text, tip = "start", "▶ " + tr("Start"), tr("Start cleaning the whole home.")
+            key, text, tip = ("start", tr("Start cleaning all rooms"),
+                              tr("Start cleaning the whole home."))
         self._primary_key = key
+        self.btn_primary.setIcon(icon(key))   # icons/start.svg, icons/pause.svg
         self.btn_primary.setText(text)
         self.btn_primary.setToolTip(tip)
         self.btn_primary.setEnabled(self.client is not None and key in act
@@ -737,7 +739,7 @@ class ValetudoPanel(QgsDockWidget):
             parts = [_format_duration(seconds)] if seconds is not None else []
             if area is not None:
                 parts.append(_format_area_cm2(area))
-            self.lbl_job.setText("⏱ " + " · ".join(parts))
+            self.lbl_job.setText(" · ".join(parts))
         self._emit_summary()
 
     def _emit_summary(self):
@@ -750,7 +752,7 @@ class ValetudoPanel(QgsDockWidget):
         parts = [f"<b style='color:{color}'>{html.escape(_label(_state_labels(), state))}</b>"]
         battery = getattr(self, "_battery", None)
         if battery is not None:
-            parts.append(f"🔋 {battery} %")
+            parts.append(f"{battery} %")
         if self.lbl_job.isVisibleTo(self):
             parts.append(html.escape(self.lbl_job.text()))
         self.summaryChanged.emit(" · ".join(parts))
@@ -1688,7 +1690,7 @@ class ValetudoPanel(QgsDockWidget):
             color = signal_color(signal, cfg["wifi_good_dbm"], cfg["wifi_fair_dbm"],
                                  cfg["wifi_bad_dbm"])
             text = tr("Wi-Fi {signal} dBm").format(signal=signal)
-            self.lbl_wifi_strip.setText(f"<span style='color:{color}'>📶 {signal}</span>")
+            self.lbl_wifi_strip.setText(f"<span style='color:{color}'>Wi-Fi {signal}</span>")
             self.sparkline.add(signal)
             self._wifi_html = f"<span style='color:{color}'>{html.escape(text)}</span>"
             parts = [details.get("ssid"), details.get("frequency"),

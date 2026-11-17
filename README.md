@@ -37,9 +37,8 @@ The panel, from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  📶 -55  ⏱ 12 min · 18 m²  ⚠  [🗺] [⋮] │  status strip
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ [🗺] [⋮] │  status strip
 │   (click it: connection, robot, Raspberry Pi details)              │
-│ [        ⏸ Pause         ] [⌂ Dock]                                │  big button
 ├──┬───────────────────────────────────────────────────┤
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
 │📅│ Schedule  week view + list                        │
@@ -48,7 +47,9 @@ The panel, from top to bottom:
 │🧰│ Care      consumables, dock station, statistics   │
 │⌨ │ Terminal  [Robot | Pi]  [Console | Log]           │
 │⚙ │ System    robot and Pi cards, boot log, events    │
-└──┴───────────────────────────────────────────────────┘
+├──┴───────────────────────────────────────────────────┤
+│ [ Start cleaning all rooms ] [Dock]                  │  big button, at the bottom
+└──────────────────────────────────────────────────────┘
 ```
 
 - **Status strip**, always visible: the state, battery, Wi-Fi signal (coloured with
@@ -61,13 +62,14 @@ The panel, from top to bottom:
   how far off, when it differs from the computer's by more than 2 minutes) and
   uptime; with a Raspberry Pi set in the settings, the same for the Pi (read over
   SSH every 30 s while the panel is visible).
-- **Big button**, after the robot's state: *Start* (whole home) when docked or idle,
-  *Pause* while it works, *Resume* when paused; *Dock* next to it while away from
-  the dock.
+- **Big button**, at the bottom of the panel, after the robot's state: *Start
+  cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
+  paused; *Dock* next to it while away from the dock.
 - **Side tabs**: icons, their names as tooltips; a tab gets an orange dot when one
   of the problems of the ⚠ belongs to it.
 - **Compact mode** (⋮ menu): only the strip and the big button; hovering the panel
-  unfolds the rest, which folds again when the mouse leaves it.
+  unfolds the rest, which folds again when the mouse leaves it (e.g. towards a
+  toolbar). Untick it in the ⋮ menu to keep the panel unfolded.
 
 **Clean** tab
 - Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking
