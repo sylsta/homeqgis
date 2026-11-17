@@ -877,10 +877,20 @@ class ValetudoPlugin:
         return (host, cfg["ssh_user"], cfg["ssh_port"], cfg) if host else None
 
     def _update_robot_survey_actions(self):
+        """Install only when not installed; import and remove only when installed.
+        Nothing while an SSH operation runs."""
         installed = bool(QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str))
+        robot_survey = getattr(self, "robot_survey", None)
+        busy = robot_survey is not None and robot_survey.is_busy()
+        install = self.act.get("robot_survey_install")
+        if install is not None:
+            install.setEnabled(not installed and not busy)
+            install.setToolTip(
+                tr("Already recording on the robot. To install it again, remove it first.")
+                if installed else command_hints()["robot_survey_install"])
         for key in ("robot_survey_import", "robot_survey_remove"):
             if key in self.act:
-                self.act[key].setEnabled(installed)
+                self.act[key].setEnabled(installed and not busy)
 
     def _robot_survey_run(self, operation, command, stdin=b""):
         target = self._ssh_target()
@@ -891,6 +901,7 @@ class ValetudoPlugin:
             self._message(tr("Another Wi-Fi recorder operation is running."),
                           Qgis.MessageLevel.Info)
             return False
+        self._update_robot_survey_actions()   # greyed out while it runs
         return True
 
     def install_robot_survey(self, *_):
@@ -950,6 +961,7 @@ class ValetudoPlugin:
     def _on_robot_survey_finished(self, operation, ok, output, detail):
         if self._unloaded:
             return
+        self._update_robot_survey_actions()   # the operation is over (and on early returns)
         if detail == "ssh_missing":
             self._message(tr("ssh not found: install an SSH client."), Qgis.MessageLevel.Critical)
             return

@@ -1653,5 +1653,9 @@ Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du
         <source>This robot's “Go to” is a small cleaning job. Ticked, the plugin lifts the mops (vacuum-only mode), turns the water off and the fan to its lowest for the trip, then restores your settings.</source>
         <translation>Sur ce robot, « Aller à » est un petit nettoyage. Coché, l’extension relève les serpillières (mode aspiration seule), coupe l’eau et met l’aspiration au minimum pendant le trajet, puis rétablit vos réglages.</translation>
     </message>
+    <message>
+        <source>Already recording on the robot. To install it again, remove it first.</source>
+        <translation>Enregistrement déjà en place sur le robot. Pour le réinstaller, retirez-le d’abord.</translation>
+    </message>
 </context>
 </TS>
