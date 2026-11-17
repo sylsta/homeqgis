@@ -1634,16 +1634,16 @@ Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du
         <translation>Robot en route sans nettoyer ({changes}) ; il sera mis en pause à l’arrivée, puis vos réglages rétablis.</translation>
     </message>
     <message>
-        <source>“Go to” cancelled: the robot's settings could not be changed for a trip without cleaning ({error}). Untick “travel without cleaning” to go anyway.</source>
-        <translation>« Aller à » annulé : les réglages du robot n’ont pas pu être modifiés pour un trajet sans nettoyage ({error}). Décochez « trajet sans nettoyer » pour y aller quand même.</translation>
+        <source>“Go to” cancelled: the robot's settings could not be changed for a trip without cleaning ({error}). Untick “Without cleaning” to go anyway.</source>
+        <translation>« Aller à » annulé : les réglages du robot n’ont pas pu être modifiés pour un trajet sans nettoyage ({error}). Décochez « Sans nettoyer » pour y aller quand même.</translation>
     </message>
     <message>
         <source>settings already at their lowest</source>
         <translation>réglages déjà au minimum</translation>
     </message>
     <message>
-        <source>Go to: travel without cleaning</source>
-        <translation>Aller à : trajet sans nettoyer</translation>
+        <source>Without cleaning</source>
+        <translation>Sans nettoyer</translation>
     </message>
     <message>
         <source>This robot's “Go to” is a small cleaning job. Ticked, the plugin lifts the mops (vacuum-only mode), turns the water off and the fan to its lowest for the trip, then restores your settings.</source>
@@ -1664,12 +1664,12 @@ Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du
     <message>
         <source>This robot cannot simply drive to a point. The plugin will send it to clean a small zone ({size} cm) at that point, then pause it as soon as it arrives.
 
-“Travel without cleaning” is ticked: for the trip, the mops are lifted (vacuum-only mode), the water is turned off and the fan set to its lowest; your settings are restored on arrival. If the robot has no “off” fan speed, it still vacuums gently.
+“Without cleaning” is ticked: for the trip, the mops are lifted (vacuum-only mode), the water is turned off and the fan set to its lowest; your settings are restored on arrival. If the robot has no “off” fan speed, it still vacuums gently.
 
 Continue?</source>
         <translation>Ce robot ne sait pas simplement rouler jusqu’à un point. L’extension va l’envoyer nettoyer une petite zone ({size} cm) à cet endroit, puis le mettre en pause dès son arrivée.
 
-« Trajet sans nettoyer » est coché : pendant le trajet, les serpillières sont relevées (mode aspiration seule), l’eau est coupée et l’aspiration mise au minimum ; vos réglages sont rétablis à l’arrivée. Si le robot n’a pas de vitesse d’aspiration « arrêt », il aspire quand même doucement.
+« Sans nettoyer » est coché : pendant le trajet, les serpillières sont relevées (mode aspiration seule), l’eau est coupée et l’aspiration mise au minimum ; vos réglages sont rétablis à l’arrivée. Si le robot n’a pas de vitesse d’aspiration « arrêt », il aspire quand même doucement.
 
 Continuer ?</translation>
     </message>

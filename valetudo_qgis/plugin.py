@@ -789,7 +789,7 @@ class ValetudoPlugin:
                 text = tr("This robot cannot simply drive to a point. The plugin will "
                           "send it to clean a small zone ({size} cm) at that point, "
                           "then pause it as soon as it arrives.\n\n"
-                          "“Travel without cleaning” is ticked: for the trip, the mops are "
+                          "“Without cleaning” is ticked: for the trip, the mops are "
                           "lifted (vacuum-only mode), the water is turned off and the fan set "
                           "to its lowest; your settings are restored on arrival. If the robot "
                           "has no “off” fan speed, it still vacuums gently.\n\n"
@@ -851,8 +851,8 @@ class ValetudoPlugin:
         self._goto_point = None
         self.iface.messageBar().pushMessage(
             "Valetudo", tr("“Go to” cancelled: the robot's settings could not be changed for "
-                           "a trip without cleaning ({error}). Untick “travel without "
-                           "cleaning” to go anyway.").format(error=error),
+                           "a trip without cleaning ({error}). Untick “Without cleaning” "
+                           "to go anyway.").format(error=error),
             level=Qgis.MessageLevel.Warning, duration=0)
 
     def _on_goto_finished(self, result, detail):

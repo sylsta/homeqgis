@@ -112,7 +112,7 @@
        <item row="3" column="1">
         <widget class="QCheckBox" name="chk_goto_quiet">
          <property name="text">
-          <string>Go to: travel without cleaning</string>
+          <string>Without cleaning</string>
          </property>
          <property name="toolTip">
           <string>This robot's “Go to” is a small cleaning job. Ticked, the plugin lifts the mops (vacuum-only mode), turns the water off and the fan to its lowest for the trip, then restores your settings.</string>

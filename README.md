@@ -96,7 +96,7 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
   (cleanings the robot starts by itself).
 - **Go to…** on robots without Valetudo's go-to (e.g. Eureka J15 Pro Ultra): a 60 cm
   zone clean at that spot, then a pause as soon as the robot is within 50 cm.
-  With **Go to: travel without cleaning** ticked (under the button, on by default),
+  With **Without cleaning** ticked (under the button, on by default),
   the plugin first reads the robot's fan speed, water usage and mode, switches to
   the quietest ones it offers (mode "vacuum" so the mops stay up, water off, fan off
   or lowest), and puts yours back when the trip ends, whatever its end. If the robot
