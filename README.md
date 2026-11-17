@@ -116,7 +116,7 @@ The panel, from top to bottom:
 - **Show on map** (in the strip) loads the map, refreshes the robot live and keeps it
   in view (recentring only when it nears the edge). Click again to stop. It is
   turned on by itself when QGIS starts with an empty project and the robot answers
-  within a minute (*Settings > Options > Valetudo*, *Connection*: "Show the robot on
+  within a minute (*Settings > Options > Valetudo*, tab *Robot*: "Show the robot on
   the map when QGIS starts with an empty project"); a project with layers is left
   untouched.
 - While it is on, a **Valetudo map** toolbar appears: *Pick rooms on the map* (click a
