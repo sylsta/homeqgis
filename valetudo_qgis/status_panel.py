@@ -9,41 +9,49 @@ import math
 import re
 import time
 
-from qgis.PyQt.QtCore import QDateTime, QSize, Qt, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtCore import QDateTime, Qt, QTimer, QUrl, pyqtSignal
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
-    QCheckBox,
-    QComboBox,
-    QFormLayout,
-    QGridLayout,
-    QGroupBox,
-    QHBoxLayout,
     QLabel,
-    QListWidget,
     QInputDialog,
     QMenu,
     QMessageBox,
-    QPlainTextEdit,
     QProgressBar,
-    QPushButton,
-    QScrollArea,
     QSizePolicy,
-    QTabWidget,
     QToolButton,
-    QTreeWidget,
     QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
 )
 from qgis.core import QgsApplication, QgsSettings
-from qgis.gui import QgsCollapsibleGroupBox, QgsDockWidget
+from qgis.gui import QgsDockWidget
 
 from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from .icons import icon
+from .ui_loader import load_ui
 
 KEY_TAB = "valetudo/panel_tab"
+
+# Layout: ui/status_panel.ui (Qt Designer). The code fills it at run time and
+# relies on these object names.
+UI_WIDGETS = (
+    "lbl_connection", "btn_refresh", "lbl_robot", "lbl_badge", "bar_battery", "lbl_error",
+    "grp_clean", "clean_grid", "rooms", "btn_rooms", "grp_robot", "robot_grid",
+    "grp_dock", "dock_grid", "map_row", "lbl_feedback", "tabs", "tab_camera",
+    "camera_layout", "camera_light", "status_form", "lbl_state", "lbl_dock", "dock_form",
+    "settings_form", "combo_fan_speed", "combo_water_usage", "lbl_attachments",
+    "lbl_position", "consumables_form", "lbl_cur_time", "lbl_cur_area", "lbl_tot_count",
+    "lbl_tot_time", "lbl_tot_area", "tools_grid", "lbl_wifi", "list_events", "txt_boot",
+    "lbl_features",
+)
+# Collapsible sections -> key of their remembered open/closed state.
+SECTIONS = {
+    "box_status": "status", "box_dock": "dock", "box_settings": "settings",
+    "box_attachments": "attachments", "box_position": "position",
+    "box_consumables": "consumables", "box_current": "current", "box_total": "totals",
+    "box_tools": "tools", "box_wifi": "wifi", "box_events": "events", "box_boot": "boot",
+    "box_features": "features",
+}
 STATE_COLORS = {
     "cleaning": "#1565c0", "moving": "#1565c0", "manual_control": "#1565c0",
     "returning": "#ef6c00", "paused": "#f9a825", "docked": "#2e7d32",
@@ -274,8 +282,7 @@ class ValetudoPanel(QgsDockWidget):
     splitRequested = pyqtSignal(str, str)   # room id, room name: draw the cut on the map
 
     def __init__(self, parent=None):
-        super().__init__(tr("Valetudo status"), parent)
-        self.setObjectName("ValetudoStatusPanel")
+        super().__init__(parent)   # title and object name come from the .ui
         self.client = None
         self.capabilities = None
         self._last_ok = None        # time.monotonic() of the last successful request
@@ -297,213 +304,64 @@ class ValetudoPanel(QgsDockWidget):
 
     # -- UI construction -------------------------------------------------------
 
-    def _section(self, title, key, open_default=True):
+    def _build_ui(self):
+        load_ui("status_panel.ui", self, UI_WIDGETS)
+        self.setObjectName("ValetudoStatusPanel")   # QGIS restores the dock by this name
+        self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_refresh.clicked.connect(self.refresh)
+        self._set_badge(None)
+        self.lbl_error.setVisible(False)
+
+        # Rooms in a checkable tree: "All rooms" (tri-state) above one checkbox per
+        # room. Right-click a room to rename, join or split it.
+        self.rooms.setColumnCount(1)
+        self.rooms.itemChanged.connect(self._on_room_item_changed)
+        self.rooms.customContextMenuRequested.connect(self._on_rooms_context_menu)
+        self.rooms.itemExpanded.connect(lambda item: self._on_group_expanded(item, True))
+        self.rooms.itemCollapsed.connect(lambda item: self._on_group_expanded(item, False))
+        self.rooms.setVisible(False)
+        self.btn_rooms.setIcon(icon("clean_rooms"))
+        self.btn_rooms.clicked.connect(self._clean_rooms)
+        self.btn_rooms.setVisible(False)
+        self._segments, self._checked_rooms = [], set()
+
+        self.preset_combos = {"FanSpeedControlCapability": self.combo_fan_speed,
+                              "WaterUsageControlCapability": self.combo_water_usage}
+        for capability, combo in self.preset_combos.items():
+            combo.activated.connect(lambda index, c=capability: self._on_preset_chosen(c, index))
+
+        self.lbl_position.setText(tr("Waiting for the robot position…"))
+
+        # Camera: plays only while this tab is shown and the panel is visible.
+        self.camera_page = self.tab_camera
+        self.camera = CameraWidget()
+        self.camera_layout.insertWidget(0, self.camera)
+        self.camera_light.setVisible(False)    # shown if the robot supports it
+        self.camera_light.clicked.connect(self._on_camera_light_clicked)  # user only
+
+        # Sections remember whether they are open, under our own keys.
+        for name, key in SECTIONS.items():
+            self._remember_section(getattr(self, name), key)
+
+        self._tab_keys = [self.tabs.widget(i).objectName().removeprefix("tab_")
+                          for i in range(self.tabs.count())]
+        last = QgsSettings().value(KEY_TAB, "robot", type=str)
+        if last in self._tab_keys:
+            self.tabs.setCurrentIndex(self._tab_keys.index(last))
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+
+        for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
+                    self.box_attachments, self.box_wifi, self.box_dock):
+            box.setVisible(False)   # shown once the robot reports them
+
+    @staticmethod
+    def _remember_section(box, key, open_default=True):
         """A native QGIS collapsible section; its open/closed state is remembered."""
-        box = QgsCollapsibleGroupBox(title)
         box.setSaveCollapsedState(False)   # we store it ourselves, under our own key
         settings_key = f"valetudo/section_{key}"
         box.setCollapsed(not QgsSettings().value(settings_key, open_default, type=bool))
         box.collapsedStateChanged.connect(
             lambda collapsed: QgsSettings().setValue(settings_key, not collapsed))
-        form = QFormLayout(box)
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-        self._layout.addWidget(box)
-        return box, form
-
-    def _value_label(self):
-        label = QLabel("—")
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        return label
-
-    def _page(self, title, key):
-        """A scrollable tab page; following sections are added to it."""
-        page = QWidget()
-        self._layout = QVBoxLayout(page)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(page)
-        self.tabs.addTab(scroll, title)
-        self._tab_keys.append(key)
-        return scroll
-
-    def _end_page(self):
-        self._layout.addStretch(1)
-
-    def _build_ui(self):
-        root = QWidget()
-        root_layout = QVBoxLayout(root)
-
-        # -- Summary header, always visible above the tabs --------------------------
-        header = QHBoxLayout()
-        self.lbl_connection = QLabel()
-        header.addWidget(self.lbl_connection, 1)
-        btn_refresh = QToolButton()
-        btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
-        btn_refresh.setToolTip(tr("Refresh now"))
-        btn_refresh.clicked.connect(self.refresh)
-        header.addWidget(btn_refresh)
-        root_layout.addLayout(header)
-
-        self.lbl_robot = QLabel()
-        self.lbl_robot.setWordWrap(True)
-        font = self.lbl_robot.font()
-        font.setItalic(True)
-        self.lbl_robot.setFont(font)
-        root_layout.addWidget(self.lbl_robot)
-
-        summary = QHBoxLayout()
-        self.lbl_badge = QLabel()        # coloured state pill
-        self.lbl_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._set_badge(None)
-        summary.addWidget(self.lbl_badge)
-        self.bar_battery = QProgressBar()
-        self.bar_battery.setRange(0, 100)
-        self.bar_battery.setMaximumHeight(18)
-        self.bar_battery.setToolTip(tr("Battery"))
-        summary.addWidget(self.bar_battery, 1)
-        root_layout.addLayout(summary)
-
-        self.lbl_error = QLabel()
-        self.lbl_error.setWordWrap(True)
-        self.lbl_error.setStyleSheet("color: #c62828; font-weight: bold;")
-        self.lbl_error.setVisible(False)
-        root_layout.addWidget(self.lbl_error)
-
-        # Controls, filled by set_actions() with the plugin's own QActions (same
-        # enabled/checked state as the menu): quick buttons, then the command list.
-        # -- Commands: direct buttons, grouped by what you want to do ------------------
-        self.grp_clean, clean = self._group(root_layout, tr("Clean"))
-        # Rooms in a checkable tree: "All rooms" (tri-state) above one checkbox per
-        # room. Right-click a room to rename, join or split it.
-        self.rooms = QTreeWidget()
-        self.rooms.setHeaderHidden(True)
-        self.rooms.setColumnCount(1)
-        self.rooms.setMaximumHeight(240)
-        self.rooms.setToolTip(tr("Tick rooms or whole groups to clean them. Right-click a "
-                                 "room to rename, join or split it, or to edit the groups."))
-        self.rooms.itemChanged.connect(self._on_room_item_changed)
-        self.rooms.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.rooms.customContextMenuRequested.connect(self._on_rooms_context_menu)
-        self.rooms.itemExpanded.connect(lambda item: self._on_group_expanded(item, True))
-        self.rooms.itemCollapsed.connect(lambda item: self._on_group_expanded(item, False))
-        self.rooms.setVisible(False)
-        clean.addWidget(self.rooms, 0, 0, 1, 2)
-        self.btn_rooms = QPushButton()
-        self.btn_rooms.setIcon(icon("clean_rooms"))
-        self.btn_rooms.clicked.connect(self._clean_rooms)
-        self.btn_rooms.setVisible(False)
-        self._clean_grid = clean
-        self.grp_robot, self._robot_grid = self._group(root_layout, tr("Robot"))
-        self.grp_dock, self._dock_grid = self._group(root_layout, tr("Dock station"))
-        self._map_row = QHBoxLayout()
-        root_layout.addLayout(self._map_row)
-
-        # Results of commands only (help is in the buttons' tooltips).
-        self.lbl_feedback = QLabel()
-        self.lbl_feedback.setWordWrap(True)
-        root_layout.addWidget(self.lbl_feedback)
-
-        # -- Tabs ---------------------------------------------------------------------
-        self.tabs = QTabWidget()
-        self.tabs.setDocumentMode(True)
-        self._tab_keys = []
-        root_layout.addWidget(self.tabs, 1)
-
-        # Robot
-        self._page(tr("Robot"), "robot")
-        self._segments, self._checked_rooms = [], set()
-        self.box_status, form = self._section(tr("Status"), "status")
-        self.lbl_state = self._value_label()
-        form.addRow(tr("State"), self.lbl_state)
-        self.lbl_dock = self._value_label()
-        form.addRow(tr("Dock"), self.lbl_dock)
-        self._status_form = form
-
-        # Dock station: fresh/waste water tanks, detergent, dust bag (rows rebuilt on update)
-        self.box_dock, self._dock_form = self._section(tr("Dock station"), "dock")
-
-        self.box_settings, form = self._section(tr("Settings"), "settings")
-        self.preset_combos = {}
-        for capability, text in (("FanSpeedControlCapability", tr("Fan speed")),
-                                 ("WaterUsageControlCapability", tr("Water usage"))):
-            combo = QComboBox()
-            combo.activated.connect(lambda index, c=capability: self._on_preset_chosen(c, index))
-            form.addRow(text, combo)
-            self.preset_combos[capability] = combo
-        self._settings_form = form
-
-        self.box_attachments, form = self._section(tr("Attachments"), "attachments")
-        self.lbl_attachments = self._value_label()
-        form.addRow(self.lbl_attachments)
-
-        self.box_position, form = self._section(tr("Position"), "position")
-        self.lbl_position = self._value_label()
-        self.lbl_position.setText(tr("Waiting for the robot position…"))
-        form.addRow(self.lbl_position)
-        self._end_page()
-
-        # Camera: plays only while this tab is shown and the panel is visible.
-        self.camera_page = self._page(tr("Camera"), "camera")
-        self.camera = CameraWidget()
-        self._layout.addWidget(self.camera)
-        self.camera_light = QCheckBox(tr("Camera light"))
-        self.camera_light.setVisible(False)    # shown if the robot supports it
-        self.camera_light.clicked.connect(self._on_camera_light_clicked)  # user only
-        self._layout.addWidget(self.camera_light)
-        self._end_page()
-
-        # Maintenance
-        self._page(tr("Maintenance"), "maintenance")
-        self.box_consumables, self._consumables_form = self._section(
-            tr("Consumables"), "consumables")
-        self.box_current, form = self._section(tr("Current or last cleaning"), "current")
-        self.lbl_cur_time = self._value_label()
-        self.lbl_cur_area = self._value_label()
-        form.addRow(tr("Duration"), self.lbl_cur_time)
-        form.addRow(tr("Area"), self.lbl_cur_area)
-        self.box_total, form = self._section(tr("Totals"), "totals")
-        self.lbl_tot_count = self._value_label()
-        self.lbl_tot_time = self._value_label()
-        self.lbl_tot_area = self._value_label()
-        form.addRow(tr("Cleanings"), self.lbl_tot_count)
-        form.addRow(tr("Duration"), self.lbl_tot_time)
-        form.addRow(tr("Area"), self.lbl_tot_area)
-        self._end_page()
-
-        # Advanced: tools and technical information
-        self._page(tr("Advanced"), "advanced")
-        self.box_tools, form = self._section(tr("Tools"), "tools")
-        self._tools_grid = QGridLayout()
-        self._tools_grid.setSpacing(4)
-        form.addRow(self._tools_grid)
-        self.box_wifi, form = self._section(tr("Wi-Fi"), "wifi")
-        self.lbl_wifi = self._value_label()
-        form.addRow(self.lbl_wifi)
-        self.box_events, form = self._section(tr("Recent events"), "events")
-        self.list_events = QListWidget()
-        self.list_events.setMaximumHeight(200)
-        form.addRow(self.list_events)
-        self.box_boot, form = self._section(tr("Boot log"), "boot")
-        self.txt_boot = QPlainTextEdit()
-        self.txt_boot.setReadOnly(True)
-        self.txt_boot.setMaximumHeight(220)
-        self.txt_boot.setPlaceholderText(tr("Use “Watch robot boot”, or reboot the robot."))
-        form.addRow(self.txt_boot)
-        self.box_features, form = self._section(tr("Features"), "features")
-        self.lbl_features = self._value_label()
-        form.addRow(self.lbl_features)
-        self._end_page()
-
-        last = QgsSettings().value(KEY_TAB, "robot", type=str)
-        if last in self._tab_keys:
-            self.tabs.setCurrentIndex(self._tab_keys.index(last))
-        self.tabs.currentChanged.connect(self._on_tab_changed)
-        self.setWidget(root)
-
-        for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
-                    self.box_attachments, self.box_wifi, self.box_dock):
-            box.setVisible(False)   # shown once the robot reports them
 
     def _set_badge(self, state):
         """Coloured pill with the robot state, readable at a glance."""
@@ -518,14 +376,6 @@ class ValetudoPanel(QgsDockWidget):
         if 0 <= index < len(self._tab_keys):
             QgsSettings().setValue(KEY_TAB, self._tab_keys[index])
         self._update_camera()
-
-    @staticmethod
-    def _group(parent_layout, title):
-        box = QGroupBox(title)
-        grid = QGridLayout(box)
-        grid.setSpacing(4)
-        parent_layout.addWidget(box)
-        return box, grid
 
     @staticmethod
     def _button(action, hide_when_disabled=False):
@@ -552,18 +402,18 @@ class ValetudoPanel(QgsDockWidget):
             return buttons
 
         # Clean: rooms list (row 0), Everything + Ticked rooms, Zone + Go to
-        put(self._clean_grid, ["start"], row=1)
-        self._clean_grid.addWidget(self.btn_rooms, 1, 1)
-        put(self._clean_grid, ["zone", "goto"], row=2)
-        put(self._robot_grid, ["pause", "home", "locate"], columns=3)
-        dock = put(self._dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
+        put(self.clean_grid, ["start"], row=1)
+        self.clean_grid.addWidget(self.btn_rooms, 1, 1)
+        put(self.clean_grid, ["zone", "goto"], row=2)
+        put(self.robot_grid, ["pause", "home", "locate"], columns=3)
+        dock = put(self.dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
         self._dock_actions = [act[k] for k in ("empty_dock", "mop_wash", "mop_dry") if k in act]
         for action in self._dock_actions:
             action.changed.connect(self._update_dock_group)
         self._update_dock_group()
         if "live" in act:
-            self._map_row.addWidget(self._button(act["live"]))
-        put(self._tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
+            self.map_row.addWidget(self._button(act["live"]))
+        put(self.tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
                                "reboot", "wifi_survey", "wifi_map"])
         self._update_rooms_button()
 
@@ -932,7 +782,7 @@ class ValetudoPanel(QgsDockWidget):
         any_preset = False
         for capability, combo in self.preset_combos.items():
             supported = capability in caps
-            _set_row_visible(self._settings_form, combo, supported)
+            _set_row_visible(self.settings_form, combo, supported)
             any_preset |= supported
             if supported:
                 self.client.fetch_presets(capability, quiet=True)
@@ -1011,7 +861,7 @@ class ValetudoPanel(QgsDockWidget):
             elif cls == "DockComponentStateAttribute":
                 components[attr.get("type")] = attr.get("value")
 
-        _set_row_visible(self._status_form, self.lbl_dock, dock_value is not None)
+        _set_row_visible(self.status_form, self.lbl_dock, dock_value is not None)
         self.lbl_dock.setText(_label(states, dock_value))
         self.lbl_error.setVisible(bool(error_text))
         self.lbl_error.setText(f"⚠ {error_text}" if error_text else "")
@@ -1024,7 +874,7 @@ class ValetudoPanel(QgsDockWidget):
 
     def _update_dock_components(self, components):
         """One row per dock component; problems (missing/empty/full) in red with advice."""
-        form = self._dock_form
+        form = self.dock_form
         while form.rowCount():
             form.removeRow(0)
         self.box_dock.setVisible(bool(components))
@@ -1048,7 +898,7 @@ class ValetudoPanel(QgsDockWidget):
             form.addRow(name, label)
 
     def _on_consumables(self, consumables):
-        form = self._consumables_form
+        form = self.consumables_form
         while form.rowCount():
             form.removeRow(0)
         for item in consumables:

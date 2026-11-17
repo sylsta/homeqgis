@@ -27,8 +27,9 @@ without restarting QGIS.
 
 ## Usage
 
-1. *Plugins > Valetudo > Settings…*: enter the robot address (e.g. `http://192.168.1.23`)
-   and click **Test connection**.
+1. *Settings > Options > Valetudo* (or *Plugins > Valetudo > Settings…*, which opens
+   that page): enter the robot address (e.g. `http://192.168.1.23`), click
+   **Test connection**, then **OK**. As for every Options page, *Cancel* saves nothing.
 2. Open the **Valetudo panel** (the only toolbar button, or *Plugins > Valetudo*).
    The menu and the toolbar stay minimal: everything happens in the panel.
 
@@ -63,7 +64,7 @@ Robot · Camera · Maintenance · Advanced   (tabs)
   is the same room, ticked everywhere and cleaned once. *Clean room(s)* cleans the
   ticked rooms.
 - **Room groups** are defined in `valetudo_room_groups.ini`, in the QGIS profile
-  folder (right-click in the tree, or *Settings…* → *Edit room groups…*, opens it):
+  folder (right-click in the tree, or *Edit room groups…* in the settings, opens it):
 
   ```ini
   # one [Group] per section, one room per line (as named on the robot,
@@ -172,14 +173,36 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |
 | `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
-| `settings_dialog.py`         | Settings (URL, authentication, refresh interval)        |
+| `settings.py`                | Setting keys, defaults and `load_settings()`            |
+| `options_page.py`            | The Valetudo page of *Settings > Options*               |
+| `ui_loader.py`               | Loads the Qt Designer forms of `ui/`                    |
+| `ui/settings_page.ui`        | Layout of the settings page (Qt Designer)               |
+| `ui/status_panel.ui`         | Layout of the status panel (Qt Designer)                |
 | `i18n.py`                    | `tr()` helper and translator loading                    |
 | `i18n/valetudo_qgis_fr.ts`   | French translation (Qt Linguist format)                 |
+
+## Editing the forms
+
+The settings page and the status panel are laid out in Qt Designer files
+(`valetudo_qgis/ui/*.ui`); open them with Qt Designer, or with *QGIS Designer*
+(shipped with QGIS, it knows the QGIS widgets). The Python code only fills them
+at run time (rooms, consumables, dock components, the command buttons) and wires
+them.
+
+- Keep the object names: each module lists the ones it uses in `UI_WIDGETS`,
+  and loading fails with a clear message if one is missing.
+- Leave the form's *class* (top of the object inspector, `<class>` in the file)
+  as `ValetudoQgis`: it is the translation context, shared with `tr()`.
+- Visible texts are translated like the code's strings; mark texts that must not
+  be translated (units, examples, `—`) as not translatable.
+- `python3 scripts/check_ui.py` loads every form and checks the names the code
+  uses (needs PyQt5, not QGIS; also run in CI).
 
 ## Translations
 
 - Every user-facing string is written in English and wrapped in `tr("...")`
-  (from `valetudo_qgis/i18n.py`), with a string literal as argument.
+  (from `valetudo_qgis/i18n.py`), with a string literal as argument, or typed in a
+  Qt Designer form.
   Use named placeholders and `.format()`: `tr("Command “{command}” sent.").format(command=...)`.
 - Add each new string to `valetudo_qgis/i18n/valetudo_qgis_fr.ts` (by hand or with
   Qt Linguist).

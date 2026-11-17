@@ -7,7 +7,7 @@ sample. ``build_wifi_map()`` interpolates the points (IDW) into a raster,
 optionally clipped to the rooms, styled with fixed dBm thresholds so that two
 surveys can be compared.
 
-All tuning values come from the settings (see ``settings_dialog.py``).
+All tuning values come from the settings (see ``settings.py``, edited in Settings › Options).
 """
 
 import time

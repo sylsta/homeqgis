@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ValetudoQgis</class>
+ <widget class="QDockWidget" name="ValetudoStatusPanel">
+  <property name="windowTitle">
+   <string>Valetudo status</string>
+  </property>
+  <widget class="QWidget" name="dockWidgetContents">
+   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,0,0,0,0,1">
+    <item>
+     <layout class="QHBoxLayout" name="header_layout" stretch="1,0">
+      <item>
+       <widget class="QLabel" name="lbl_connection"/>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btn_refresh">
+        <property name="toolTip">
+         <string>Refresh now</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="lbl_robot">
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <italic>true</italic>
+       </font>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="summary_layout" stretch="0,1">
+      <item>
+       <widget class="QLabel" name="lbl_badge">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="bar_battery">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>18</height>
+         </size>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="toolTip">
+         <string>Battery</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="lbl_error">
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: #c62828; font-weight: bold;</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="grp_clean">
+      <property name="title">
+       <string>Clean</string>
+      </property>
+      <layout class="QGridLayout" name="clean_grid">
+       <property name="horizontalSpacing">
+        <number>4</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
+       </property>
+       <item row="0" column="0" colspan="2">
+        <widget class="QTreeWidget" name="rooms">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>240</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Tick rooms or whole groups to clean them. Right-click a room to rename, join or split it, or to edit the groups.</string>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
+         <property name="headerHidden">
+          <bool>true</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="btn_rooms"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="grp_robot">
+      <property name="title">
+       <string>Robot</string>
+      </property>
+      <layout class="QGridLayout" name="robot_grid">
+       <property name="horizontalSpacing">
+        <number>4</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
+       </property>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="grp_dock">
+      <property name="title">
+       <string>Dock station</string>
+      </property>
+      <layout class="QGridLayout" name="dock_grid">
+       <property name="horizontalSpacing">
+        <number>4</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
+       </property>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="map_row"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="lbl_feedback">
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabs">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="tab_robot">
+       <attribute name="title">
+        <string>Robot</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_robot_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_robot">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scroll_robot_contents">
+           <layout class="QVBoxLayout" name="robot_layout">
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_status">
+              <property name="title">
+               <string>Status</string>
+              </property>
+              <layout class="QFormLayout" name="status_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lbl_state_caption">
+                 <property name="text">
+                  <string>State</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lbl_state">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lbl_dock_caption">
+                 <property name="text">
+                  <string>Dock</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="lbl_dock">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_dock">
+              <property name="title">
+               <string>Dock station</string>
+              </property>
+              <layout class="QFormLayout" name="dock_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_settings">
+              <property name="title">
+               <string>Settings</string>
+              </property>
+              <layout class="QFormLayout" name="settings_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lbl_fan_speed">
+                 <property name="text">
+                  <string>Fan speed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="combo_fan_speed"/>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lbl_water_usage">
+                 <property name="text">
+                  <string>Water usage</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="combo_water_usage"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_attachments">
+              <property name="title">
+               <string>Attachments</string>
+              </property>
+              <layout class="QFormLayout" name="attachments_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="lbl_attachments">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_position">
+              <property name="title">
+               <string>Position</string>
+              </property>
+              <layout class="QFormLayout" name="position_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="lbl_position">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="robot_spacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_camera">
+       <attribute name="title">
+        <string>Camera</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_camera_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_camera">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scroll_camera_contents">
+           <layout class="QVBoxLayout" name="camera_layout">
+            <item>
+             <widget class="QCheckBox" name="camera_light">
+              <property name="text">
+               <string>Camera light</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="camera_spacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_maintenance">
+       <attribute name="title">
+        <string>Maintenance</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_maintenance_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_maintenance">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scroll_maintenance_contents">
+           <layout class="QVBoxLayout" name="maintenance_layout">
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_consumables">
+              <property name="title">
+               <string>Consumables</string>
+              </property>
+              <layout class="QFormLayout" name="consumables_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_current">
+              <property name="title">
+               <string>Current or last cleaning</string>
+              </property>
+              <layout class="QFormLayout" name="current_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lbl_cur_time_caption">
+                 <property name="text">
+                  <string>Duration</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lbl_cur_time">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lbl_cur_area_caption">
+                 <property name="text">
+                  <string>Area</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="lbl_cur_area">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_total">
+              <property name="title">
+               <string>Totals</string>
+              </property>
+              <layout class="QFormLayout" name="total_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lbl_tot_count_caption">
+                 <property name="text">
+                  <string>Cleanings</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lbl_tot_count">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lbl_tot_time_caption">
+                 <property name="text">
+                  <string>Duration</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="lbl_tot_time">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="lbl_tot_area_caption">
+                 <property name="text">
+                  <string>Area</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLabel" name="lbl_tot_area">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="maintenance_spacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_advanced">
+       <attribute name="title">
+        <string>Advanced</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_advanced_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_advanced">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scroll_advanced_contents">
+           <layout class="QVBoxLayout" name="advanced_layout">
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_tools">
+              <property name="title">
+               <string>Tools</string>
+              </property>
+              <layout class="QGridLayout" name="tools_grid">
+               <property name="horizontalSpacing">
+                <number>4</number>
+               </property>
+               <property name="verticalSpacing">
+                <number>4</number>
+               </property>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_wifi">
+              <property name="title">
+               <string>Wi-Fi</string>
+              </property>
+              <layout class="QFormLayout" name="wifi_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="lbl_wifi">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_events">
+              <property name="title">
+               <string>Recent events</string>
+              </property>
+              <layout class="QFormLayout" name="events_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QListWidget" name="list_events">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_boot">
+              <property name="title">
+               <string>Boot log</string>
+              </property>
+              <layout class="QFormLayout" name="boot_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QPlainTextEdit" name="txt_boot">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>220</height>
+                  </size>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Use “Watch robot boot”, or reboot the robot.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_features">
+              <property name="title">
+               <string>Features</string>
+              </property>
+              <layout class="QFormLayout" name="features_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="lbl_features">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="advanced_spacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsCollapsibleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>qgis.gui</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

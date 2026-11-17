@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ValetudoQgis</class>
+ <widget class="QWidget" name="ValetudoOptionsPage">
+  <property name="windowTitle">
+   <string>Valetudo – settings</string>
+  </property>
+  <layout class="QVBoxLayout" name="root_layout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QTabWidget" name="tabs">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_connection">
+      <attribute name="title">
+       <string>Connection</string>
+      </attribute>
+      <layout class="QFormLayout" name="connection_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_url">
+         <property name="text">
+          <string>Robot address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="url">
+         <property name="placeholderText">
+          <string notr="true">http://192.168.1.23</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_auth">
+         <property name="text">
+          <string>Authentication (optional)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QgsAuthConfigSelect" name="auth"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_interval">
+         <property name="text">
+          <string>Live tracking refresh</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="interval">
+         <property name="suffix">
+          <string notr="true"> s</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>60</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="test_layout" stretch="0,1">
+         <item>
+          <widget class="QPushButton" name="btn_test">
+           <property name="text">
+            <string>Test connection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_test">
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="lbl_room_groups">
+         <property name="text">
+          <string>Room groups</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="btn_room_groups">
+         <property name="text">
+          <string>Edit room groups…</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_camera">
+      <attribute name="title">
+       <string>Camera</string>
+      </attribute>
+      <layout class="QFormLayout" name="camera_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_camera_url">
+         <property name="text">
+          <string>Camera stream URL</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="camera_url"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_ffmpeg">
+         <property name="text">
+          <string>ffmpeg path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="ffmpeg">
+         <property name="placeholderText">
+          <string>ffmpeg (found in PATH)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_camera_width">
+         <property name="text">
+          <string>Video width</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="camera_width">
+         <property name="suffix">
+          <string notr="true"> px</string>
+         </property>
+         <property name="minimum">
+          <number>160</number>
+         </property>
+         <property name="maximum">
+          <number>1920</number>
+         </property>
+         <property name="singleStep">
+          <number>160</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_notifications">
+      <attribute name="title">
+       <string>Notifications</string>
+      </attribute>
+      <layout class="QFormLayout" name="notifications_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0" colspan="2">
+        <widget class="QCheckBox" name="notify_dock">
+         <property name="text">
+          <string>Warn when a dock tank is empty, full or missing</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_wifi">
+      <attribute name="title">
+       <string>Wi-Fi survey</string>
+      </attribute>
+      <layout class="QFormLayout" name="wifi_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_wifi_interval_s">
+         <property name="text">
+          <string>Time between readings</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QDoubleSpinBox" name="wifi_interval_s">
+         <property name="suffix">
+          <string notr="true"> s</string>
+         </property>
+         <property name="decimals">
+          <number>1</number>
+         </property>
+         <property name="minimum">
+          <double>0.5</double>
+         </property>
+         <property name="maximum">
+          <double>60</double>
+         </property>
+         <property name="singleStep">
+          <double>0.5</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_wifi_min_step_cm">
+         <property name="text">
+          <string>Minimum distance between points</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="wifi_min_step_cm">
+         <property name="suffix">
+          <string notr="true"> cm</string>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>500</number>
+         </property>
+         <property name="singleStep">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_wifi_max_pos_age_s">
+         <property name="text">
+          <string>Maximum age of the robot position</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="wifi_max_pos_age_s">
+         <property name="suffix">
+          <string notr="true"> s</string>
+         </property>
+         <property name="decimals">
+          <number>1</number>
+         </property>
+         <property name="minimum">
+          <double>0.5</double>
+         </property>
+         <property name="maximum">
+          <double>60</double>
+         </property>
+         <property name="singleStep">
+          <double>0.5</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbl_wifi_pixel_cm">
+         <property name="text">
+          <string>Map cell size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QSpinBox" name="wifi_pixel_cm">
+         <property name="suffix">
+          <string notr="true"> cm</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="lbl_wifi_idw_power">
+         <property name="text">
+          <string>IDW distance coefficient</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="wifi_idw_power">
+         <property name="decimals">
+          <number>1</number>
+         </property>
+         <property name="minimum">
+          <double>0.5</double>
+         </property>
+         <property name="maximum">
+          <double>10</double>
+         </property>
+         <property name="singleStep">
+          <double>0.5</double>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="lbl_wifi_bad_dbm">
+         <property name="text">
+          <string>Bad signal (red)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QSpinBox" name="wifi_bad_dbm">
+         <property name="suffix">
+          <string notr="true"> dBm</string>
+         </property>
+         <property name="minimum">
+          <number>-100</number>
+         </property>
+         <property name="maximum">
+          <number>0</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="lbl_wifi_fair_dbm">
+         <property name="text">
+          <string>Fair signal (yellow)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QSpinBox" name="wifi_fair_dbm">
+         <property name="suffix">
+          <string notr="true"> dBm</string>
+         </property>
+         <property name="minimum">
+          <number>-100</number>
+         </property>
+         <property name="maximum">
+          <number>0</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="lbl_wifi_good_dbm">
+         <property name="text">
+          <string>Good signal (green)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QSpinBox" name="wifi_good_dbm">
+         <property name="suffix">
+          <string notr="true"> dBm</string>
+         </property>
+         <property name="minimum">
+          <number>-100</number>
+         </property>
+         <property name="maximum">
+          <number>0</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="lbl_wifi_opacity">
+         <property name="text">
+          <string>Map opacity</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QSpinBox" name="wifi_opacity">
+         <property name="suffix">
+          <string notr="true"> %</string>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="singleStep">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0" colspan="2">
+        <widget class="QCheckBox" name="wifi_clip_rooms">
+         <property name="text">
+          <string>Clip the Wi-Fi map to the rooms</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_ssh">
+      <attribute name="title">
+       <string>SSH</string>
+      </attribute>
+      <layout class="QFormLayout" name="ssh_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_ssh_user">
+         <property name="text">
+          <string>SSH user (reboot)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="ssh_user">
+         <property name="placeholderText">
+          <string notr="true">root</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_ssh_port">
+         <property name="text">
+          <string>SSH port (reboot)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="ssh_port">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="lbl_ssh_hint">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Used only by “Reboot robot (SSH)…”, with your SSH key (no password is stored).</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottom_spacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint">
+      <size>
+       <width>20</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsAuthConfigSelect</class>
+   <extends>QWidget</extends>
+   <header>qgis.gui</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

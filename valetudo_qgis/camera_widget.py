@@ -20,7 +20,7 @@ from qgis.PyQt.QtWidgets import (
 
 from .camera import CameraStream
 from .i18n import tr
-from .settings_dialog import load_settings
+from .settings import load_settings
 
 DEFAULT_ASPECT = 9 / 16   # height / width until the first image tells the real one
 

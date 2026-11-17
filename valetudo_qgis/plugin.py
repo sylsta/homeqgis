@@ -23,7 +23,8 @@ from .icons import has_icon, icon
 from .map_layers import ValetudoLayers, layer_names
 from .map_tools import GoToMapTool, LineMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
-from .settings_dialog import SettingsDialog, load_settings
+from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
+from .settings import load_settings
 from .ssh_reboot import SshReboot
 from .status_panel import (
     DOCK_COMPONENT_PROBLEMS,
@@ -136,6 +137,7 @@ class ValetudoPlugin:
         self._reload_quietly = False    # next restrictions reload: no editing, no bar
         self.zone_tool = self.goto_tool = None
         self.panel = None
+        self.options_factory = None   # our page in Settings › Options
         self._dock_state = {}  # dock component -> last known value
         self._watch = None
         self._reboot = None
@@ -161,6 +163,9 @@ class ValetudoPlugin:
         win = self.iface.mainWindow()
 
         self._new_action("settings", tr("Settings…"), self.configure)
+        # The settings are a page of Settings › Options; "Settings…" opens it.
+        self.options_factory = ValetudoOptionsFactory(self._on_settings_applied)
+        self.iface.registerOptionsWidgetFactory(self.options_factory)
         # One switch for the map: load it, track the robot live and keep it in view.
         self._new_action("live", tr("Show on map"), self.toggle_live, checkable=True)
         self.act["live"].setIcon(icon("show_map"))
@@ -286,6 +291,9 @@ class ValetudoPlugin:
             self._watch.stop()
             self._watch = None
         self._drop_client()
+        if getattr(self, "options_factory", None) is not None:
+            self.iface.unregisterOptionsWidgetFactory(self.options_factory)
+            self.options_factory = None
         canvas = self.iface.mapCanvas()
         split_tool = getattr(self, "split_tool", None)
         for tool in (self.zone_tool, self.goto_tool, split_tool):
@@ -331,9 +339,9 @@ class ValetudoPlugin:
         if not cfg["url"]:
             if not prompt or not self.configure():
                 return None
+            if self.client:   # already connected by _on_settings_applied()
+                return self.client
             cfg = load_settings()
-            if not cfg["url"]:
-                return None
         self.client = ValetudoClient(cfg["url"], cfg["authcfg"])
         self.client.error.connect(self._on_error)
         self.client.reachable.connect(self._on_reachable)
@@ -434,15 +442,23 @@ class ValetudoPlugin:
     # ------------------------------------------------------------------
 
     def configure(self, *_):
-        dlg = SettingsDialog(self.iface.mainWindow())
-        if not dlg.exec():
+        """Open Settings › Options on the Valetudo page; True if a robot is then set."""
+        if self._unloaded or self.options_factory is None:
             return False
-        self._drop_client()  # settings may have changed
+        # Runs once the (modal) Options dialog is open and its pages exist.
+        QTimer.singleShot(0, self.options_factory.select_page)
+        self.iface.showOptionsDialog(self.iface.mainWindow(), currentPage=OPTIONS_PAGE)
+        return bool(load_settings()["url"])
+
+    def _on_settings_applied(self):
+        """Our Options page saved changed values: reconnect with them."""
+        if self._unloaded:
+            return
+        self._drop_client()
         if self.panel is not None and self.panel.isVisible():
             self._get_client(prompt=False)   # reconnect the visible panel at once
         if self.panel is not None:
             self.panel.camera.restart_if_running()
-        return True
 
     def _center_on_robot(self, map_json, force=False):
         """Recentre on the robot when it leaves the middle of the view (no constant jitter)."""

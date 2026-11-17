@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Check that every tr("...") string of the plugin is translated in each .ts file.
+"""Check that every string of the plugin is translated in each .ts file.
+
+Strings come from tr("...") calls in the Python code and from the Qt Designer
+forms (ui/*.ui: every <string> not marked notr="true"), all in one context.
 
 Usage: python3 scripts/check_translations.py
 Exit code 1 if a string is missing or unfinished in a translation file.
@@ -30,6 +33,14 @@ def source_strings():
                 else:
                     print(f"WARNING {path.relative_to(ROOT)}:{node.lineno}: "
                           "tr() argument is not a string literal")
+    for path in sorted(PLUGIN.glob("**/*.ui")):
+        root = ET.parse(path).getroot()
+        if root.findtext("class") != CONTEXT:
+            print(f"WARNING {path.relative_to(ROOT)}: <class> is not {CONTEXT!r}, "
+                  "its strings are translated in another context")
+        for el in root.iter("string"):
+            if el.get("notr") != "true" and (el.text or "").strip():
+                found.setdefault(el.text, str(path.relative_to(ROOT)))
     return found
 
 

@@ -1285,5 +1285,9 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <source>Tick rooms or whole groups to clean them. Right-click a room to rename, join or split it, or to edit the groups.</source>
         <translation>Cochez des pièces ou des groupes entiers pour les nettoyer. Clic droit sur une pièce pour la renommer, la fusionner ou la diviser, ou pour modifier les groupes.</translation>
     </message>
+    <message>
+        <source>Valetudo</source>
+        <translation>Valetudo</translation>
+    </message>
 </context>
 </TS>
