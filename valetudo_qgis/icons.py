@@ -10,6 +10,7 @@ from qgis.PyQt.QtWidgets import QApplication
 ICON_DIR = os.path.join(os.path.dirname(__file__), "icons")
 LOGO = "valetudo_logo_small"   # the plugin's own icon: Plugin Manager, menu, panel, Options
 RPI_LOGO = "COLOUR-Raspberry-Pi-Symbol-Registered-300x300"   # the Pi block of the panel
+HA_LOGO = "HA-lockup-stacked-color-on-dark"   # Home Assistant, in the panel's strip
 # Single-colour icons are drawn in this grey: it is replaced by the theme's text
 # colour when they are loaded, so they stay visible in a dark theme.
 THEMED_COLOR = "#4a4a4a"

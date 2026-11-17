@@ -33,11 +33,11 @@ without restarting QGIS.
 2. Open the **Valetudo panel** (the only toolbar button, or *Plugins > Valetudo*).
    The menu and the toolbar stay minimal: everything happens in the panel.
 
-The panel, from top to bottom:
+The panel (titled *Connection*), from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ [🗺] [⋮] │  status strip
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
 │   (click it: connection, robot, Raspberry Pi details)              │
 ├──┬───────────────────────────────────────────────────┤
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
@@ -55,7 +55,11 @@ The panel, from top to bottom:
 - **Status strip**, always visible: the state, battery, Wi-Fi signal (coloured with
   the thresholds of the Wi-Fi tab), the job in progress (time and area), a ⚠ when
   something needs you (dock tank empty or full, worn consumable, robot error,
-  wrong clock: hover it for the list, click it to open the right tab), *Show on map*
+  wrong clock: hover it for the list, click it to open the right tab), the
+  Raspberry Pi's status (when one is set: checked over SSH every 30 s), Home
+  Assistant's status (checked every minute: *Online*, *No token* when it answers
+  but no access token is set, *Offline*; hidden when there is neither a token nor
+  an answer; hover it for the server's name and version), *Show on map*
   and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact
   mode). **Click the strip** to show or hide the details: connection, robot model,
   Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with

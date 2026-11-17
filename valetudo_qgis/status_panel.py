@@ -39,7 +39,7 @@ from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from . import host_info
-from .icons import LOGO, RPI_LOGO, icon
+from .icons import HA_LOGO, LOGO, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
 from .log_tab import LogTab
 from .log_tail import LOG_PATH
@@ -47,7 +47,8 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import load_settings
+from .settings import has_ha_token, ha_token, load_settings
+from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .console_tab import ConsoleTab
 from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minutes
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
@@ -67,7 +68,8 @@ KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all r
 UI_WIDGETS = (
     # strip, details, action bar
     "strip", "strip_layout", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
-    "btn_warning", "btn_menu", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "btn_warning", "sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
+    "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu", "details", "header_layout", "lbl_connection", "btn_refresh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
     "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
@@ -119,6 +121,7 @@ STATE_COLORS = {
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
 PI_INTERVAL_MS = 30_000    # Pi block refresh (one short SSH command) while visible
+HA_INTERVAL_MS = 60_000    # Home Assistant check (one GET) while visible
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
 ACTIVE_STATES = {"cleaning", "returning", "moving", "manual_control"}
 LOW_PERCENT = 10
@@ -397,6 +400,16 @@ class ValetudoPanel(QgsDockWidget):
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
         self._pi_timer.timeout.connect(self._refresh_pi)
+        self.lbl_pi_strip_logo.setPixmap(icon(RPI_LOGO).pixmap(16, 16))
+        self.lbl_ha_strip_logo.setPixmap(icon(HA_LOGO).pixmap(16, 16))
+        for name in ("sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
+                     "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip"):
+            getattr(self, name).setVisible(False)
+        self._ha_client = None
+        self._ha_token = None        # read (decrypted) once, when first needed
+        self._ha_timer = QTimer(self)
+        self._ha_timer.setInterval(HA_INTERVAL_MS)
+        self._ha_timer.timeout.connect(self._refresh_ha)
         self.btn_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.refresh)
         self._set_badge(None)
@@ -1266,6 +1279,8 @@ class ValetudoPanel(QgsDockWidget):
         its details are read while the panel is visible."""
         has_pi = self._pi_target() is not None
         self.pi_header.setVisible(has_pi)
+        for widget in (self.sep_pi, self.lbl_pi_strip_logo, self.lbl_pi_strip):
+            widget.setVisible(has_pi)
         self.box_pi_card.setVisible(has_pi)
         self.btn_term_pi.setEnabled(has_pi)
         if not has_pi and self.btn_term_pi.isChecked():
@@ -1290,6 +1305,7 @@ class ValetudoPanel(QgsDockWidget):
         if self._pi_ok is None:
             self.lbl_pi_connection.setText(
                 f"<span style='color:#9e9e9e'>●</span> {tr('Connecting…')}")
+            self._set_strip_status(self.lbl_pi_strip, "#9e9e9e", tr("Connecting…"))
 
     def _on_pi_info(self, _operation, ok, output, detail):
         if ok:
@@ -1308,9 +1324,11 @@ class ValetudoPanel(QgsDockWidget):
             text = tr("Connected · updated {seconds} s ago").format(seconds=seconds)
             self.lbl_pi_connection.setText(f"<span style='color:#2e7d32'>●</span> {text}")
             self.lbl_pi_connection.setToolTip("")
+            self._set_strip_status(self.lbl_pi_strip, "#2e7d32", tr("Online"), text)
         else:
             text = tr("Unreachable over SSH")
             self.lbl_pi_connection.setText(f"<span style='color:#c62828'>●</span> {text}")
+            self._set_strip_status(self.lbl_pi_strip, "#c62828", tr("Offline"), text)
         pi = self._pi or {}
         self.lbl_pi_name.setTextFormat(Qt.TextFormat.PlainText)
         self.lbl_pi_name.setText(" · ".join(p for p in (pi.get("hostname"), pi.get("uname")) if p))
@@ -1327,12 +1345,67 @@ class ValetudoPanel(QgsDockWidget):
                           "system")
 
     @staticmethod
+    def _set_strip_status(label, color, text, tooltip=""):
+        label.setText(f"<span style='color:{color}'>●</span> {html.escape(text)}")
+        label.setToolTip(tooltip)
+
+    # -- Home Assistant (strip) -----------------------------------------------------
+
+    def _update_ha(self):
+        """Check Home Assistant every HA_INTERVAL_MS while the panel is visible."""
+        if self.isVisible():
+            if not self._ha_timer.isActive():
+                self._ha_timer.start()
+                self._refresh_ha()
+        else:
+            self._ha_timer.stop()
+
+    def _refresh_ha(self, *_):
+        url = load_settings()["ha_url"]
+        has_token = has_ha_token()
+        if not has_token:
+            self._ha_token = ""
+        elif not self._ha_token:
+            self._ha_token = ha_token()   # may ask for the QGIS master password, once
+        if self._ha_client is not None:
+            self._ha_client.close()
+        self._ha_client = HomeAssistantClient(url, self._ha_token, self)
+
+        def ok(config):
+            config = config if isinstance(config, dict) else {}
+            name = config.get("location_name") or "Home Assistant"
+            version = config.get("version", "")
+            self._show_ha("#2e7d32", tr("Online"),
+                          f"{name} ({version}) · {url}" if version else f"{name} · {url}")
+
+        def failed(error):
+            if error == UNAUTHORISED:   # there, but no token to go further
+                self._show_ha("#ef6c00", tr("No token"), tr(
+                    "Home Assistant answers at {url}. Add an access token in "
+                    "Settings › Options › Valetudo to use it.").format(url=url))
+            elif has_token:
+                self._show_ha("#c62828", tr("Offline"), f"{url}: {error}")
+            else:   # no token and nothing answers: no Home Assistant, nothing to show
+                self._show_ha(None)
+
+        self._ha_client.get("/config", ok, failed, timeout_ms=5000)
+
+    def _show_ha(self, color, text="", tooltip=""):
+        for widget in (self.sep_ha, self.lbl_ha_strip_logo, self.lbl_ha_strip):
+            widget.setVisible(color is not None)
+        if color is not None:
+            self._set_strip_status(self.lbl_ha_strip, color, text, tooltip)
+
+    @staticmethod
     def _local_time(epoch):
         return QDateTime.fromSecsSinceEpoch(int(epoch)).toString("dd/MM/yyyy HH:mm")
 
     def settings_changed(self):
         """Called by the plugin after the Options page saved changes."""
         self._update_console()
+        self._ha_token = None   # the token may have changed
+        if self.isVisible():
+            self._refresh_ha()
 
     def _update_console(self):
         """Consoles and logs run only while their page of the Terminal tab is shown."""
@@ -1364,6 +1437,9 @@ class ValetudoPanel(QgsDockWidget):
         self.camera.shutdown()
         self._pi_timer.stop()
         self.pi_runner.stop()
+        self._ha_timer.stop()
+        if self._ha_client is not None:
+            self._ha_client.close()
         for log in self.logs:
             log.shutdown()
         for console in self.consoles:
@@ -1372,6 +1448,7 @@ class ValetudoPanel(QgsDockWidget):
     def _on_visibility(self, visible):
         self._update_camera()
         self._update_console()
+        self._update_ha()
         self._update_schedule()
         if not visible:
             self._timer.stop()

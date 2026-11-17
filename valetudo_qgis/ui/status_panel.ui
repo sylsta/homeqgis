@@ -3,7 +3,7 @@
  <class>ValetudoQgis</class>
  <widget class="QDockWidget" name="ValetudoStatusPanel">
   <property name="windowTitle">
-   <string>Valetudo status</string>
+   <string>Connection</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,1,0,0">
@@ -84,6 +84,46 @@
           <bool>true</bool>
          </property>
         </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="sep_pi">
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_pi_strip_logo">
+         <property name="toolTip">
+          <string>Raspberry Pi</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_pi_strip"/>
+       </item>
+       <item>
+        <widget class="QFrame" name="sep_ha">
+         <property name="frameShape">
+          <enum>QFrame::VLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_ha_strip_logo">
+         <property name="toolTip">
+          <string>Home Assistant</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_ha_strip"/>
        </item>
        <item>
         <spacer name="strip_spacer">

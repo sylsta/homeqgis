@@ -344,10 +344,6 @@
         <translation>{area} m²</translation>
     </message>
     <message>
-        <source>Valetudo status</source>
-        <translation>État Valetudo</translation>
-    </message>
-    <message>
         <source>Refresh now</source>
         <translation>Actualiser maintenant</translation>
     </message>
@@ -2026,6 +2022,22 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Optional: your Home Assistant server. The token is optional too, but without it the plugin can only check that Home Assistant is there. Create it in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</source>
         <translation>Facultatif : votre serveur Home Assistant. Le jeton est facultatif lui aussi, mais sans lui le plugin peut seulement vérifier que Home Assistant est là. Créez-le dans Home Assistant, sur votre page de profil (Sécurité › Jetons d’accès longue durée). Il est conservé chiffré dans la base d’authentification de QGIS, qui peut demander votre mot de passe principal.</translation>
+    </message>
+    <message>
+        <source>Online</source>
+        <translation>En ligne</translation>
+    </message>
+    <message>
+        <source>Offline</source>
+        <translation>Hors ligne</translation>
+    </message>
+    <message>
+        <source>No token</source>
+        <translation>Sans jeton</translation>
+    </message>
+    <message>
+        <source>Home Assistant answers at {url}. Add an access token in Settings › Options › Valetudo to use it.</source>
+        <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › Valetudo pour l’utiliser.</translation>
     </message>
 </context>
 </TS>

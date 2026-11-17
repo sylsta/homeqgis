@@ -75,6 +75,15 @@ def load_settings():
     }
 
 
+def has_ha_token():
+    """True if a Home Assistant token is stored (nothing is decrypted)."""
+    try:
+        from qgis.core import QgsApplication
+        return bool(QgsApplication.authManager().existsAuthSetting(HA_TOKEN_SETTING))
+    except Exception:
+        return False
+
+
 def ha_token():
     """The Home Assistant access token ("" if none, or if it cannot be decrypted)."""
     try:
