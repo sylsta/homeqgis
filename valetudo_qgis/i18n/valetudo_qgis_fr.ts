@@ -1793,5 +1793,13 @@ Continuer ?</translation>
         <source>Show the robot on the map when QGIS starts (if it answers)</source>
         <translation>Afficher le robot sur la carte au démarrage de QGIS (s’il répond)</translation>
     </message>
+    <message>
+        <source>Wi-Fi {signal} dBm</source>
+        <translation>Wi-Fi {signal} dBm</translation>
+    </message>
+    <message>
+        <source>Wi-Fi: {details}</source>
+        <translation>Wi-Fi : {details}</translation>
+    </message>
 </context>
 </TS>

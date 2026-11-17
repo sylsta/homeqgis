@@ -37,7 +37,7 @@ The panel, from top to bottom:
 
 ```
 (logo) ● Connected · 12:04:31      [Show on map] [⟳]
-Eureka J15 Pro Ultra · Valetudo 2025.12.0
+Eureka J15 Pro Ultra · Valetudo 2025.12.0 · Wi-Fi -55 dBm
 [Docked]  ████████████████████ 99 %
 ⚠ error, only when there is one
 ┌ Clean ─────────────────────────────────────┐
@@ -58,6 +58,9 @@ Result of the last command
 Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH console · Schedule
 ```
 
+- The header's second line ends with the robot's Wi-Fi signal, coloured with the
+  *Wi-Fi survey* thresholds (green, yellow, orange, red); hover it for the network
+  name, band and address.
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
   stay pressed until you have drawn the zone or clicked the point on the map.
 - Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking
@@ -94,7 +97,7 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
 - **Tabs**: Robot (state details with the parts fitted to the robot, dock station
   states, fan speed, water usage and mode — vacuum only, mop only or both —, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go
-  zones and walls, watch boot, reboot; Wi-Fi, events, boot log, features), Log
+  zones and walls, watch boot, reboot; events, boot log, features), Log
   (Valetudo's log file, live), Robot console (commands on the robot), RPI SSH console
   (commands on the Raspberry Pi, when one is set in the settings), Schedule
   (cleanings the robot starts by itself).
