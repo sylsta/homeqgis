@@ -352,20 +352,12 @@
         <translation>Actualiser maintenant</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>État</translation>
-    </message>
-    <message>
         <source>State</source>
         <translation>État</translation>
     </message>
     <message>
         <source>Battery</source>
         <translation>Batterie</translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation>Réglages</translation>
     </message>
     <message>
         <source>Current or last cleaning</source>
@@ -780,10 +772,6 @@ Un nettoyage en cours sera interrompu. Le robot sera injoignable pendant une ou 
         <translation>En attente de la position du robot…</translation>
     </message>
     <message>
-        <source>Maintenance</source>
-        <translation>Entretien</translation>
-    </message>
-    <message>
         <source>Locate robot (beep)</source>
         <translation>Localiser le robot (bip)</translation>
     </message>
@@ -1094,14 +1082,6 @@ Continuer ?</translation>
         <translation>Nettoyer</translation>
     </message>
     <message>
-        <source>Advanced</source>
-        <translation>Avancé</translation>
-    </message>
-    <message>
-        <source>Tools</source>
-        <translation>Outils</translation>
-    </message>
-    <message>
         <source>Rename room</source>
         <translation>Renommer la pièce</translation>
     </message>
@@ -1320,10 +1300,6 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
     <message>
         <source>ssh was not found: install an SSH client.</source>
         <translation>ssh est introuvable : installez un client SSH.</translation>
-    </message>
-    <message>
-        <source>Needs key-based SSH login to the robot (ssh-copy-id root@&lt;robot&gt;), as for the reboot.</source>
-        <translation>Nécessite une connexion SSH par clé au robot (ssh-copy-id root@&lt;robot&gt;), comme pour le redémarrage.</translation>
     </message>
     <message>
         <source>Connect</source>
@@ -1694,14 +1670,6 @@ Continuer ?</translation>
         <translation>Port SSH</translation>
     </message>
     <message>
-        <source>Robot console</source>
-        <translation>Console du robot</translation>
-    </message>
-    <message>
-        <source>RPI SSH console</source>
-        <translation>Console SSH RPI</translation>
-    </message>
-    <message>
         <source>Runs on the Raspberry Pi, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
         <translation>S’exécute sur le Raspberry Pi, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables ne le sont pas.</translation>
     </message>
@@ -1778,14 +1746,6 @@ Continuer ?</translation>
         <translation>Lecture de la carte Wi-Fi complète sur le Pi…</translation>
     </message>
     <message>
-        <source>Full map (all runs)</source>
-        <translation>Carte complète (tous les passages)</translation>
-    </message>
-    <message>
-        <source>Ticked: load the map of all runs combined. Unticked: the latest run only.</source>
-        <translation>Coché : charger la carte de tous les passages réunis. Décoché : le dernier passage seulement.</translation>
-    </message>
-    <message>
         <source>Show the robot on the map when QGIS starts with an empty project</source>
         <translation>Afficher le robot sur la carte quand QGIS démarre avec un projet vide</translation>
     </message>
@@ -1828,6 +1788,192 @@ Continuer ?</translation>
     <message>
         <source>The robot's clock is wrong: check Valetudo's NTP settings.</source>
         <translation>L’horloge du robot est fausse : vérifiez les réglages NTP de Valetudo.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi signal over the last 10 minutes</source>
+        <translation>Signal Wi-Fi des 10 dernières minutes</translation>
+    </message>
+    <message>
+        <source>Valetudo camera</source>
+        <translation>Caméra Valetudo</translation>
+    </message>
+    <message>
+        <source>Waiting for readings…</source>
+        <translation>En attente de mesures…</translation>
+    </message>
+    <message>
+        <source>Pick rooms on the map</source>
+        <translation>Choisir les pièces sur la carte</translation>
+    </message>
+    <message>
+        <source>Valetudo map</source>
+        <translation>Carte Valetudo</translation>
+    </message>
+    <message>
+        <source>Click rooms on the map to tick them in the Clean tab; right-click a room for its menu.</source>
+        <translation>Cliquez sur des pièces de la carte pour les cocher dans l’onglet Nettoyer ; clic droit sur une pièce pour son menu.</translation>
+    </message>
+    <message>
+        <source>Not installed.</source>
+        <translation>Non installé.</translation>
+    </message>
+    <message>
+        <source>Installed in {dir}: records whenever the robot moves, even with QGIS closed.</source>
+        <translation>Installé dans {dir} : enregistre chaque fois que le robot se déplace, même QGIS fermé.</translation>
+    </message>
+    <message>
+        <source>No scheduled cleaning.
+Double-click a slot, or drop a room group here.</source>
+        <translation>Aucun nettoyage programmé.
+Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translation>
+    </message>
+    <message>
+        <source>Compact mode</source>
+        <translation>Mode compact</translation>
+    </message>
+    <message>
+        <source>Tonight</source>
+        <translation>Ce soir</translation>
+    </message>
+    <message>
+        <source>Start at</source>
+        <translation>Démarrer à</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>Connecté</translation>
+    </message>
+    <message>
+        <source>The Raspberry Pi's clock is wrong.</source>
+        <translation>L’horloge du Raspberry Pi est fausse.</translation>
+    </message>
+    <message>
+        <source>Resume the paused job.</source>
+        <translation>Reprendre la tâche en pause.</translation>
+    </message>
+    <message>
+        <source>Ticked: {rooms}</source>
+        <translation>Cochées : {rooms}</translation>
+    </message>
+    <message>
+        <source>Once {date}</source>
+        <translation>Une fois {date}</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation>Reprendre</translation>
+    </message>
+    <message>
+        <source>Replace soon: {parts}</source>
+        <translation>À remplacer bientôt : {parts}</translation>
+    </message>
+    <message>
+        <source>Click for details</source>
+        <translation>Cliquez pour les détails</translation>
+    </message>
+    <message>
+        <source>More</source>
+        <translation>Plus</translation>
+    </message>
+    <message>
+        <source>Cleaning profile</source>
+        <translation>Profil de nettoyage</translation>
+    </message>
+    <message>
+        <source>How many times the rooms or the zone are cleaned.</source>
+        <translation>Combien de fois les pièces ou la zone sont nettoyées.</translation>
+    </message>
+    <message>
+        <source>Tonight…</source>
+        <translation>Ce soir…</translation>
+    </message>
+    <message>
+        <source>Clean the ticked rooms (or the whole home) once, tonight; the plugin removes it afterwards.</source>
+        <translation>Nettoyer une fois, ce soir, les pièces cochées (ou tout le logement) ; l’extension le supprime ensuite.</translation>
+    </message>
+    <message>
+        <source>Signal now</source>
+        <translation>Signal actuel</translation>
+    </message>
+    <message>
+        <source>Colours</source>
+        <translation>Couleurs</translation>
+    </message>
+    <message>
+        <source>Green from</source>
+        <translation>Vert à partir de</translation>
+    </message>
+    <message>
+        <source>Yellow from</source>
+        <translation>Jaune à partir de</translation>
+    </message>
+    <message>
+        <source>Red from</source>
+        <translation>Rouge à partir de</translation>
+    </message>
+    <message>
+        <source>Record with QGIS open</source>
+        <translation>Enregistrer avec QGIS ouvert</translation>
+    </message>
+    <message>
+        <source>Recorder on the robot</source>
+        <translation>Enregistreur sur le robot</translation>
+    </message>
+    <message>
+        <source>Maps from the Raspberry Pi</source>
+        <translation>Cartes du Raspberry Pi</translation>
+    </message>
+    <message>
+        <source>Latest run</source>
+        <translation>Dernier passage</translation>
+    </message>
+    <message>
+        <source>Full map</source>
+        <translation>Carte complète</translation>
+    </message>
+    <message>
+        <source>The last map loaded from the Pi.</source>
+        <translation>La dernière carte chargée depuis le Pi.</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>Plein écran</translation>
+    </message>
+    <message>
+        <source>Show the video in its own window (Esc to close)</source>
+        <translation>Afficher la vidéo dans sa propre fenêtre (Échap pour fermer)</translation>
+    </message>
+    <message>
+        <source>Care</source>
+        <translation>Entretien</translation>
+    </message>
+    <message>
+        <source>Terminal</source>
+        <translation>Terminal</translation>
+    </message>
+    <message>
+        <source>Commands and log of the robot</source>
+        <translation>Commandes et journal du robot</translation>
+    </message>
+    <message>
+        <source>Commands and log of the Raspberry Pi</source>
+        <translation>Commandes et journal du Raspberry Pi</translation>
+    </message>
+    <message>
+        <source>Console</source>
+        <translation>Console</translation>
+    </message>
+    <message>
+        <source>Run commands</source>
+        <translation>Exécuter des commandes</translation>
+    </message>
+    <message>
+        <source>Follow the log file</source>
+        <translation>Suivre le fichier journal</translation>
+    </message>
+    <message>
+        <source>System</source>
+        <translation>Système</translation>
     </message>
 </context>
 </TS>

@@ -28,7 +28,7 @@ def remote_command(path=LOG_PATH, lines=INITIAL_LINES):
             f" || tail -n {lines} -f {path}")
 
 
-def ssh_arguments(host, user="root", port=22):
+def ssh_arguments(host, user="root", port=22, path=LOG_PATH):
     return [
         "-n",                                        # no stdin
         "-o", "BatchMode=yes",                       # key only, never prompt
@@ -37,7 +37,7 @@ def ssh_arguments(host, user="root", port=22):
         "-o", "ServerAliveCountMax=3",
         "-p", str(int(port)),
         f"{user}@{host}",
-        remote_command(),
+        remote_command(path),
     ]
 
 
@@ -48,7 +48,7 @@ class LogTail(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._process = None
-        self._target = None      # (host, user, port) while it should run
+        self._target = None      # (host, user, port, path) while it should run
         self._buffer = b""
         self._stderr = b""
         self._following = False
@@ -60,8 +60,9 @@ class LogTail(QObject):
     def is_running(self):
         return self._target is not None
 
-    def start(self, host, user="root", port=22):
-        target = (host, user or "root", int(port))
+    def start(self, host, user="root", port=22, path=LOG_PATH):
+        """Follow path (absolute, or relative to the user's home) on host."""
+        target = (host, user or "root", int(port), path)
         if target == self._target:
             return
         self.stop(quiet=True)
@@ -91,7 +92,7 @@ class LogTail(QObject):
             self._target = None
             self.stateChanged.emit("ssh_missing", "")
             return
-        host, user, port = self._target
+        host, user, port, path = self._target
         self._buffer = self._stderr = b""
         process = QProcess(self)
         process.readyReadStandardOutput.connect(self._on_stdout)
@@ -100,7 +101,7 @@ class LogTail(QObject):
         process.finished.connect(self._on_finished)
         self._process = process
         self.stateChanged.emit("connecting", host)
-        process.start(program, ssh_arguments(host, user, port))
+        process.start(program, ssh_arguments(host, user, port, path))
 
     def _on_stdout(self):
         if self._process is None:

@@ -6,82 +6,110 @@
    <string>Valetudo status</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,0,0,0,0,0,1">
+   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,1">
     <item>
-     <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
-      <item>
-       <widget class="QLabel" name="lbl_logo">
-        <property name="toolTip">
-         <string notr="true">Valetudo</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lbl_connection"/>
-      </item>
-      <item>
-       <widget class="QToolButton" name="btn_refresh">
-        <property name="toolTip">
-         <string>Refresh now</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="QLabel" name="lbl_robot">
-      <property name="wordWrap">
-       <bool>true</bool>
+     <widget class="QFrame" name="strip">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
       </property>
-      <property name="font">
-       <font>
-        <italic>true</italic>
-       </font>
+      <property name="toolTip">
+       <string>Click for details</string>
       </property>
+      <layout class="QHBoxLayout" name="strip_layout">
+       <property name="leftMargin">
+        <number>4</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="lbl_logo"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_badge">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="bar_battery">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Battery</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_wifi_strip"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_job"/>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btn_warning">
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="strip_spacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint">
+          <size>
+           <width>0</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btn_menu">
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+         <property name="popupMode">
+          <enum>QToolButton::InstantPopup</enum>
+         </property>
+         <property name="toolTip">
+          <string>More</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="lbl_robot_info">
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="summary_layout" stretch="0,1">
-      <item>
-       <widget class="QLabel" name="lbl_badge">
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QProgressBar" name="bar_battery">
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>18</height>
-         </size>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="toolTip">
-         <string>Battery</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="QWidget" name="pi_header">
-      <layout class="QVBoxLayout" name="pi_header_layout">
+     <widget class="QWidget" name="details">
+      <layout class="QVBoxLayout" name="details_layout">
        <property name="leftMargin">
         <number>0</number>
        </property>
        <property name="topMargin">
-        <number>6</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
         <number>0</number>
@@ -90,19 +118,12 @@
         <number>0</number>
        </property>
        <item>
-        <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0">
+        <layout class="QHBoxLayout" name="header_layout" stretch="1,0">
          <item>
-          <widget class="QLabel" name="lbl_pi_logo">
-           <property name="toolTip">
-            <string>Raspberry Pi</string>
-           </property>
-          </widget>
+          <widget class="QLabel" name="lbl_connection"/>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_pi_connection"/>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btn_pi_refresh">
+          <widget class="QToolButton" name="btn_refresh">
            <property name="toolTip">
             <string>Refresh now</string>
            </property>
@@ -111,7 +132,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="lbl_pi_name">
+        <widget class="QLabel" name="lbl_robot">
          <property name="wordWrap">
           <bool>true</bool>
          </property>
@@ -123,14 +144,91 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="lbl_pi_info">
+        <widget class="QLabel" name="lbl_robot_info">
          <property name="wordWrap">
           <bool>true</bool>
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QWidget" name="pi_header">
+         <layout class="QVBoxLayout" name="pi_header_layout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0">
+            <item>
+             <widget class="QLabel" name="lbl_pi_logo">
+              <property name="toolTip">
+               <string>Raspberry Pi</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_pi_connection"/>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btn_pi_refresh">
+              <property name="toolTip">
+               <string>Refresh now</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbl_pi_name">
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="font">
+             <font>
+              <italic>true</italic>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbl_pi_info">
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="action_layout" stretch="1">
+      <item>
+       <widget class="QPushButton" name="btn_primary">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>34</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
      <widget class="QLabel" name="lbl_error">
@@ -140,88 +238,6 @@
       <property name="styleSheet">
        <string notr="true">color: #c62828; font-weight: bold;</string>
       </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QGroupBox" name="grp_clean">
-      <property name="title">
-       <string>Clean</string>
-      </property>
-      <layout class="QGridLayout" name="clean_grid">
-       <property name="horizontalSpacing">
-        <number>4</number>
-       </property>
-       <property name="verticalSpacing">
-        <number>4</number>
-       </property>
-       <item row="0" column="0" colspan="2">
-        <widget class="QTreeWidget" name="rooms">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>240</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Tick rooms or whole groups to clean them. Right-click a room to rename, join or split it, or to edit the groups.</string>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
-         <property name="headerHidden">
-          <bool>true</bool>
-         </property>
-         <column>
-          <property name="text">
-           <string notr="true">1</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="btn_rooms"/>
-       </item>
-       <item row="3" column="1">
-        <widget class="QCheckBox" name="chk_goto_quiet">
-         <property name="text">
-          <string>Without cleaning</string>
-         </property>
-         <property name="toolTip">
-          <string>This robot's “Go to” is a small cleaning job. Ticked, the plugin lifts the mops (vacuum-only mode), turns the water off and the fan to its lowest for the trip, then restores your settings.</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QGroupBox" name="grp_robot">
-      <property name="title">
-       <string>Robot</string>
-      </property>
-      <layout class="QGridLayout" name="robot_grid">
-       <property name="horizontalSpacing">
-        <number>4</number>
-       </property>
-       <property name="verticalSpacing">
-        <number>4</number>
-       </property>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QGroupBox" name="grp_dock">
-      <property name="title">
-       <string>Dock station</string>
-      </property>
-      <layout class="QGridLayout" name="dock_grid">
-       <property name="horizontalSpacing">
-        <number>4</number>
-       </property>
-       <property name="verticalSpacing">
-        <number>4</number>
-       </property>
-      </layout>
      </widget>
     </item>
     <item>
@@ -239,11 +255,20 @@
       <property name="documentMode">
        <bool>true</bool>
       </property>
-      <widget class="QWidget" name="tab_robot">
+      <property name="tabPosition">
+       <enum>QTabWidget::West</enum>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>22</width>
+        <height>22</height>
+       </size>
+      </property>
+      <widget class="QWidget" name="tab_clean">
        <attribute name="title">
-        <string>Robot</string>
+        <string>Clean</string>
        </attribute>
-       <layout class="QVBoxLayout" name="tab_robot_layout">
+       <layout class="QVBoxLayout" name="tab_clean_layout">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -257,114 +282,61 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QScrollArea" name="scroll_robot">
+         <widget class="QScrollArea" name="scroll_clean">
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="QWidget" name="scroll_robot_contents">
-           <layout class="QVBoxLayout" name="robot_layout">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <widget class="QWidget" name="scroll_clean_contents">
+           <layout class="QVBoxLayout" name="clean_layout">
             <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_status">
-              <property name="title">
-               <string>Status</string>
+             <widget class="QTreeWidget" name="rooms">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>260</height>
+               </size>
               </property>
-              <layout class="QFormLayout" name="status_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0">
-                <widget class="QLabel" name="lbl_state_caption">
-                 <property name="text">
-                  <string>State</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLabel" name="lbl_state">
-                 <property name="text">
-                  <string notr="true">—</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="lbl_dock_caption">
-                 <property name="text">
-                  <string>Dock</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLabel" name="lbl_dock">
-                 <property name="text">
-                  <string notr="true">—</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="lbl_attachments_caption">
-                 <property name="text">
-                  <string>Attachments</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLabel" name="lbl_attachments">
-                 <property name="text">
-                  <string notr="true">—</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_dock">
-              <property name="title">
-               <string>Dock station</string>
+              <property name="toolTip">
+               <string>Tick rooms or whole groups to clean them. Right-click a room to rename, join or split it, or to edit the groups.</string>
               </property>
-              <layout class="QFormLayout" name="dock_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
+              </property>
+              <property name="headerHidden">
+               <bool>true</bool>
+              </property>
+              <column>
+               <property name="text">
+                <string notr="true">1</string>
                </property>
-              </layout>
+              </column>
              </widget>
             </item>
             <item>
              <widget class="QgsCollapsibleGroupBox" name="box_settings">
               <property name="title">
-               <string>Settings</string>
+               <string>Cleaning profile</string>
               </property>
               <layout class="QFormLayout" name="settings_form">
                <property name="fieldGrowthPolicy">
                 <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                </property>
                <item row="0" column="0">
-                <widget class="QLabel" name="lbl_fan_speed">
+                <widget class="QLabel" name="lbl_operation_mode">
                  <property name="text">
-                  <string>Fan speed</string>
+                  <string>Mode</string>
                  </property>
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QComboBox" name="combo_fan_speed"/>
+                <widget class="QComboBox" name="combo_operation_mode">
+                 <property name="toolTip">
+                  <string>Vacuum only, mop only, or both.</string>
+                 </property>
+                </widget>
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="lbl_water_usage">
@@ -377,16 +349,57 @@
                 <widget class="QComboBox" name="combo_water_usage"/>
                </item>
                <item row="2" column="0">
-                <widget class="QLabel" name="lbl_operation_mode">
+                <widget class="QLabel" name="lbl_fan_speed">
                  <property name="text">
-                  <string>Mode</string>
+                  <string>Fan speed</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QComboBox" name="combo_operation_mode">
+                <widget class="QComboBox" name="combo_fan_speed"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="clean_buttons">
+              <layout class="QGridLayout" name="clean_grid">
+               <property name="horizontalSpacing">
+                <number>4</number>
+               </property>
+               <property name="verticalSpacing">
+                <number>4</number>
+               </property>
+               <item row="0" column="1">
+                <widget class="QPushButton" name="btn_rooms"/>
+               </item>
+               <item row="2" column="1">
+                <widget class="QCheckBox" name="chk_goto_quiet">
+                 <property name="text">
+                  <string>Without cleaning</string>
+                 </property>
                  <property name="toolTip">
-                  <string>Vacuum only, mop only, or both.</string>
+                  <string>This robot's “Go to” is a small cleaning job. Ticked, the plugin lifts the mops (vacuum-only mode), turns the water off and the fan to its lowest for the trip, then restores your settings.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="lbl_passes">
+                 <property name="text">
+                  <string>Passes</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QSpinBox" name="spin_passes">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>3</number>
+                 </property>
+                 <property name="toolTip">
+                  <string>How many times the rooms or the zone are cleaned.</string>
                  </property>
                 </widget>
                </item>
@@ -394,24 +407,293 @@
              </widget>
             </item>
             <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_position">
-              <property name="title">
-               <string>Position</string>
+             <spacer name="clean_spacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
               </property>
-              <layout class="QFormLayout" name="position_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0" colspan="2">
-                <widget class="QLabel" name="lbl_position">
-                 <property name="text">
-                  <string notr="true">—</string>
-                 </property>
+              <property name="sizeHint">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_schedule">
+       <attribute name="title">
+        <string>Schedule</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_schedule_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QWidget" name="week_holder">
+          <layout class="QVBoxLayout" name="week_layout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTreeWidget" name="timers">
+          <property name="rootIsDecorated">
+           <bool>false</bool>
+          </property>
+          <property name="uniformRowHeights">
+           <bool>true</bool>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>170</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Tick to turn a scheduled cleaning on or off; double-click to edit it.</string>
+          </property>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Days</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Time</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Cleaning</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="schedule_buttons">
+          <item>
+           <widget class="QToolButton" name="btn_timer_new">
+            <property name="text">
+             <string>New…</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_timer_edit">
+            <property name="text">
+             <string>Edit…</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_timer_delete">
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_timer_run">
+            <property name="text">
+             <string>Run now</string>
+            </property>
+            <property name="toolTip">
+             <string>Start the selected cleaning now, whatever its days and time.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="schedule_buttons_spacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_tonight">
+            <property name="text">
+             <string>Tonight…</string>
+            </property>
+            <property name="toolTip">
+             <string>Clean the ticked rooms (or the whole home) once, tonight; the plugin removes it afterwards.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbl_timers_note">
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_wifi">
+       <attribute name="title">
+        <string>Wi-Fi</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_wifi_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_wifi">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <widget class="QWidget" name="scroll_wifi_contents">
+           <layout class="QVBoxLayout" name="wifi_layout">
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_wifi_live">
+              <property name="title">
+               <string>Signal now</string>
+              </property>
+              <layout class="QVBoxLayout" name="wifi_live_layout">
+               <item>
+                <widget class="QLabel" name="lbl_wifi_now">
                  <property name="wordWrap">
                   <bool>true</bool>
                  </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
+                </widget>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="sparkline_layout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_wifi_legend">
+              <property name="title">
+               <string>Colours</string>
+              </property>
+              <layout class="QFormLayout" name="wifi_legend_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lbl_legend_good">
+                 <property name="text">
+                  <string>Green from</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QSpinBox" name="spin_wifi_good">
+                 <property name="suffix">
+                  <string notr="true"> dBm</string>
+                 </property>
+                 <property name="minimum">
+                  <number>-100</number>
+                 </property>
+                 <property name="maximum">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lbl_legend_fair">
+                 <property name="text">
+                  <string>Yellow from</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QSpinBox" name="spin_wifi_fair">
+                 <property name="suffix">
+                  <string notr="true"> dBm</string>
+                 </property>
+                 <property name="minimum">
+                  <number>-100</number>
+                 </property>
+                 <property name="maximum">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="lbl_legend_bad">
+                 <property name="text">
+                  <string>Red from</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QSpinBox" name="spin_wifi_bad">
+                 <property name="suffix">
+                  <string notr="true"> dBm</string>
+                 </property>
+                 <property name="minimum">
+                  <number>-100</number>
+                 </property>
+                 <property name="maximum">
+                  <number>0</number>
                  </property>
                 </widget>
                </item>
@@ -419,7 +701,85 @@
              </widget>
             </item>
             <item>
-             <spacer name="robot_spacer">
+             <widget class="QgsCollapsibleGroupBox" name="box_wifi_qgis">
+              <property name="title">
+               <string>Record with QGIS open</string>
+              </property>
+              <layout class="QGridLayout" name="wifi_qgis_grid">
+               <property name="horizontalSpacing">
+                <number>4</number>
+               </property>
+               <property name="verticalSpacing">
+                <number>4</number>
+               </property>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_wifi_robot">
+              <property name="title">
+               <string>Recorder on the robot</string>
+              </property>
+              <layout class="QVBoxLayout" name="wifi_robot_layout">
+               <item>
+                <widget class="QLabel" name="lbl_robot_recorder">
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QGridLayout" name="wifi_robot_grid">
+                 <property name="horizontalSpacing">
+                  <number>4</number>
+                 </property>
+                 <property name="verticalSpacing">
+                  <number>4</number>
+                 </property>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_wifi_pi">
+              <property name="title">
+               <string>Maps from the Raspberry Pi</string>
+              </property>
+              <layout class="QVBoxLayout" name="wifi_pi_layout">
+               <item>
+                <layout class="QHBoxLayout" name="wifi_pi_buttons">
+                 <item>
+                  <widget class="QPushButton" name="btn_pi_latest">
+                   <property name="text">
+                    <string>Latest run</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_pi_full">
+                   <property name="text">
+                    <string>Full map</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QLabel" name="lbl_pi_thumb">
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="toolTip">
+                  <string>The last map loaded from the Pi.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="wifi_spacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
@@ -459,14 +819,44 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
           <widget class="QWidget" name="scroll_camera_contents">
            <layout class="QVBoxLayout" name="camera_layout">
             <item>
-             <widget class="QCheckBox" name="camera_light">
-              <property name="text">
-               <string>Camera light</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="camera_controls">
+              <item>
+               <widget class="QCheckBox" name="camera_light">
+                <property name="text">
+                 <string>Camera light</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="camera_controls_spacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint">
+                 <size>
+                  <width>0</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_camera_full">
+                <property name="text">
+                 <string>Full screen</string>
+                </property>
+                <property name="toolTip">
+                 <string>Show the video in its own window (Esc to close)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
              <spacer name="camera_spacer">
@@ -487,11 +877,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_maintenance">
+      <widget class="QWidget" name="tab_care">
        <attribute name="title">
-        <string>Maintenance</string>
+        <string>Care</string>
        </attribute>
-       <layout class="QVBoxLayout" name="tab_maintenance_layout">
+       <layout class="QVBoxLayout" name="tab_care_layout">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -505,12 +895,15 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QScrollArea" name="scroll_maintenance">
+         <widget class="QScrollArea" name="scroll_care">
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="QWidget" name="scroll_maintenance_contents">
-           <layout class="QVBoxLayout" name="maintenance_layout">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <widget class="QWidget" name="scroll_care_contents">
+           <layout class="QVBoxLayout" name="care_layout">
             <item>
              <widget class="QgsCollapsibleGroupBox" name="box_consumables">
               <property name="title">
@@ -520,6 +913,32 @@
                <property name="fieldGrowthPolicy">
                 <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                </property>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_dock">
+              <property name="title">
+               <string>Dock station</string>
+              </property>
+              <layout class="QVBoxLayout" name="dock_box_layout">
+               <item>
+                <layout class="QFormLayout" name="dock_form">
+                 <property name="fieldGrowthPolicy">
+                  <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                 </property>
+                </layout>
+               </item>
+               <item>
+                <layout class="QGridLayout" name="dock_grid">
+                 <property name="horizontalSpacing">
+                  <number>4</number>
+                 </property>
+                 <property name="verticalSpacing">
+                  <number>4</number>
+                 </property>
+                </layout>
+               </item>
               </layout>
              </widget>
             </item>
@@ -648,7 +1067,7 @@
              </widget>
             </item>
             <item>
-             <spacer name="maintenance_spacer">
+             <spacer name="care_spacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
@@ -666,11 +1085,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_advanced">
+      <widget class="QWidget" name="tab_terminal">
        <attribute name="title">
-        <string>Advanced</string>
+        <string>Terminal</string>
        </attribute>
-       <layout class="QVBoxLayout" name="tab_advanced_layout">
+       <layout class="QVBoxLayout" name="tab_terminal_layout">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -684,53 +1103,554 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QScrollArea" name="scroll_advanced">
+         <layout class="QHBoxLayout" name="terminal_switches">
+          <item>
+           <widget class="QToolButton" name="btn_term_robot">
+            <property name="text">
+             <string>Robot</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Commands and log of the robot</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_term_pi">
+            <property name="text">
+             <string>Raspberry Pi</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Commands and log of the Raspberry Pi</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="terminal_switches_spacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QWidget" name="term_mode">
+            <layout class="QHBoxLayout" name="term_mode_layout">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QToolButton" name="btn_term_console">
+               <property name="text">
+                <string>Console</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="autoExclusive">
+                <bool>true</bool>
+               </property>
+               <property name="toolTip">
+                <string>Run commands</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btn_term_log">
+               <property name="text">
+                <string>Log</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="autoExclusive">
+                <bool>true</bool>
+               </property>
+               <property name="toolTip">
+                <string>Follow the log file</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="terminal_stack">
+          <widget class="QWidget" name="tab_console">
+           <layout class="QVBoxLayout" name="tab_console_layout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="console_header" stretch="1,0,0">
+              <item>
+               <widget class="QLabel" name="lbl_console_status">
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_console_connect">
+                <property name="text">
+                 <string>Connect</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_console_clear">
+                <property name="text">
+                 <string>Clear</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="txt_console">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="lineWrapMode">
+               <enum>QPlainTextEdit::NoWrap</enum>
+              </property>
+              <property name="maximumBlockCount">
+               <number>5000</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="console_input" stretch="0,1,0,0">
+              <item>
+               <widget class="QLabel" name="lbl_console_prompt">
+                <property name="text">
+                 <string notr="true">$</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="edit_console">
+                <property name="placeholderText">
+                 <string>Command, then Enter (↑ ↓: history)</string>
+                </property>
+                <property name="toolTip">
+                 <string>Runs on the robot, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work, use e.g. top -b -n 1. cd is kept from one command to the next, variables are not.</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_console_run">
+                <property name="text">
+                 <string>Run</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_console_stop">
+                <property name="text">
+                 <string>Stop</string>
+                </property>
+                <property name="toolTip">
+                 <string>Stop the running command (reconnects).</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_pi_console">
+           <layout class="QVBoxLayout" name="tab_pi_console_layout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="pi_console_header" stretch="1,0,0">
+              <item>
+               <widget class="QLabel" name="lbl_pi_console_status">
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_pi_console_connect">
+                <property name="text">
+                 <string>Connect</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_pi_console_clear">
+                <property name="text">
+                 <string>Clear</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="txt_pi_console">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="lineWrapMode">
+               <enum>QPlainTextEdit::NoWrap</enum>
+              </property>
+              <property name="maximumBlockCount">
+               <number>5000</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="pi_console_input" stretch="0,1,0,0">
+              <item>
+               <widget class="QLabel" name="lbl_pi_console_prompt">
+                <property name="text">
+                 <string notr="true">$</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="edit_pi_console">
+                <property name="placeholderText">
+                 <string>Command, then Enter (↑ ↓: history)</string>
+                </property>
+                <property name="toolTip">
+                 <string>Runs on the Raspberry Pi, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_pi_console_run">
+                <property name="text">
+                 <string>Run</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_pi_console_stop">
+                <property name="text">
+                 <string>Stop</string>
+                </property>
+                <property name="toolTip">
+                 <string>Stop the running command (reconnects).</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_log">
+           <layout class="QVBoxLayout" name="tab_log_layout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="log_header" stretch="1,0,0">
+              <item>
+               <widget class="QLabel" name="lbl_log_status">
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="chk_log_follow">
+                <property name="text">
+                 <string>Scroll to new lines</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_log_clear">
+                <property name="text">
+                 <string>Clear</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="txt_log">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="lineWrapMode">
+               <enum>QPlainTextEdit::NoWrap</enum>
+              </property>
+              <property name="maximumBlockCount">
+               <number>5000</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_pi_log">
+           <layout class="QVBoxLayout" name="tab_pi_log_layout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="pi_log_header" stretch="1,0,0">
+              <item>
+               <widget class="QLabel" name="lbl_pi_log_status">
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="chk_pi_log_follow">
+                <property name="text">
+                 <string>Scroll to new lines</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btn_pi_log_clear">
+                <property name="text">
+                 <string>Clear</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="txt_pi_log">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="lineWrapMode">
+               <enum>QPlainTextEdit::NoWrap</enum>
+              </property>
+              <property name="maximumBlockCount">
+               <number>5000</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_system">
+       <attribute name="title">
+        <string>System</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_system_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_system">
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="QWidget" name="scroll_advanced_contents">
-           <layout class="QVBoxLayout" name="advanced_layout">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <widget class="QWidget" name="scroll_system_contents">
+           <layout class="QVBoxLayout" name="system_layout">
             <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_tools">
+             <widget class="QgsCollapsibleGroupBox" name="box_status">
               <property name="title">
-               <string>Tools</string>
+               <string>Robot</string>
               </property>
-              <layout class="QGridLayout" name="tools_grid">
-               <property name="horizontalSpacing">
-                <number>4</number>
-               </property>
-               <property name="verticalSpacing">
-                <number>4</number>
-               </property>
-               <item row="99" column="0">
-                <widget class="QCheckBox" name="chk_pi_map_full">
-                 <property name="text">
-                  <string>Full map (all runs)</string>
+              <layout class="QVBoxLayout" name="robot_card_layout">
+               <item>
+                <layout class="QFormLayout" name="status_form">
+                 <property name="fieldGrowthPolicy">
+                  <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                  </property>
-                 <property name="toolTip">
-                  <string>Ticked: load the map of all runs combined. Unticked: the latest run only.</string>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="lbl_state_caption">
+                   <property name="text">
+                    <string>State</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QLabel" name="lbl_state">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lbl_dock_caption">
+                   <property name="text">
+                    <string>Dock</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="lbl_dock">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="lbl_attachments_caption">
+                   <property name="text">
+                    <string>Attachments</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="lbl_attachments">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="lbl_position_caption">
+                   <property name="text">
+                    <string>Position</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLabel" name="lbl_position">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QGridLayout" name="system_grid">
+                 <property name="horizontalSpacing">
+                  <number>4</number>
                  </property>
-                </widget>
+                 <property name="verticalSpacing">
+                  <number>4</number>
+                 </property>
+                </layout>
                </item>
               </layout>
              </widget>
             </item>
             <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_events">
+             <widget class="QgsCollapsibleGroupBox" name="box_pi_card">
               <property name="title">
-               <string>Recent events</string>
+               <string>Raspberry Pi</string>
               </property>
-              <layout class="QFormLayout" name="events_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0" colspan="2">
-                <widget class="QListWidget" name="list_events">
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>200</height>
-                  </size>
+              <layout class="QVBoxLayout" name="pi_card_layout">
+               <item>
+                <widget class="QLabel" name="lbl_pi_card">
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
                  </property>
                 </widget>
                </item>
@@ -766,6 +1686,28 @@
              </widget>
             </item>
             <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_events">
+              <property name="title">
+               <string>Recent events</string>
+              </property>
+              <layout class="QFormLayout" name="events_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QListWidget" name="list_events">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
              <widget class="QgsCollapsibleGroupBox" name="box_features">
               <property name="title">
                <string>Features</string>
@@ -791,7 +1733,7 @@
              </widget>
             </item>
             <item>
-             <spacer name="advanced_spacer">
+             <spacer name="system_spacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
@@ -805,318 +1747,6 @@
             </item>
            </layout>
           </widget>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_log">
-       <attribute name="title">
-        <string>Log</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="log_layout">
-        <item>
-         <layout class="QHBoxLayout" name="log_header" stretch="1,0,0">
-          <item>
-           <widget class="QLabel" name="lbl_log_status">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="chk_log_follow">
-            <property name="text">
-             <string>Scroll to new lines</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_log_clear">
-            <property name="text">
-             <string>Clear</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPlainTextEdit" name="txt_log">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="lineWrapMode">
-           <enum>QPlainTextEdit::NoWrap</enum>
-          </property>
-          <property name="maximumBlockCount">
-           <number>5000</number>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_console">
-       <attribute name="title">
-        <string>Robot console</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="console_layout">
-        <item>
-         <layout class="QHBoxLayout" name="console_header" stretch="1,0,0">
-          <item>
-           <widget class="QLabel" name="lbl_console_status">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_console_connect">
-            <property name="text">
-             <string>Connect</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_console_clear">
-            <property name="text">
-             <string>Clear</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPlainTextEdit" name="txt_console">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="lineWrapMode">
-           <enum>QPlainTextEdit::NoWrap</enum>
-          </property>
-          <property name="maximumBlockCount">
-           <number>5000</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="console_input" stretch="0,1,0,0">
-          <item>
-           <widget class="QLabel" name="lbl_console_prompt">
-            <property name="text">
-             <string notr="true">$</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="edit_console">
-            <property name="placeholderText">
-             <string>Command, then Enter (↑ ↓: history)</string>
-            </property>
-            <property name="toolTip">
-             <string>Runs on the robot, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work, use e.g. top -b -n 1. cd is kept from one command to the next, variables are not.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_console_run">
-            <property name="text">
-             <string>Run</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_console_stop">
-            <property name="text">
-             <string>Stop</string>
-            </property>
-            <property name="toolTip">
-             <string>Stop the running command (reconnects).</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_pi_console">
-       <attribute name="title">
-        <string>RPI SSH console</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="pi_console_layout">
-        <item>
-         <layout class="QHBoxLayout" name="pi_console_header" stretch="1,0,0">
-          <item>
-           <widget class="QLabel" name="lbl_pi_console_status">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_pi_console_connect">
-            <property name="text">
-             <string>Connect</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_pi_console_clear">
-            <property name="text">
-             <string>Clear</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPlainTextEdit" name="txt_pi_console">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="lineWrapMode">
-           <enum>QPlainTextEdit::NoWrap</enum>
-          </property>
-          <property name="maximumBlockCount">
-           <number>5000</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="pi_console_input" stretch="0,1,0,0">
-          <item>
-           <widget class="QLabel" name="lbl_pi_console_prompt">
-            <property name="text">
-             <string notr="true">$</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="edit_pi_console">
-            <property name="placeholderText">
-             <string>Command, then Enter (↑ ↓: history)</string>
-            </property>
-            <property name="toolTip">
-             <string>Runs on the Raspberry Pi, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_pi_console_run">
-            <property name="text">
-             <string>Run</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_pi_console_stop">
-            <property name="text">
-             <string>Stop</string>
-            </property>
-            <property name="toolTip">
-             <string>Stop the running command (reconnects).</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_schedule">
-       <attribute name="title">
-        <string>Schedule</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="schedule_layout">
-        <item>
-         <widget class="QTreeWidget" name="timers">
-          <property name="rootIsDecorated">
-           <bool>false</bool>
-          </property>
-          <property name="uniformRowHeights">
-           <bool>true</bool>
-          </property>
-          <property name="alternatingRowColors">
-           <bool>true</bool>
-          </property>
-          <property name="toolTip">
-           <string>Tick to turn a scheduled cleaning on or off; double-click to edit it.</string>
-          </property>
-          <column>
-           <property name="text">
-            <string>Name</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Days</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Time</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Cleaning</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="schedule_buttons">
-          <item>
-           <widget class="QToolButton" name="btn_timer_new">
-            <property name="text">
-             <string>New…</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_timer_edit">
-            <property name="text">
-             <string>Edit…</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_timer_delete">
-            <property name="text">
-             <string>Delete</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_timer_run">
-            <property name="text">
-             <string>Run now</string>
-            </property>
-            <property name="toolTip">
-             <string>Start the selected cleaning now, whatever its days and time.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="schedule_buttons_spacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint">
-             <size>
-              <width>0</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_timers_note">
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
          </widget>
         </item>
        </layout>

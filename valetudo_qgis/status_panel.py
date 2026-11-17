@@ -10,9 +10,14 @@ import math
 import re
 import time
 
-from qgis.PyQt.QtCore import QDateTime, Qt, QTimer, QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices, QFontDatabase
+from qgis.PyQt.QtCore import QDateTime, QEvent, Qt, QTime, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtGui import QDesktopServices, QKeySequence, QPixmap
 from qgis.PyQt.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QTimeEdit,
     QLabel,
     QInputDialog,
     QMenu,
@@ -23,6 +28,11 @@ from qgis.PyQt.QtWidgets import (
     QTreeWidgetItem,
 )
 from qgis.core import QgsApplication, QgsSettings
+
+try:
+    from qgis.PyQt.QtGui import QShortcut   # Qt 6
+except ImportError:
+    from qgis.PyQt.QtWidgets import QShortcut   # Qt 5
 from qgis.gui import QgsDockWidget
 
 from .camera_widget import CameraWidget
@@ -31,7 +41,10 @@ from .i18n import tr
 from . import host_info
 from .icons import LOGO, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
-from .log_tail import LOG_PATH, LogTail
+from .log_tab import LogTab
+from .log_tail import LOG_PATH
+from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
+from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
 from .settings import load_settings
@@ -40,38 +53,64 @@ from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minu
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
+KEY_DETAILS = "valetudo/panel_details"       # details under the status strip: shown or not
+KEY_TERMINAL = "valetudo/panel_terminal"     # "robot/console", "pi/log"…
+PI_LOG_PATH = "valetudo/collect.log"         # the Pi collector's log (README's cron line)
+KEY_COMPACT = "valetudo/panel_compact"       # compact mode: strip and big button only
+KEY_ONCE_TIMERS = "valetudo/once_timers"     # "label|due Unix time" of one-off cleanings
+ONCE_GRACE_S = 3600                          # deleted an hour after their start time
+COMPACT_FOLD_MS = 800                        # compact mode: fold again after leaving
 KEY_GOTO_QUIET = "valetudo/goto_quiet"   # "Go to" without cleaning (emulated go-to only)
 KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all runs
 
 # Layout: ui/status_panel.ui (Qt Designer). The code fills it at run time and
 # relies on these object names.
 UI_WIDGETS = (
-    "lbl_connection", "btn_refresh", "lbl_robot", "lbl_badge", "bar_battery", "lbl_error",
-    "grp_clean", "clean_grid", "rooms", "btn_rooms", "grp_robot", "robot_grid",
-    "grp_dock", "dock_grid", "header_layout", "lbl_logo", "lbl_robot_info", "pi_header",
-    "lbl_pi_logo", "lbl_pi_connection", "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "lbl_feedback", "tabs", "tab_camera",
-    "camera_layout", "camera_light", "status_form", "lbl_state", "lbl_dock", "dock_form",
-    "settings_form", "combo_fan_speed", "combo_water_usage", "combo_operation_mode",
-    "lbl_attachments",
-    "lbl_position", "consumables_form", "lbl_cur_time", "lbl_cur_area", "lbl_tot_count",
-    "lbl_tot_time", "lbl_tot_area", "tools_grid", "list_events", "txt_boot",
-    "lbl_features", "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear",
-    "txt_log",
+    # strip, details, action bar
+    "strip", "strip_layout", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
+    "btn_warning", "btn_menu", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
+    "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
+    "lbl_error", "lbl_feedback", "tabs",
+    # Clean
+    "tab_clean", "rooms", "box_settings", "settings_form", "combo_operation_mode",
+    "combo_water_usage", "combo_fan_speed", "clean_grid", "btn_rooms", "chk_goto_quiet",
+    "spin_passes",
+    # Schedule
+    "tab_schedule", "week_layout", "timers", "btn_timer_new", "btn_timer_edit",
+    "btn_timer_delete", "btn_timer_run", "btn_tonight", "lbl_timers_note",
+    # Wi-Fi
+    "tab_wifi", "lbl_wifi_now", "sparkline_layout", "spin_wifi_good", "spin_wifi_fair",
+    "spin_wifi_bad", "wifi_qgis_grid", "lbl_robot_recorder", "wifi_robot_grid",
+    "btn_pi_latest", "btn_pi_full", "lbl_pi_thumb",
+    # Camera
+    "tab_camera", "camera_layout", "camera_light", "btn_camera_full",
+    # Care
+    "tab_care", "box_consumables", "consumables_form", "box_dock", "dock_form", "dock_grid",
+    "box_current", "lbl_cur_time", "lbl_cur_area", "box_total", "lbl_tot_count",
+    "lbl_tot_time", "lbl_tot_area",
+    # Terminal
+    "tab_terminal", "btn_term_robot", "btn_term_pi", "btn_term_console", "btn_term_log",
+    "terminal_stack",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
     "txt_console", "lbl_console_prompt", "edit_console", "btn_console_run", "btn_console_stop",
     "tab_pi_console", "lbl_pi_console_status", "btn_pi_console_connect",
     "btn_pi_console_clear", "txt_pi_console", "lbl_pi_console_prompt", "edit_pi_console",
     "btn_pi_console_run", "btn_pi_console_stop",
-    "tab_schedule", "timers", "btn_timer_new", "btn_timer_edit", "btn_timer_delete",
-    "btn_timer_run", "lbl_timers_note", "chk_goto_quiet", "chk_pi_map_full",
+    "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear", "txt_log",
+    "tab_pi_log", "lbl_pi_log_status", "chk_pi_log_follow", "btn_pi_log_clear", "txt_pi_log",
+    # System
+    "tab_system", "box_status", "status_form", "lbl_state", "lbl_dock", "lbl_attachments",
+    "lbl_position", "system_grid", "box_pi_card", "lbl_pi_card", "txt_boot", "list_events",
+    "lbl_features",
 )
 # Collapsible sections -> key of their remembered open/closed state.
 SECTIONS = {
-    "box_status": "status", "box_dock": "dock", "box_settings": "settings",
-    "box_position": "position",
-    "box_consumables": "consumables", "box_current": "current", "box_total": "totals",
-    "box_tools": "tools", "box_events": "events", "box_boot": "boot",
-    "box_features": "features",
+    "box_settings": "settings", "box_wifi_live": "wifi_live", "box_wifi_legend": "wifi_legend",
+    "box_wifi_qgis": "wifi_qgis", "box_wifi_robot": "wifi_robot", "box_wifi_pi": "wifi_pi",
+    "box_consumables": "consumables", "box_dock": "dock", "box_current": "current",
+    "box_total": "totals", "box_status": "status", "box_pi_card": "pi_card",
+    "box_boot": "boot", "box_events": "events", "box_features": "features",
 }
 STATE_COLORS = {
     "cleaning": "#1565c0", "moving": "#1565c0", "manual_control": "#1565c0",
@@ -264,20 +303,6 @@ def _event_label(event):
     return cls.replace("ValetudoEvent", "") or "?"
 
 
-LOG_LEVEL_COLORS = {"error": "#c62828", "warn": "#ef6c00", "debug": "#757575",
-                    "trace": "#9e9e9e"}
-
-
-def _log_line_html(line):
-    """One log line, coloured by its level ("[ERROR]", "[WARN]"…) when it has one."""
-    match = re.search(r"\[(ERROR|WARN|WARNING|DEBUG|TRACE)\]", line, re.IGNORECASE)
-    text = html.escape(line) or "&nbsp;"
-    level = match.group(1).lower()[:5] if match else ""
-    color = LOG_LEVEL_COLORS.get("warn" if level.startswith("warn") else level)
-    return f"<span style='white-space:pre; color:{color}'>{text}</span>" if color \
-        else f"<span style='white-space:pre'>{text}</span>"
-
-
 def state_label(state):
     """Translated robot state ("docked" -> "Docked" / "À la base")."""
     return _label(_state_labels(), state)
@@ -314,6 +339,8 @@ class ValetudoPanel(QgsDockWidget):
     clientRequested = pyqtSignal()   # the panel was shown but no client exists yet
     splitRequested = pyqtSignal(str, str)   # room id, room name: draw the cut on the map
     segmentsChanged = pyqtSignal(list)      # [(room id, name)] known on the robot
+    piMapRequested = pyqtSignal(bool)       # Wi-Fi tab: load the Pi's map (True: full map)
+    summaryChanged = pyqtSignal(str)        # one-line status (HTML) for the map overlay
 
     def __init__(self, parent=None):
         super().__init__(parent)   # title and object name come from the .ui
@@ -346,27 +373,50 @@ class ValetudoPanel(QgsDockWidget):
     def _build_ui(self):
         load_ui("status_panel.ui", self, UI_WIDGETS)
         self.setObjectName("ValetudoStatusPanel")   # QGIS restores the dock by this name
-        self.lbl_logo.setPixmap(icon(LOGO).pixmap(20, 20))
-        # Raspberry Pi block: one SSH command every PI_INTERVAL_MS while visible.
+        theme = QgsApplication.getThemeIcon
+
+        # -- status strip: click it to show or hide the details ------------------------
+        self.lbl_logo.setPixmap(icon(LOGO).pixmap(18, 18))
+        self.btn_menu.setIcon(icon("menu"))
+        self.menu = QMenu(self)
+        self.btn_menu.setMenu(self.menu)
+        self.btn_warning.setIcon(theme("/mIconWarning.svg"))
+        self.btn_warning.setVisible(False)
+        self.btn_warning.clicked.connect(self._on_warning_clicked)
+        self._problems = {}          # key -> (text, tab key): shown by the ⚠ button
+        self.lbl_job.setVisible(False)
+        self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.strip.installEventFilter(self)
+        self.details.setVisible(QgsSettings().value(KEY_DETAILS, False, type=bool))
+
+        # -- details: connection, robot, Raspberry Pi ------------------------------------
         self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
-        self.btn_pi_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_pi_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.btn_pi_refresh.clicked.connect(self._refresh_pi)
         self.pi_runner = RobotSurvey(self)   # one-shot SSH runner
         self.pi_runner.finished.connect(self._on_pi_info)
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
         self._pi_timer.timeout.connect(self._refresh_pi)
-        self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.refresh)
         self._set_badge(None)
         self.lbl_error.setVisible(False)
 
+        # -- the big button: Start / Pause / Resume, after the robot's state ------------
+        self._state = None
+        self.btn_primary.clicked.connect(self._on_primary)
+        self._update_primary()
+
+        # -- Clean -------------------------------------------------------------------------
         # Rooms in a checkable tree: "All rooms" (tri-state) above one checkbox per
         # room. Right-click a room to rename, join or split it.
         self.rooms_ctl = RoomsTree(self.rooms, expanded_key="valetudo/room_group_open")
         self.rooms_ctl.checkedChanged.connect(self._update_rooms_button)
         self.rooms.customContextMenuRequested.connect(self._on_rooms_context_menu)
         self.rooms.setVisible(False)
+        self.rooms.setDragEnabled(True)   # a group can be dropped on the week view
+        self.rooms.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         self.btn_rooms.setIcon(icon("clean_rooms"))
         self.btn_rooms.clicked.connect(self._clean_rooms)
         self.btn_rooms.setVisible(False)
@@ -376,19 +426,28 @@ class ValetudoPanel(QgsDockWidget):
         self.chk_goto_quiet.toggled.connect(
             lambda checked: QgsSettings().setValue(KEY_GOTO_QUIET, checked))
         self.chk_goto_quiet.setVisible(False)
-        self.chk_pi_map_full.setChecked(QgsSettings().value(KEY_PI_MAP_FULL, False, type=bool))
-        self.chk_pi_map_full.toggled.connect(
-            lambda checked: QgsSettings().setValue(KEY_PI_MAP_FULL, checked))
-
         self.preset_combos = {"FanSpeedControlCapability": self.combo_fan_speed,
                               "WaterUsageControlCapability": self.combo_water_usage,
                               "OperationModeControlCapability": self.combo_operation_mode}
         for capability, combo in self.preset_combos.items():
             combo.activated.connect(lambda index, c=capability: self._on_preset_chosen(c, index))
 
-        self.lbl_position.setText(tr("Waiting for the robot position…"))
+        # -- Wi-Fi ---------------------------------------------------------------------------
+        self.sparkline = Sparkline()
+        self.sparkline_layout.addWidget(self.sparkline)
+        cfg = load_settings()
+        for name, key in (("spin_wifi_good", "wifi_good_dbm"), ("spin_wifi_fair", "wifi_fair_dbm"),
+                          ("spin_wifi_bad", "wifi_bad_dbm")):
+            spin = getattr(self, name)
+            spin.setValue(int(cfg[key]))
+            spin.valueChanged.connect(lambda value, k=key: self._on_threshold(k, value))
+        self._update_thresholds()
+        self.btn_pi_latest.clicked.connect(lambda: self.piMapRequested.emit(False))
+        self.btn_pi_full.clicked.connect(lambda: self.piMapRequested.emit(True))
+        self.lbl_pi_thumb.setVisible(False)
 
-        # Camera: plays only while this tab is shown and the panel is visible.
+        # -- Camera: plays only while this tab is shown and the panel is visible ---------
+        self.lbl_position.setText(tr("Waiting for the robot position…"))
         self.camera_page = self.tab_camera
         self.camera = CameraWidget()
         self.camera_layout.insertWidget(0, self.camera)
@@ -400,18 +459,14 @@ class ValetudoPanel(QgsDockWidget):
         self._camera_grace.timeout.connect(self.camera.stop)
         self.camera_light.setVisible(False)    # shown if the robot supports it
         self.camera_light.clicked.connect(self._on_camera_light_clicked)  # user only
+        self.video_window = None
+        self.btn_camera_full.setIcon(theme("/mActionZoomFullExtent.svg"))
+        self.btn_camera_full.clicked.connect(self._show_video_window)
+        snapshot = QShortcut(QKeySequence("Ctrl+Shift+S"), self.tab_camera)
+        snapshot.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        snapshot.activated.connect(self.camera.save_snapshot)
 
-        # Log: Valetudo's log file, followed over SSH while this tab is shown.
-        self.txt_log.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
-        self.btn_log_clear.clicked.connect(self.txt_log.clear)
-        self.chk_log_follow.toggled.connect(self._on_log_follow_toggled)
-        self.log_tail = LogTail(self)
-        self.log_tail.linesReceived.connect(self._on_log_lines)
-        self.log_tail.stateChanged.connect(self._on_log_state)
-        self.lbl_log_status.setText(tr("Shown while this tab is open."))
-
-        # SSH consoles (robot, Raspberry Pi): open when their tab is first shown, stay
-        # open while the panel is visible, close when it is hidden.
+        # -- Terminal: robot or Pi, console or log -----------------------------------------
         def console_widgets(p):
             return {"status": getattr(self, f"lbl_{p}console_status"),
                     "connect": getattr(self, f"btn_{p}console_connect"),
@@ -421,37 +476,75 @@ class ValetudoPanel(QgsDockWidget):
                     "edit": getattr(self, f"edit_{p}console"),
                     "run": getattr(self, f"btn_{p}console_run"),
                     "stop": getattr(self, f"btn_{p}console_stop")}
+
+        def log_widgets(p):
+            return {"status": getattr(self, f"lbl_{p}log_status"),
+                    "follow": getattr(self, f"chk_{p}log_follow"),
+                    "clear": getattr(self, f"btn_{p}log_clear"),
+                    "output": getattr(self, f"txt_{p}log")}
         self.consoles = [
             ConsoleTab(self.tab_console, console_widgets(""), self._ssh_target,
                        tr("No robot configured."), self),
             ConsoleTab(self.tab_pi_console, console_widgets("pi_"), self._pi_target,
                        tr("No Raspberry Pi set in the settings."), self),
         ]
-        self._update_pi_tab()
+        self.logs = [
+            LogTab(self.tab_log, log_widgets(""), self._ssh_target, LOG_PATH,
+                   tr("No robot configured."), self),
+            LogTab(self.tab_pi_log, log_widgets("pi_"), self._pi_target, PI_LOG_PATH,
+                   tr("No Raspberry Pi set in the settings."), self),
+        ]
+        choice = QgsSettings().value(KEY_TERMINAL, "robot/console", type=str) or "robot/console"
+        device, _, mode = str(choice).partition("/")
+        (self.btn_term_pi if device == "pi" else self.btn_term_robot).setChecked(True)
+        (self.btn_term_log if mode == "log" else self.btn_term_console).setChecked(True)
+        for button in (self.btn_term_robot, self.btn_term_pi, self.btn_term_console,
+                       self.btn_term_log):
+            button.toggled.connect(self._on_terminal_switch)
+        self._show_terminal_page()
 
-        # Schedule: Valetudo's timers (run by the robot); fetched when the tab is shown.
+        # -- Schedule: Valetudo's timers (run by the robot); read when the tab is shown --
         self._timers, self._timer_props = [], None
+        self.week = WeekView()
+        self.week.drop_source = self.rooms
+        self.week_layout.addWidget(self.week)
+        self.week.timerClicked.connect(self._select_timer)
+        self.week.timerDoubleClicked.connect(lambda timer_id: (self._select_timer(timer_id),
+                                                               self._edit_timer()))
+        self.week.slotDoubleClicked.connect(self._new_timer_at)
+        self.week.groupDropped.connect(self._new_timer_for_group)
         self.timers.itemChanged.connect(self._on_timer_item_changed)
         self.timers.itemDoubleClicked.connect(lambda *_: self._edit_timer())
         self.timers.itemSelectionChanged.connect(self._update_timer_buttons)
+        self.timers.itemSelectionChanged.connect(
+            lambda: self.week.set_selected(self._selected_timer_id()))
         self.btn_timer_new.clicked.connect(self._new_timer)
         self.btn_timer_edit.clicked.connect(self._edit_timer)
         self.btn_timer_delete.clicked.connect(self._delete_timer)
         self.btn_timer_run.clicked.connect(self._run_timer)
+        self.btn_tonight.clicked.connect(self._tonight)
         self.segmentsChanged.connect(lambda *_: self._render_timers())
         self._render_timers()
 
-        # Sections remember whether they are open, under our own keys.
+        # -- Sections remember whether they are open, under our own keys -----------------
         for name, key in SECTIONS.items():
             self._remember_section(getattr(self, name), key)
 
+        # -- Side tabs: icons, their titles as tooltips --------------------------------------
         self._tab_keys = [self.tabs.widget(i).objectName().removeprefix("tab_")
                           for i in range(self.tabs.count())]
-        last = QgsSettings().value(KEY_TAB, "robot", type=str)
+        self._tab_icons = {}
+        for i, key in enumerate(self._tab_keys):
+            self._tab_icons[key] = icon(f"tab_{key}")
+            self.tabs.setTabToolTip(i, self.tabs.tabText(i))
+            self.tabs.setTabText(i, "")
+            self.tabs.setTabIcon(i, self._tab_icons[key])
+        last = QgsSettings().value(KEY_TAB, "clean", type=str)
         if last in self._tab_keys:
             self.tabs.setCurrentIndex(self._tab_keys.index(last))
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
+        self._update_pi_tab()
         for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
                     self.box_dock):
             box.setVisible(False)   # shown once the robot reports them
@@ -479,7 +572,6 @@ class ValetudoPanel(QgsDockWidget):
         if 0 <= index < len(self._tab_keys):
             QgsSettings().setValue(KEY_TAB, self._tab_keys[index])
         self._update_camera()
-        self._update_log()
         self._update_console()
         self._update_schedule()
 
@@ -499,6 +591,8 @@ class ValetudoPanel(QgsDockWidget):
 
     def bind_actions(self, act):
         """Place the plugin's actions; called once by the plugin."""
+        self.act = act
+
         def put(grid, keys, row=0, columns=2, hide=False):
             buttons = []
             for i, key in enumerate(k for k in keys if k in act):
@@ -507,36 +601,238 @@ class ValetudoPanel(QgsDockWidget):
                 buttons.append(b)
             return buttons
 
-        # Clean: rooms list (row 0), Everything + Ticked rooms, Zone + Go to
-        put(self.clean_grid, ["start"], row=1)
-        self.clean_grid.addWidget(self.btn_rooms, 1, 1)
-        put(self.clean_grid, ["zone", "goto"], row=2)
-        put(self.robot_grid, ["pause", "home", "locate"], columns=3)
-        dock = put(self.dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
+        # Clean: [Clean everything] [Clean room(s)], then [Clean a zone…] [Go to…]
+        put(self.clean_grid, ["start"], row=0)
+        put(self.clean_grid, ["zone", "goto"], row=1)
+        # Action bar: [Dock] next to the big button
+        if "home" in act:
+            self._dock_button = self._button(act["home"])
+            self._dock_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            self._dock_button.setMinimumHeight(34)
+            self.action_layout.addWidget(self._dock_button)
+        for key in ("start", "pause"):
+            if key in act:
+                act[key].changed.connect(self._update_primary)
+        # Strip: [Show on map] (icon only) before the ⋮ menu
+        if "live" in act:
+            live = QToolButton()
+            live.setDefaultAction(act["live"])
+            live.setAutoRaise(True)
+            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_menu), live)
+        # ⋮ menu: occasional commands
+        for key in ("locate", None, "watch_boot", "reboot", None, "settings"):
+            if key is None:
+                self.menu.addSeparator()
+            elif key in act:
+                self.menu.addAction(act[key])
+        self.menu.addAction(QgsApplication.getThemeIcon("/mActionRefresh.svg"), tr("Refresh now"),
+                            self.refresh)
+        self.act_compact = self.menu.addAction(tr("Compact mode"))
+        self.act_compact.setCheckable(True)
+        self.act_compact.setChecked(QgsSettings().value(KEY_COMPACT, False, type=bool))
+        self.act_compact.toggled.connect(self.set_compact)
+        # Care: dock station commands (hidden when the robot has none)
+        put(self.dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
         self._dock_actions = [act[k] for k in ("empty_dock", "mop_wash", "mop_dry") if k in act]
         for action in self._dock_actions:
             action.changed.connect(self._update_dock_group)
-        self._update_dock_group()
-        if "live" in act:   # in the header, between the status and the refresh button
-            live = self._button(act["live"])
-            live.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-            self.header_layout.insertWidget(self.header_layout.indexOf(self.btn_refresh), live)
-        tools = put(self.tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
-                                      "reboot", "wifi_survey", "wifi_map",
-                                      "robot_survey_install", "robot_survey_import",
-                                      "robot_survey_remove", "pi_wifi_map"])
-        # "Full map" goes right under "Load Wi-Fi map from the Pi", and follows its state.
-        if "pi_wifi_map" in act and tools:
-            last = len(tools) - 1   # put() fills two columns, row by row
-            self.tools_grid.addWidget(self.chk_pi_map_full, last // 2 + 1, last % 2)
+        # Wi-Fi: recording with QGIS open, recorder on the robot, maps from the Pi
+        put(self.wifi_qgis_grid, ["wifi_survey", "wifi_map"])
+        put(self.wifi_robot_grid, ["robot_survey_install", "robot_survey_import",
+                                   "robot_survey_remove"], columns=1)
+        if "pi_wifi_map" in act:
             pi_action = act["pi_wifi_map"]
-            pi_action.changed.connect(
-                lambda: self.chk_pi_map_full.setEnabled(pi_action.isEnabled()))
-            self.chk_pi_map_full.setEnabled(pi_action.isEnabled())
+
+            def follow_pi_action():
+                for button in (self.btn_pi_latest, self.btn_pi_full):
+                    button.setEnabled(pi_action.isEnabled())
+                    button.setToolTip(pi_action.toolTip())
+            pi_action.changed.connect(follow_pi_action)
+            follow_pi_action()
+        # System: boot tools of the robot card
+        put(self.system_grid, ["watch_boot", "reboot"])
+        self._update_dock_group()
         self._update_rooms_button()
+        self._update_primary()
+        self.set_compact(self.act_compact.isChecked())
 
     def _update_dock_group(self, *_):
-        self.grp_dock.setVisible(any(a.isEnabled() for a in self._dock_actions))
+        actions = getattr(self, "_dock_actions", [])
+        self.box_dock.setVisible(any(a.isEnabled() for a in actions)
+                                 or getattr(self, "_has_components", False))
+
+    # -- status strip, big button, warnings ---------------------------------------------
+
+    def eventFilter(self, obj, event):
+        if obj is getattr(self, "strip", None) \
+                and event.type() == QEvent.Type.MouseButtonRelease:
+            self.toggle_details()
+            return True
+        if obj is getattr(self, "_compact_watch", None) and self.is_compact():
+            if event.type() == QEvent.Type.Enter:      # hovering: unfold
+                self._compact_timer.stop()
+                self._show_body(True)
+            elif event.type() == QEvent.Type.Leave:    # left: fold again a bit later
+                self._compact_timer.start()
+        return super().eventFilter(obj, event)
+
+    def toggle_details(self):
+        visible = not self.details.isVisible()
+        self.details.setVisible(visible)
+        QgsSettings().setValue(KEY_DETAILS, visible)
+
+    def _update_primary(self, *_):
+        """Start when docked or idle, Pause while working, Resume when paused."""
+        act = getattr(self, "act", {})
+        state = self._state
+        if state in ACTIVE_STATES:
+            key, text, tip = "pause", "⏸ " + tr("Pause"), tr("Pause the current job.")
+        elif state == "paused":
+            key, text, tip = "start", "▶ " + tr("Resume"), tr("Resume the paused job.")
+        else:
+            key, text, tip = "start", "▶ " + tr("Start"), tr("Start cleaning the whole home.")
+        self._primary_key = key
+        self.btn_primary.setText(text)
+        self.btn_primary.setToolTip(tip)
+        self.btn_primary.setEnabled(self.client is not None and key in act
+                                    and act[key].isEnabled())
+        dock = getattr(self, "_dock_button", None)
+        if dock is not None:
+            dock.setVisible(state not in ("docked", None))
+
+    def _on_primary(self, *_):
+        action = getattr(self, "act", {}).get(getattr(self, "_primary_key", "start"))
+        if action is not None and action.isEnabled():
+            action.trigger()
+
+    def _set_problem(self, key, text, tab=None):
+        """A problem shown by the ⚠ of the strip (text None: solved) and on its tab."""
+        if text:
+            self._problems[key] = (text, tab)
+        else:
+            self._problems.pop(key, None)
+        problems = list(self._problems.values())
+        self.btn_warning.setVisible(bool(problems))
+        self.btn_warning.setToolTip("\n".join(f"⚠ {text}" for text, _ in problems))
+        for i, tab_key in enumerate(self._tab_keys):
+            flagged = any(t == tab_key for _, t in problems)
+            self.tabs.setTabIcon(i, badge_icon(self._tab_icons[tab_key]) if flagged
+                                 else self._tab_icons[tab_key])
+
+    def _on_warning_clicked(self, *_):
+        """Open the tab of the first problem that has one."""
+        tab = next((t for _, t in self._problems.values() if t), None)
+        if tab in self._tab_keys:
+            self.tabs.setCurrentIndex(self._tab_keys.index(tab))
+        if not self.details.isVisible() and any(t is None for _, t in self._problems.values()):
+            self.toggle_details()
+
+    def _update_job(self):
+        """Time and area of the job in progress, in the strip."""
+        job = getattr(self, "_job", None)
+        show = self._state in ACTIVE_STATES and job is not None
+        self.lbl_job.setVisible(show)
+        if show:
+            seconds, area = job
+            parts = [_format_duration(seconds)] if seconds is not None else []
+            if area is not None:
+                parts.append(_format_area_cm2(area))
+            self.lbl_job.setText("⏱ " + " · ".join(parts))
+        self._emit_summary()
+
+    def _emit_summary(self):
+        """State, battery and job in one line, for the card over the map."""
+        state = self._state
+        if state is None:
+            self.summaryChanged.emit("")
+            return
+        color = STATE_COLORS.get(state, "#757575")
+        parts = [f"<b style='color:{color}'>{html.escape(_label(_state_labels(), state))}</b>"]
+        battery = getattr(self, "_battery", None)
+        if battery is not None:
+            parts.append(f"🔋 {battery} %")
+        if self.lbl_job.isVisibleTo(self):
+            parts.append(html.escape(self.lbl_job.text()))
+        self.summaryChanged.emit(" · ".join(parts))
+
+    # -- compact mode ---------------------------------------------------------------------
+
+    def is_compact(self):
+        return getattr(self, "_compact", False)
+
+    def set_compact(self, compact):
+        """Only the strip and the big button; hovering the panel unfolds the rest."""
+        self._compact = compact
+        QgsSettings().setValue(KEY_COMPACT, compact)
+        if not hasattr(self, "_compact_timer"):
+            self._compact_timer = QTimer(self)
+            self._compact_timer.setSingleShot(True)
+            self._compact_timer.setInterval(COMPACT_FOLD_MS)
+            self._compact_timer.timeout.connect(lambda: self._show_body(False))
+            self._compact_watch = self.widget()
+            self._compact_watch.installEventFilter(self)
+        self._show_body(not compact)
+
+    def _show_body(self, visible):
+        if self.is_compact() and visible is False and self.widget().underMouse():
+            return
+        for widget in (self.tabs, self.lbl_feedback):
+            widget.setVisible(visible)
+        if self.is_compact() and not visible:
+            self.details.setVisible(False)
+        elif visible:
+            self.details.setVisible(QgsSettings().value(KEY_DETAILS, False, type=bool))
+
+    # -- terminal -------------------------------------------------------------------------
+
+    def _on_terminal_switch(self, checked):
+        if not checked:   # the other button of the pair is being checked
+            return
+        device = "pi" if self.btn_term_pi.isChecked() else "robot"
+        mode = "log" if self.btn_term_log.isChecked() else "console"
+        QgsSettings().setValue(KEY_TERMINAL, f"{device}/{mode}")
+        self._show_terminal_page()
+        self._update_console()
+
+    def _show_terminal_page(self):
+        pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
+                 ("robot", "log"): self.tab_log, ("pi", "log"): self.tab_pi_log}
+        device = "pi" if self.btn_term_pi.isChecked() else "robot"
+        mode = "log" if self.btn_term_log.isChecked() else "console"
+        self.terminal_stack.setCurrentWidget(pages[(device, mode)])
+
+    # -- Wi-Fi tab ------------------------------------------------------------------------
+
+    def _on_threshold(self, key, value):
+        QgsSettings().setValue(f"valetudo/{key}", value)
+        self._update_thresholds()
+
+    def _update_thresholds(self):
+        self.sparkline.thresholds = (self.spin_wifi_good.value(), self.spin_wifi_fair.value(),
+                                     self.spin_wifi_bad.value())
+        self.sparkline.update()
+
+    def set_robot_recorder_status(self, text):
+        """Called by the plugin: where the Wi-Fi recorder of the robot stands."""
+        self.lbl_robot_recorder.setText(text)
+
+    def set_pi_thumbnail(self, path):
+        """Called by the plugin with the PNG of the last map loaded from the Pi."""
+        pixmap = QPixmap(path) if path else QPixmap()
+        self.lbl_pi_thumb.setVisible(not pixmap.isNull())
+        if not pixmap.isNull():
+            self.lbl_pi_thumb.setPixmap(pixmap.scaledToWidth(
+                min(260, pixmap.width()), Qt.TransformationMode.SmoothTransformation))
+
+    # -- camera ---------------------------------------------------------------------------
+
+    def _show_video_window(self, *_):
+        if self.video_window is None:
+            self.video_window = VideoWindow(self)
+            self.camera.stream.frameReady.connect(self.video_window.show_image)
+        if not self.camera.stream.is_running():
+            self.camera.play()
+        self.video_window.showFullScreen()
 
     def show_feedback(self, text, kind="info"):
         """Called by the plugin with the result of a command."""
@@ -580,6 +876,18 @@ class ValetudoPanel(QgsDockWidget):
             menu = QMenu(self)
             menu.addAction(tr("Edit room groups…"), self.edit_room_groups)
             menu.exec(global_pos)
+
+    def toggle_room(self, seg_id):
+        """From the map: tick or untick a room in the Clean tab."""
+        ids = list(self.rooms_ctl.checked)
+        ids = [i for i in ids if i != seg_id] if seg_id in ids else ids + [seg_id]
+        self.rooms_ctl.set_checked(ids)
+        self.show_feedback(tr("Ticked: {rooms}").format(
+            rooms=", ".join(self.rooms_ctl.name(i) for i in ids) or "—"))
+
+    def room_menu(self, seg_id, name, global_pos):
+        """From the map: the room's menu (rename, join, split)."""
+        self._room_menu(seg_id, name or self.rooms_ctl.name(seg_id), global_pos)
 
     def edit_room_groups(self, *_):
         """Open the room groups file in the system's text editor (created if needed)."""
@@ -643,21 +951,15 @@ class ValetudoPanel(QgsDockWidget):
     def _clean_rooms(self, *_):
         ids = self.checked_room_ids()
         if self.client is not None and ids:
-            self.client.clean_segments(ids)
+            self.client.clean_segments(ids, self.passes())
+
+    def passes(self):
+        """Number of passes chosen in the Clean tab (rooms and zones)."""
+        return self.spin_passes.value()
 
     def checked_room_ids(self):
         """Ticked rooms, in list order."""
         return self.rooms_ctl.checked_ids()
-
-    def _sync_run_button(self, *_):
-        action = self._current_command()
-        self.btn_run.setEnabled(action is not None and action.isEnabled())
-        self.btn_run.setToolTip(action.toolTip() if action is not None else "")
-
-    def _run_command(self, *_):
-        action = self._current_command()
-        if action is not None and action.isEnabled():
-            action.trigger()   # same as the menu entry (toggles if checkable)
 
     # -- client wiring ---------------------------------------------------------
 
@@ -666,7 +968,6 @@ class ValetudoPanel(QgsDockWidget):
         self.client = client
         self.capabilities = None
         self._reachable = None
-        self._update_log()   # the robot address may have changed
         self._update_console()
         if client is None:
             self._timer.stop()
@@ -710,6 +1011,8 @@ class ValetudoPanel(QgsDockWidget):
         self._version_text = ""
         self._wifi_html, self._wifi_tip = "", ""
         self._update_schedule()
+        if QgsSettings().value(KEY_ONCE_TIMERS, [], type=list):
+            client.fetch_timers()   # a one-off cleaning may be due for removal
         client.fetch_robot_info(quiet=True)
         client.fetch_version(quiet=True)
         if self.isVisible():
@@ -742,6 +1045,7 @@ class ValetudoPanel(QgsDockWidget):
         offset = utc_offset_minutes()
         self._timers = sorted(timers, key=lambda t: schedule.sort_key(t, offset))
         self._render_timers()
+        self._remove_done_once_timers()
 
     def _days_text(self, days):
         days = set(days)
@@ -790,6 +1094,13 @@ class ValetudoPanel(QgsDockWidget):
         self.timers.blockSignals(False)
         for column in range(3):
             self.timers.resizeColumnToContents(column)
+        entries = []
+        for timer in self._timers:
+            days, hour, minute = schedule.local_schedule(timer, offset)
+            entries.append((timer.get("id"), timer.get("label") or tr("(no name)"),
+                            days, hour, minute, bool(timer.get("enabled"))))
+        self.week.set_entries(entries, day_names())
+        self.week.set_selected(selected)
         self.lbl_timers_note.setText(
             tr("Run by the robot itself, even when QGIS is closed. Local times ({offset}).")
             .format(offset=format_offset(offset)) if self.client is not None
@@ -827,6 +1138,88 @@ class ValetudoPanel(QgsDockWidget):
                              self.client, self.capabilities, self._timer_props)
         if dialog.exec() and self.client is not None:
             self.client.save_timer(dialog.timer())
+
+    def _select_timer(self, timer_id):
+        for i in range(self.timers.topLevelItemCount()):
+            item = self.timers.topLevelItem(i)
+            item.setSelected(item.data(0, Qt.ItemDataRole.UserRole) == timer_id)
+        self.week.set_selected(timer_id)
+
+    def _new_timer_at(self, dow, hour, minute, segment_ids=None, label=""):
+        """New cleaning at a slot of the week view (local time), rooms pre-ticked."""
+        if self.client is None:
+            return
+        self._open_timer_dialog(schedule.build_timer(
+            None, label, [dow], hour, minute, utc_offset_minutes(), segment_ids=segment_ids,
+            iterations=self.passes()))
+
+    def _dragged_rooms(self):
+        """(room ids, group title) of the line being dragged from the rooms tree."""
+        item = self.rooms.currentItem()
+        if item is None:
+            return [], ""
+        seg_id = item.data(0, Qt.ItemDataRole.UserRole)
+        if seg_id is not None:
+            return [seg_id], item.text(0)
+        ids = [item.child(i).data(0, Qt.ItemDataRole.UserRole) for i in range(item.childCount())]
+        return [i for i in ids if i is not None], item.text(0)
+
+    def _new_timer_for_group(self, dow, hour, minute):
+        ids, title = self._dragged_rooms()
+        if ids:
+            self._new_timer_at(dow, hour, minute, ids, title[:24])
+
+    def _tonight(self, *_):
+        """Clean the ticked rooms (or the whole home) once, tonight: a timer for today
+        that the plugin deletes once its time is past."""
+        if self.client is None:
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle(tr("Tonight"))
+        form = QFormLayout(dialog)
+        when = QTimeEdit(QTime(22, 0))
+        when.setDisplayFormat("HH:mm")
+        form.addRow(tr("Start at"), when)
+        ids = self.rooms_ctl.checked_ids(ticked_order=True)
+        names = ", ".join(self.rooms_ctl.name(i) for i in ids) or tr("Whole home")
+        form.addRow(tr("Clean"), QLabel(names))
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok
+                                   | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        form.addRow(buttons)
+        if not dialog.exec():
+            return
+        start = QDateTime.currentDateTime()
+        start.setTime(when.time())
+        if start <= QDateTime.currentDateTime():
+            start = start.addDays(1)   # already past today: tomorrow
+        dow = start.date().dayOfWeek() % 7          # Qt: 1 = Monday … 7 = Sunday
+        label = tr("Once {date}").format(date=start.toString("dd/MM HH:mm"))[:24]
+        timer = schedule.build_timer(None, label, [dow], when.time().hour(),
+                                     when.time().minute(), utc_offset_minutes(),
+                                     segment_ids=ids or None, iterations=self.passes())
+        once = QgsSettings().value(KEY_ONCE_TIMERS, [], type=list) or []
+        once.append(f"{label}|{start.toSecsSinceEpoch()}")
+        QgsSettings().setValue(KEY_ONCE_TIMERS, once)
+        self.client.save_timer(timer)
+
+    def _remove_done_once_timers(self):
+        """Delete the one-off cleanings ("Tonight") whose time is past by an hour."""
+        once = QgsSettings().value(KEY_ONCE_TIMERS, [], type=list) or []
+        if not once or self.client is None:
+            return
+        now, keep = time.time(), []
+        labels = {t.get("label"): t.get("id") for t in self._timers}
+        for entry in once:
+            label, _, due = entry.rpartition("|")
+            if not due.isdigit() or label not in labels:
+                continue           # unknown or already gone: forget it
+            if now > int(due) + ONCE_GRACE_S:
+                self.client.delete_timer(labels[label])
+            else:
+                keep.append(entry)
+        QgsSettings().setValue(KEY_ONCE_TIMERS, keep)
 
     def _new_timer(self, *_):
         if self.client is not None:
@@ -877,13 +1270,14 @@ class ValetudoPanel(QgsDockWidget):
         return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
 
     def _update_pi_tab(self):
-        """The Pi console tab and header block exist only when a Pi address is set;
-        the block is read while the panel is visible."""
+        """The Pi's details, card and terminal exist only when a Pi address is set;
+        its details are read while the panel is visible."""
         has_pi = self._pi_target() is not None
-        index = self.tabs.indexOf(self.tab_pi_console)
-        if hasattr(self.tabs, "setTabVisible"):   # Qt >= 5.15
-            self.tabs.setTabVisible(index, has_pi)
         self.pi_header.setVisible(has_pi)
+        self.box_pi_card.setVisible(has_pi)
+        self.btn_term_pi.setEnabled(has_pi)
+        if not has_pi and self.btn_term_pi.isChecked():
+            self.btn_term_robot.setChecked(True)
         if has_pi and self.isVisible():
             if not self._pi_timer.isActive():
                 self._pi_timer.start()
@@ -933,6 +1327,12 @@ class ValetudoPanel(QgsDockWidget):
                                           pi.get("uptime"), self._local_time)
         self.lbl_pi_info.setText(line)
         self.lbl_pi_info.setStyleSheet("color: #ef6c00;" if wrong else "")
+        # System tab: the same, as a card
+        state = (tr("Connected") if self._pi_ok else tr("Unreachable over SSH"))
+        self.lbl_pi_card.setText("\n".join(p for p in (
+            state, self.lbl_pi_name.text(), line) if p))
+        self._set_problem("pi_clock", tr("The Raspberry Pi's clock is wrong.") if wrong else None,
+                          "system")
 
     @staticmethod
     def _local_time(epoch):
@@ -943,9 +1343,12 @@ class ValetudoPanel(QgsDockWidget):
         self._update_console()
 
     def _update_console(self):
+        """Consoles and logs run only while their page of the Terminal tab is shown."""
         self._update_pi_tab()
-        for console in self.consoles:
-            console.update(self.isVisible(), self.tabs.currentWidget())
+        page = (self.terminal_stack.currentWidget()
+                if self.tabs.currentWidget() is self.tab_terminal else None)
+        for view in self.consoles + self.logs:
+            view.update(self.isVisible(), page)
 
     def _update_camera(self):
         """Play while the panel is visible and the Camera tab is shown; keep playing
@@ -956,56 +1359,6 @@ class ValetudoPanel(QgsDockWidget):
                 self.camera.play()
         elif self.camera.stream.is_running() and not self._camera_grace.isActive():
             self._camera_grace.start()
-
-    # -- robot log ------------------------------------------------------------------
-
-    def _update_log(self):
-        """Follow the log only while the panel is visible and the Log tab is shown.
-
-        The robot address and SSH user/port come from the settings; a change
-        there reconnects (start() ignores an unchanged target)."""
-        cfg = load_settings()
-        host = QUrl(cfg["url"]).host() if cfg["url"] else ""
-        if self.isVisible() and self.tabs.currentWidget() is self.tab_log:
-            if not host:
-                self.log_tail.stop(quiet=True)
-                self.lbl_log_status.setText(tr("No robot configured."))
-                return
-            self.log_tail.start(host, cfg["ssh_user"], cfg["ssh_port"])
-        else:
-            self.log_tail.stop()
-
-    def _on_log_state(self, state, detail):
-        colors = {"following": "#2e7d32", "failed": "#c62828", "ssh_missing": "#c62828"}
-        texts = {
-            "connecting": tr("Connecting to {host} over SSH…").format(host=detail),
-            "following": tr("Following {path} on {host}.").format(path=LOG_PATH, host=detail),
-            "failed": tr("SSH connection lost or refused: {error}. Retrying in 10 s…")
-                .format(error=detail),
-            "ssh_missing": tr("ssh was not found: install an SSH client."),
-            "stopped": tr("Shown while this tab is open."),
-        }
-        self.lbl_log_status.setStyleSheet(f"color: {colors[state]};" if state in colors else "")
-        self.lbl_log_status.setText(texts.get(state, state))
-        if state in ("failed", "ssh_missing"):
-            self.lbl_log_status.setToolTip(tr("Needs key-based SSH login to the robot "
-                                              "(ssh-copy-id root@<robot>), as for the reboot."))
-
-    def _on_log_lines(self, lines):
-        bar = self.txt_log.verticalScrollBar()
-        at_bottom = bar.value() >= bar.maximum() - 2
-        keep = None if at_bottom or self.chk_log_follow.isChecked() else bar.value()
-        for line in lines:
-            self.txt_log.appendHtml(_log_line_html(line))
-        if keep is None:
-            bar.setValue(bar.maximum())
-        else:
-            bar.setValue(keep)   # reading older lines: do not jump
-
-    def _on_log_follow_toggled(self, checked):
-        if checked:
-            bar = self.txt_log.verticalScrollBar()
-            bar.setValue(bar.maximum())
 
     def clear_boot_log(self):
         self.txt_boot.clear()
@@ -1019,13 +1372,13 @@ class ValetudoPanel(QgsDockWidget):
         self.camera.shutdown()
         self._pi_timer.stop()
         self.pi_runner.stop()
-        self.log_tail.stop(quiet=True)
+        for log in self.logs:
+            log.shutdown()
         for console in self.consoles:
             console.shutdown()
 
     def _on_visibility(self, visible):
         self._update_camera()
-        self._update_log()
         self._update_console()
         self._update_schedule()
         if not visible:
@@ -1076,6 +1429,14 @@ class ValetudoPanel(QgsDockWidget):
         self._wifi_html, self._wifi_tip = "", ""
         self._robot_ip, self._host = "", {}
         self.lbl_robot_info.setText("")
+        self.lbl_wifi_strip.setText("")
+        self.lbl_wifi_now.setText(tr("Not connected."))
+        self.sparkline.clear()
+        self._state, self._job, self._battery = None, None, None
+        self._update_primary()
+        self._update_job()
+        for key in ("error", "dock", "consumables", "robot_clock"):
+            self._set_problem(key, None)
 
     def _on_reachable(self, ok):
         self._reachable = ok
@@ -1124,6 +1485,8 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_robot_info.setStyleSheet("color: #ef6c00;" if wrong else "")
         self.lbl_robot_info.setToolTip(
             tr("The robot's clock is wrong: check Valetudo's NTP settings.") if wrong else "")
+        self._set_problem("robot_clock", tr("The robot's clock is wrong: check Valetudo's "
+                                            "NTP settings.") if wrong else None, "system")
 
     def _update_robot_label(self):
         """Second header line: robot model · Valetudo version · Wi-Fi signal."""
@@ -1196,6 +1559,7 @@ class ValetudoPanel(QgsDockWidget):
                     text += f" ({_label(flags, flag)})"
                 self.lbl_state.setText(text)
                 self._set_badge(state)
+                self._state = state
                 err = attr.get("error") or {}
                 error_text = (err.get("message") if isinstance(err, dict) else "") \
                     or (attr.get("metaData") or {}).get("error_description", "")
@@ -1205,6 +1569,7 @@ class ValetudoPanel(QgsDockWidget):
                 level = int(attr.get("level") or 0)
                 flag = attr.get("flag")
                 self.bar_battery.setValue(level)
+                self._battery = level
                 suffix = f" · {_label(flags, flag)}" if flag and flag != "none" else ""
                 self.bar_battery.setFormat(f"{level} %{suffix}")
             elif cls == "PresetSelectionStateAttribute":
@@ -1226,6 +1591,10 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_dock.setText(_label(states, dock_value))
         self.lbl_error.setVisible(bool(error_text))
         self.lbl_error.setText(f"⚠ {error_text}" if error_text else "")
+        self._set_problem("error", error_text or None, None)
+        self._update_primary()
+        self._update_job()
+        self._emit_summary()
         _set_row_visible(self.status_form, self.lbl_attachments, bool(attachments))
         self._update_dock_components(components)
         self.lbl_attachments.setText("   ".join(attachments))
@@ -1238,9 +1607,13 @@ class ValetudoPanel(QgsDockWidget):
         form = self.dock_form
         while form.rowCount():
             form.removeRow(0)
-        self.box_dock.setVisible(bool(components))
+        self._has_components = bool(components)
+        self._update_dock_group()
         names, values, advice = (dock_component_labels(), dock_component_values(),
                                  dock_component_advice())
+        issues = [f"{_label(names, c)}: {advice[v]}" for c, v in components.items()
+                  if v in DOCK_COMPONENT_PROBLEMS]
+        self._set_problem("dock", " · ".join(issues) or None, "care")
         order = DOCK_COMPONENT_ORDER + sorted(c for c in components
                                               if c not in DOCK_COMPONENT_ORDER)
         for component in order:
@@ -1262,6 +1635,7 @@ class ValetudoPanel(QgsDockWidget):
         form = self.consumables_form
         while form.rowCount():
             form.removeRow(0)
+        worn = []
         for item in consumables:
             remaining = item.get("remaining") or {}
             value, unit = remaining.get("value"), remaining.get("unit")
@@ -1278,9 +1652,12 @@ class ValetudoPanel(QgsDockWidget):
                 widget = QLabel(tr("{hours} h left").format(hours=int(value) // 60))
                 low = value < LOW_MINUTES
             if low:
+                worn.append(label)
                 label = f"{label} ⚠"
                 widget.setToolTip(tr("Replace soon"))
             form.addRow(label, widget)
+        self._set_problem("consumables", tr("Replace soon: {parts}").format(
+            parts=", ".join(worn)) if worn else None, "care")
 
     @staticmethod
     def _stats(items):
@@ -1290,6 +1667,8 @@ class ValetudoPanel(QgsDockWidget):
         stats = self._stats(items)
         self.lbl_cur_time.setText(_format_duration(stats["time"]) if "time" in stats else "—")
         self.lbl_cur_area.setText(_format_area_cm2(stats["area"]) if "area" in stats else "—")
+        self._job = (stats.get("time"), stats.get("area"))
+        self._update_job()
 
     def _on_total_statistics(self, items):
         stats = self._stats(items)
@@ -1306,15 +1685,11 @@ class ValetudoPanel(QgsDockWidget):
             self._wifi_html, self._wifi_tip = "", ""
         else:
             cfg = load_settings()
-            if signal >= cfg["wifi_good_dbm"]:
-                color = "#2e7d32"
-            elif signal >= cfg["wifi_fair_dbm"]:
-                color = "#9e9d24"
-            elif signal > cfg["wifi_bad_dbm"]:
-                color = "#ef6c00"
-            else:
-                color = "#c62828"
+            color = signal_color(signal, cfg["wifi_good_dbm"], cfg["wifi_fair_dbm"],
+                                 cfg["wifi_bad_dbm"])
             text = tr("Wi-Fi {signal} dBm").format(signal=signal)
+            self.lbl_wifi_strip.setText(f"<span style='color:{color}'>📶 {signal}</span>")
+            self.sparkline.add(signal)
             self._wifi_html = f"<span style='color:{color}'>{html.escape(text)}</span>"
             parts = [details.get("ssid"), details.get("frequency"),
                      (details.get("ips") or [None])[0]]
@@ -1322,6 +1697,10 @@ class ValetudoPanel(QgsDockWidget):
             self._update_robot_info()
             self._wifi_tip = tr("Wi-Fi: {details}").format(
                 details=" · ".join(str(p) for p in parts if p) or "—")
+            self.lbl_wifi_strip.setToolTip(self._wifi_tip)
+            self.lbl_wifi_now.setText(" · ".join(
+                [f"<b style='color:{color}'>{signal} dBm</b>"]
+                + [html.escape(str(p)) for p in parts if p]))
         self._update_robot_label()
 
     def _on_events(self, events):

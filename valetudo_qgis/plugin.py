@@ -21,7 +21,8 @@ from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import LOGO, has_icon, icon
 from .map_layers import ValetudoLayers, layer_names
-from .map_tools import GoToMapTool, LineMapTool, ZoneMapTool
+from .map_overlay import MapOverlay
+from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
@@ -159,6 +160,7 @@ class ValetudoPlugin:
         self._edit_bar = None           # message bar shown while restrictions are edited
         self._reload_quietly = False    # next restrictions reload: no editing, no bar
         self.zone_tool = self.goto_tool = None
+        self.pick_tool = self.map_toolbar = self.overlay = None
         self.panel = None
         self.options_factory = None   # our page in Settings › Options
         self._dock_state = {}  # dock component -> last known value
@@ -219,7 +221,9 @@ class ValetudoPlugin:
         self.robot_survey = RobotSurvey()
         self.robot_survey.finished.connect(self._on_robot_survey_finished)
         self._new_action("pi_wifi_map", tr("Load Wi-Fi map from the Pi"),
-                         self.load_pi_wifi_map)
+                         lambda *_: self.load_pi_wifi_map())
+        self._new_action("pick_rooms", tr("Pick rooms on the map"), self.activate_pick_tool,
+                         checkable=True)
         self.pi_ssh = RobotSurvey()   # the same one-shot SSH runner, towards the Pi
         self.pi_ssh.finished.connect(self._on_pi_wifi_map)
         self._update_pi_actions()
@@ -291,6 +295,21 @@ class ValetudoPlugin:
         self.split_tool.cancelled.connect(lambda: self.iface.actionPan().trigger())
         self._split_room = None   # (id, name) of the room being split
         self.panel.splitRequested.connect(self._start_split)
+        self.pick_tool = RoomPickMapTool(
+            canvas, lambda: self.layers.layer("rooms") if self.layers.exists() else None)
+        self.pick_tool.setAction(self.act["pick_rooms"])
+        self.pick_tool.roomClicked.connect(self._on_room_clicked)
+        self.panel.piMapRequested.connect(lambda full: self.load_pi_wifi_map(full=full))
+
+        # While "Show on map" is on: a map toolbar and a status card over the canvas.
+        self.map_toolbar = self.iface.addToolBar(tr("Valetudo map"))
+        self.map_toolbar.setObjectName("ValetudoMapToolbar")
+        for key in ("pick_rooms", "edit_restrictions", "send_restrictions"):
+            self.map_toolbar.addAction(self.act[key])
+        self.map_toolbar.setVisible(False)
+        self.overlay = MapOverlay(canvas)
+        self.panel.summaryChanged.connect(self.overlay.set_html)
+        self.act["live"].toggled.connect(self._on_live_toggled)
 
         self._apply_capabilities()
 
@@ -353,9 +372,18 @@ class ValetudoPlugin:
             self.options_factory = None
         canvas = self.iface.mapCanvas()
         split_tool = getattr(self, "split_tool", None)
-        for tool in (self.zone_tool, self.goto_tool, split_tool):
+        for tool in (self.zone_tool, self.goto_tool, split_tool,
+                     getattr(self, "pick_tool", None)):
             if tool is not None and canvas.mapTool() is tool:
                 canvas.unsetMapTool(tool)
+        self.pick_tool = None
+        if getattr(self, "overlay", None) is not None:
+            self.overlay.remove()
+            self.overlay = None
+        if getattr(self, "map_toolbar", None) is not None:
+            self.iface.mainWindow().removeToolBar(self.map_toolbar)
+            self.map_toolbar.deleteLater()
+            self.map_toolbar = None
         if self.zone_tool is not None:
             self.zone_tool.cleanup()
         if split_tool is not None:
@@ -759,6 +787,26 @@ class ValetudoPlugin:
         self._activate_tool(self.zone_tool, "zone", checked,
                             tr("Drag a rectangle on the map to clean that zone."))
 
+    def activate_pick_tool(self, checked):
+        self._activate_tool(self.pick_tool, "pick_rooms", checked,
+                            tr("Click rooms on the map to tick them in the Clean tab; "
+                               "right-click a room for its menu."))
+
+    def _on_room_clicked(self, seg_id, name, right_button, global_pos):
+        if self.panel is None:
+            return
+        if right_button:
+            self.panel.room_menu(seg_id, name, global_pos)
+        else:
+            self.panel.toggle_room(seg_id)
+
+    def _on_live_toggled(self, checked):
+        """The map toolbar and the status card come with "Show on map"."""
+        if self.map_toolbar is not None:
+            self.map_toolbar.setVisible(checked)
+        if self.overlay is not None:
+            self.overlay.set_visible(checked)
+
     def activate_goto_tool(self, checked):
         self._activate_tool(self.goto_tool, "goto", checked,
                             tr("Click on the map to send the robot there."))
@@ -770,7 +818,7 @@ class ValetudoPlugin:
             return
         client = self._get_client()
         if client:
-            client.clean_zone_qgis(rect)
+            client.clean_zone_qgis(rect, self.panel.passes() if self.panel is not None else 1)
 
     # -- room split -----------------------------------------------------------------
 
@@ -947,7 +995,13 @@ class ValetudoPlugin:
     def _update_robot_survey_actions(self):
         """Install only when not installed; import and remove only when installed.
         Nothing while an SSH operation runs."""
-        installed = bool(QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str))
+        directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
+        installed = bool(directory)
+        if self.panel is not None:   # Wi-Fi tab: where the recorder stands
+            self.panel.set_robot_recorder_status(
+                tr("Installed in {dir}: records whenever the robot moves, "
+                   "even with QGIS closed.").format(dir=directory) if installed
+                else tr("Not installed."))
         robot_survey = getattr(self, "robot_survey", None)
         busy = robot_survey is not None and robot_survey.is_busy()
         install = self.act.get("robot_survey_install")
@@ -1101,7 +1155,10 @@ class ValetudoPlugin:
             action.setToolTip(command_hints()["pi_wifi_map"] if has_pi else
                               tr("Set the Raspberry Pi in Settings › Options › Valetudo first."))
 
-    def load_pi_wifi_map(self, *_):
+    def load_pi_wifi_map(self, full=None):
+        """full: the map of all runs (None: as last chosen)."""
+        if full is not None:
+            QgsSettings().setValue(KEY_PI_MAP_FULL, bool(full))
         cfg = load_settings()
         if not cfg["pi_host"]:
             return
@@ -1135,7 +1192,9 @@ class ValetudoPlugin:
                 level=Qgis.MessageLevel.Warning, duration=0)
             return
         try:
-            run, tif, csv_path = pi_maps.unpack(data)
+            run, tif, csv_path, png = pi_maps.unpack(data)
+            if self.panel is not None:
+                self.panel.set_pi_thumbnail(png)
             self._prepare_project()   # the map is in the robot's own frame
             raster, points = pi_maps.add_to_project(QgsProject.instance(), run, tif, csv_path,
                                                     cfg)

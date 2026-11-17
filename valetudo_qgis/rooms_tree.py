@@ -78,7 +78,8 @@ class RoomsTree(QObject):
         item = QTreeWidgetItem([name])
         item.setData(0, ID_ROLE, seg_id)
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                      | Qt.ItemFlag.ItemNeverHasChildren)
+                      | Qt.ItemFlag.ItemNeverHasChildren | Qt.ItemFlag.ItemIsSelectable
+                      | Qt.ItemFlag.ItemIsDragEnabled)   # can be dropped on the week view
         # The check state must be set for Qt to draw the checkbox at all.
         item.setCheckState(0, Qt.CheckState.Checked if seg_id in self.checked
                            else Qt.CheckState.Unchecked)
@@ -89,7 +90,8 @@ class RoomsTree(QObject):
         # Ticks / unticks its rooms; partial when only some are ticked.
         item = QTreeWidgetItem([title])
         item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                      | Qt.ItemFlag.ItemIsAutoTristate)
+                      | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsSelectable
+                      | Qt.ItemFlag.ItemIsDragEnabled)
         return item
 
     def rebuild(self):

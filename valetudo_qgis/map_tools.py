@@ -1,4 +1,4 @@
-"""Map tools: draw a cleaning zone, pick a go-to target.
+"""Map tools: draw a cleaning zone, pick a go-to target, pick rooms.
 
 The tools only emit coordinates in the QGIS frame; the plugin converts and
 sends them through the client (the Y flip stays in coords.py).
@@ -6,7 +6,7 @@ sends them through the client (the Y flip stays in coords.py).
 
 from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.PyQt.QtGui import QColor
-from qgis.core import Qgis, QgsPointXY, QgsRectangle
+from qgis.core import Qgis, QgsFeatureRequest, QgsGeometry, QgsPointXY, QgsRectangle
 from qgis.gui import QgsMapTool, QgsMapToolEmitPoint, QgsRubberBand
 
 ZONE_COLOR = QColor(31, 120, 180)
@@ -139,3 +139,30 @@ class LineMapTool(QgsMapTool):
     def cleanup(self):
         self._band.reset(Qgis.GeometryType.Line)
         self.canvas().scene().removeItem(self._band)
+
+
+class RoomPickMapTool(QgsMapTool):
+    """Click a room of the robot's map: left button ticks or unticks it in the
+    Clean tab, right button opens its menu (rename, join, split)."""
+
+    roomClicked = pyqtSignal(str, str, bool, object)   # id, name, right button, global pos
+
+    def __init__(self, canvas, rooms_layer):
+        super().__init__(canvas)
+        self._rooms_layer = rooms_layer   # callable: the rooms layer, or None
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def canvasReleaseEvent(self, event):
+        layer = self._rooms_layer()
+        if layer is None:
+            return
+        point = QgsGeometry.fromPointXY(self.toMapCoordinates(event.pos()))
+        request = QgsFeatureRequest().setFilterRect(point.boundingBox())
+        for feature in layer.getFeatures(request):
+            if feature["type"] == "segment" and feature["segment_id"] \
+                    and feature.geometry().contains(point):
+                right = event.button() == Qt.MouseButton.RightButton
+                self.roomClicked.emit(str(feature["segment_id"]), feature["name"] or "",
+                                      right, event.globalPos() if hasattr(event, "globalPos")
+                                      else event.globalPosition().toPoint())
+                return

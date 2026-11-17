@@ -36,47 +36,48 @@ without restarting QGIS.
 The panel, from top to bottom:
 
 ```
-(logo) ● Connected · 12:04:31      [Show on map] [⟳]
-Eureka J15 Pro Ultra · Valetudo 2025.12.0 · Wi-Fi -55 dBm
-192.168.50.20 · 17/11/2026 19:26 · up 3 d 4 h
-[Docked]  ████████████████████ 99 %
-(Pi logo) ● Connected · updated 5 s ago                  [⟳]   (if a Pi is set)
-raspberrypi · Linux raspberrypi 6.6.51 … aarch64 GNU/Linux
-192.168.50.1 · 17/11/2026 19:26 · up 1 h 2 min
-⚠ error, only when there is one
-┌ Clean ─────────────────────────────────────┐
-│ ▾ ☐ All rooms                              │
-│     ☐ Hallway                              │
-│     ☐ Kitchen                              │
-│ [Clean everything] [Clean room(s)]         │
-│ [Clean a zone…]    [Go to…]                │
-│                    ☐ Without cleaning      │
-└────────────────────────────────────────────┘
-┌ Robot ─────────────────────────────────────┐
-│ [Pause]   [Dock]   [Locate]                │
-└────────────────────────────────────────────┘
-┌ Dock station ── (only if supported) ───────┐
-│ [Empty bin] [Wash mops] [Dry mops]         │
-└────────────────────────────────────────────┘
-Result of the last command
-Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH console · Schedule
+┌──────────────────────────────────────────────────────┐
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  📶 -55  ⏱ 12 min · 18 m²  ⚠  [🗺] [⋮] │  status strip
+│   (click it: connection, robot, Raspberry Pi details)              │
+│ [        ⏸ Pause         ] [⌂ Dock]                                │  big button
+├──┬───────────────────────────────────────────────────┤
+│🧹│ Clean     rooms tree, cleaning profile, buttons   │
+│📅│ Schedule  week view + list                        │
+│📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
+│📷│ Camera                                            │
+│🧰│ Care      consumables, dock station, statistics   │
+│⌨ │ Terminal  [Robot | Pi]  [Console | Log]           │
+│⚙ │ System    robot and Pi cards, boot log, events    │
+└──┴───────────────────────────────────────────────────┘
 ```
 
-- The header's second line ends with the robot's Wi-Fi signal, coloured with the
-  *Wi-Fi survey* thresholds (green, yellow, orange, red); hover it for the network
-  name, band and address.
-- The third line gives the robot's address, its own date and time (from Valetudo's
-  answers; shown in orange, with how far off it is, when the robot's clock differs
-  from the computer's by more than 2 minutes) and how long it has been on.
-- With a Raspberry Pi set in the settings, a second block shows the Pi the same way:
-  name and `uname -a`, then address, date and uptime, read over SSH every 30 s while
-  the panel is visible (or with its own refresh button).
-- Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
-  stay pressed until you have drawn the zone or clicked the point on the map.
+- **Status strip**, always visible: the state, battery, Wi-Fi signal (coloured with
+  the thresholds of the Wi-Fi tab), the job in progress (time and area), a ⚠ when
+  something needs you (dock tank empty or full, worn consumable, robot error,
+  wrong clock: hover it for the list, click it to open the right tab), *Show on map*
+  and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact
+  mode). **Click the strip** to show or hide the details: connection, robot model,
+  Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with
+  how far off, when it differs from the computer's by more than 2 minutes) and
+  uptime; with a Raspberry Pi set in the settings, the same for the Pi (read over
+  SSH every 30 s while the panel is visible).
+- **Big button**, after the robot's state: *Start* (whole home) when docked or idle,
+  *Pause* while it works, *Resume* when paused; *Dock* next to it while away from
+  the dock.
+- **Side tabs**: icons, their names as tooltips; a tab gets an orange dot when one
+  of the problems of the ⚠ belongs to it.
+- **Compact mode** (⋮ menu): only the strip and the big button; hovering the panel
+  unfolds the rest, which folds again when the mouse leaves it.
+
+**Clean** tab
 - Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking
   a group ticks its rooms (partial when only some are); a room in several groups
-  is the same room, ticked everywhere and cleaned once. *Clean room(s)* cleans the
-  ticked rooms.
+  is the same room, ticked everywhere and cleaned once.
+- **Cleaning profile**: mode (vacuum only, mop only or both), water usage, fan speed,
+  as the robot offers them; applied at once.
+- *Clean everything*, *Clean room(s)* (the ticked ones), *Clean a zone…*, *Go to…*,
+  and **Passes** (1 to 3) for rooms and zones. *Clean a zone…* and *Go to…* stay
+  pressed until you have drawn the zone or clicked the point on the map.
 - **Room groups** are defined in `valetudo_room_groups.ini`, in the QGIS profile
   folder (right-click in the tree, or *Edit room groups…* in the settings, opens it):
 
@@ -94,24 +95,12 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
 
   The panel reloads it as soon as it is saved; names the robot does not know are
   shown greyed out ("not found on the robot").
-- **Edit rooms**: right-click a room → *Rename…*, *Join with ▸* another
-  room, or *Split with a line on the map…* (click the two ends of the cut line,
-  from wall to wall; right-click or Esc cancels). Each edit asks for confirmation;
-  the room list and the map are then reloaded. If the robot refuses (e.g. a split
-  line that does not cross the room), its own message is shown.
-- **Show on map** (top right, next to the connection status) loads the map,
-  refreshes the robot live and keeps it in view (recentring only when it nears the
-  edge). Click again to stop. It is turned on by itself when QGIS starts with an
-  empty project and the robot answers within a minute (*Settings > Options >
-  Valetudo*, *Connection*: "Show the robot on the map when QGIS starts with an
-  empty project"); a project with layers is left untouched.
-- **Tabs**: Robot (state details with the parts fitted to the robot, dock station
-  states, fan speed, water usage and mode — vacuum only, mop only or both —, position), Camera (live video, plays only while this tab is shown;
-  camera light), Maintenance (consumables, statistics), Advanced (tools: no-go
-  zones and walls, watch boot, reboot; events, boot log, features), Log
-  (Valetudo's log file, live), Robot console (commands on the robot), RPI SSH console
-  (commands on the Raspberry Pi, when one is set in the settings), Schedule
-  (cleanings the robot starts by itself).
+- **Edit rooms**: right-click a room (in the tree, or on the map with *Pick rooms on
+  the map*) → *Rename…*, *Join with ▸* another room, or *Split with a line on the
+  map…* (click the two ends of the cut line, from wall to wall; right-click or Esc
+  cancels). Each edit asks for confirmation; the room list and the map are then
+  reloaded. If the robot refuses (e.g. a split line that does not cross the room),
+  its own message is shown.
 - **Go to…** on robots without Valetudo's go-to (e.g. Eureka J15 Pro Ultra): a 60 cm
   zone clean at that spot, then a pause as soon as the robot is within 50 cm.
   With **Without cleaning** ticked (under the button, on by default),
@@ -120,6 +109,19 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
   or lowest), and puts yours back when the trip ends, whatever its end. If the robot
   refuses a change, the trip is cancelled and nothing is left changed. Most robots
   have no "fan off" in Valetudo: they still vacuum gently on the way.
+
+**On the map**
+- **Show on map** (in the strip) loads the map, refreshes the robot live and keeps it
+  in view (recentring only when it nears the edge). Click again to stop. It is
+  turned on by itself when QGIS starts with an empty project and the robot answers
+  within a minute (*Settings > Options > Valetudo*, *Connection*: "Show the robot on
+  the map when QGIS starts with an empty project"); a project with layers is left
+  untouched.
+- While it is on, a **Valetudo map** toolbar appears: *Pick rooms on the map* (click a
+  room to tick or untick it in the Clean tab, right-click it for its menu), *Edit
+  no-go zones and walls*, *Send no-go zones and walls to robot…*; and a small
+  **status card** (state, battery, job) sits in the map's top right corner, so the
+  robot can be watched with the panel closed.
 
 The panel refreshes itself while visible (every 5 s while the robot works, every
 30 s otherwise), even when the robot is docked. Sections fold with their arrow
@@ -130,8 +132,9 @@ The panel refreshes itself while visible (every 5 s while the robot works, every
 the settings). It starts at the robot's next full image (key frame), so the first
 image can take a few seconds (the status shows how long); after leaving the tab, the
 stream keeps running for a minute so that coming back is instant. The stream
-reconnects by itself if it drops, and **Save snapshot**
-saves the current image as PNG.
+reconnects by itself if it drops, and **Save snapshot** (or Ctrl+Shift+S in the
+tab) saves the current image as PNG. **Full screen** shows the video in its own
+window (Esc or a double-click closes it).
 
 **No-go zones and virtual walls**: *Edit no-go zones and walls* loads the
 robot's restrictions into two editable layers ("no-go zones" polygons, with a
@@ -148,7 +151,9 @@ persistent warning when the fresh water tank or the detergent is empty, the
 waste water tank or the dust bag is full, or a tank is missing; a short message
 confirms when it is OK again. Turn it off in the settings.
 
-**Wi-Fi survey** (Advanced tab): *Record Wi-Fi survey* reads the robot's Wi-Fi
+**Wi-Fi tab**: the signal now, with a graph of the last 10 minutes, and the three
+colour thresholds (green, yellow, red from), used by the strip, the graph and the
+maps. *Record Wi-Fi survey* (with QGIS open) reads the robot's Wi-Fi
 signal at regular intervals and stores it as a point at the robot's position (layer
 "Wi-Fi survey", fields `signal` in dBm, `frequency`, `ssid`, `time`). Start a
 cleaning, let the robot go everywhere, then click the button again: the points are
@@ -162,7 +167,8 @@ settings, tab *Wi-Fi survey*. Check first in the Swagger UI that the robot's
 `WifiConfigurationCapability` returns a fresh `signal` at each call: if it is cached,
 use a longer reading interval.
 
-**Wi-Fi survey recorded on the robot** (Advanced tab), so that QGIS does not have to
+**Wi-Fi survey recorded on the robot** (Wi-Fi tab, *Recorder on the robot*, which
+says whether it is installed and where), so that QGIS does not have to
 stay open: *Record Wi-Fi on the robot…* installs a small shell script on the robot
 over SSH (same key-based login and settings as the reboot) and starts it. From then
 on, whenever the robot moves (cleaning, returning to its dock, moving, manual
@@ -193,7 +199,7 @@ confirmation. It needs an SSH client and key-based login to the robot
 (`ssh-copy-id root@<robot>`); no password is ever stored or asked for. SSH user
 and port are in the settings (`root`, 22 by default).
 
-**Log** tab: follows Valetudo's log file on the robot, `/tmp/valetudo.log`, as
+**Terminal** tab, *Log* (Robot): follows Valetudo's log file on the robot, `/tmp/valetudo.log`, as
 `ssh root@<robot> 'tail -f /tmp/valetudo.log'` would (last 200 lines, then new
 ones as they come; errors in red, warnings in orange). It only runs while the tab
 is shown and the panel is visible, uses the same key-based SSH login and settings
@@ -202,8 +208,16 @@ robot reboots). *Scroll to new lines* keeps the newest line in view; untick it t
 read older lines in peace. *Clear* empties the view (not the file).
 
 **Schedule** tab: Valetudo's own timers, run by the robot itself, even when QGIS
-is closed. One line per scheduled cleaning (name, days, time, what); tick it to turn
-it on or off, double-click or *Edit…* to change it, *Run now* to start it at once.
+is closed. A **week view** (Monday to Sunday, 6:00 to midnight) shows each scheduled
+cleaning as a block (grey when off): click a block to select it, double-click it to
+edit it, double-click an empty slot to create one there, or **drag a room group** (or
+a room) from the Clean tab and drop it on a day and time to schedule it. Below, one
+line per cleaning (name, days, time, what); tick it to turn it on or off,
+double-click or *Edit…* to change it, *Run now* to start it at once. **Tonight…**
+cleans the ticked rooms (or the whole home) once, at the time you choose today (or
+tomorrow if already past): it is a timer named "Once dd/MM HH:mm" that the plugin
+deletes an hour after its start, the next time it connects (if QGIS is not opened
+within a week, it would run again the same day the next week).
 The editor sets the name, the days and time, *Whole home* or *Selected rooms*
 (the same rooms tree as the Clean group, with your room groups; optionally in the
 order ticked, and the number of passes), and the fan speed, water usage and mode
@@ -243,7 +257,7 @@ ssh-copy-id root@192.168.50.20                   # key login to the robot
 mkdir -p ~/valetudo && cp valetudo_wifi_collect.py ~/valetudo/
 python3 ~/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20 -v   # try it
 crontab -e    # then add:
-# */5 * * * * python3 $HOME/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20
+# */5 * * * * python3 $HOME/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20 -v >> $HOME/valetudo/collect.log 2>&1
 ```
 
 In QGIS, *Load Wi-Fi map from the Pi* (Advanced tab) fetches over SSH the newest
@@ -260,7 +274,7 @@ changing a threshold). Run names come from the robot's clock, shown in the Pi's
 time zone: keep the robot synchronised (Valetudo's NTP settings) and set the Pi's
 time zone (`sudo timedatectl set-timezone Europe/Paris`).
 
-**Robot console** tab: type a command, press Enter, and it runs on the robot
+**Terminal** tab, *Console* (Robot): type a command, press Enter, and it runs on the robot
 (`ssh <user>@<robot>`, same key-based login and settings as the reboot); its
 output appears below, errors in red, with the exit code when it is not 0. The
 session opens when the tab is first shown and stays open while the panel is
@@ -271,11 +285,13 @@ interactive programs (`vi`, `top`, `less`) do not work: use e.g. `top -b -n 1`.
 Variables set with `export` do not carry over. *Stop* ends a command that does not
 finish (e.g. `tail -f`) by opening a new session.
 
-**RPI SSH console** tab: the same console, on a Raspberry Pi (or any Linux machine
+**Terminal** tab, *Raspberry Pi*: the same console and log on a Raspberry Pi (or any Linux machine
 of your network, e.g. the one that builds the Wi-Fi maps). Set its address, SSH
 user (`pi` by default) and port in *Settings > Options > Valetudo*, tab *Raspberry
-Pi*; the tab appears in the panel once an address is set. It also needs key-based
-login from your PC: `ssh-copy-id pi@192.168.50.1`.
+Pi*; the *Raspberry Pi* switch of the Terminal tab, the Pi's details under the
+strip and its card in the System tab appear once an address is set. Its *Log*
+follows `~/valetudo/collect.log`, the log of the Pi's Wi-Fi collector (see its cron
+line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`.
 
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and
@@ -309,6 +325,10 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `ssh_console.py`             | SSH command session (one command at a time)             |
 | `console_tab.py`             | A console tab of the panel (robot, Raspberry Pi)        |
 | `pi_maps.py`                 | Loads the newest Wi-Fi map built on the Pi              |
+| `panel_widgets.py`           | Signal graph, full-screen video, tab badges             |
+| `schedule_view.py`           | Week view of the scheduled cleanings                    |
+| `log_tab.py`                 | A log view of the Terminal tab (tail -F over SSH)       |
+| `map_overlay.py`             | Status card over the map canvas                         |
 | `host_info.py`               | Header lines: address, clock, uptime (robot and Pi)     |
 | `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
 | `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |

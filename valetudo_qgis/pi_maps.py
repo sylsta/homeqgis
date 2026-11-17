@@ -52,7 +52,7 @@ def fetch_command(folder, full=False):
             f"n={FULL_NAME}" if full else
             "n=$(readlink latest.tif) || { echo error=no_map >&2; exit 3; }; n=${n%.tif}")
     return (f"cd {quoted} 2>/dev/null || {{ echo error=no_folder >&2; exit 2; }}; "
-            f'{pick}; tar -cf - "$n.tif" "$n.csv" 2>/dev/null; true')
+            f'{pick}; tar -cf - "$n.tif" "$n.csv" "$n.png" 2>/dev/null; true')
 
 
 def run_label(name):
@@ -67,25 +67,27 @@ def run_label(name):
 
 
 def unpack(data):
-    """tar bytes -> (run name, local .tif path, local .csv path or None)."""
+    """tar bytes -> (run name, local .tif, .csv or None, .png or None)."""
     target = local_dir()
-    tif = csv_path = None
+    tif = csv_path = png = None
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
         for member in archive.getmembers():
             base = os.path.basename(member.name)   # never write outside our folder
             if not member.isfile() or not base.startswith("wifi_") \
-                    or not base.endswith((".tif", ".csv")):
+                    or not base.endswith((".tif", ".csv", ".png")):
                 continue
             path = os.path.join(target, base)
             with archive.extractfile(member) as src, open(path, "wb") as dst:
                 dst.write(src.read())
             if base.endswith(".tif"):
                 tif = path
+            elif base.endswith(".png"):
+                png = path
             else:
                 csv_path = path
     if tif is None:
         raise ValueError("no_map")
-    return os.path.splitext(os.path.basename(tif))[0], tif, csv_path
+    return os.path.splitext(os.path.basename(tif))[0], tif, csv_path, png
 
 
 def points_layer(csv_path, name, cfg):
