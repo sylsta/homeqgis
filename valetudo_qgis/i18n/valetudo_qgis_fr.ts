@@ -1979,5 +1979,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Start cleaning all rooms</source>
         <translation>Nettoyer toutes les pièces</translation>
     </message>
+    <message>
+        <source>Click to unfold or fold the panel</source>
+        <translation>Cliquez pour déplier ou replier le panneau</translation>
+    </message>
 </context>
 </TS>

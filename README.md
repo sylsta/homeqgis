@@ -67,9 +67,9 @@ The panel, from top to bottom:
   paused; *Dock* next to it while away from the dock.
 - **Side tabs**: icons, their names as tooltips; a tab gets an orange dot when one
   of the problems of the ⚠ belongs to it.
-- **Compact mode** (⋮ menu): only the strip and the big button; hovering the panel
-  unfolds the rest, which folds again when the mouse leaves it (e.g. towards a
-  toolbar). Untick it in the ⋮ menu to keep the panel unfolded.
+- **Compact mode** (⋮ menu, off by default): only the strip and the big button;
+  click the strip to unfold or fold the rest. The panel never folds by itself (when
+  QGIS loses the focus or the mouse goes elsewhere).
 
 **Clean** tab
 - Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking

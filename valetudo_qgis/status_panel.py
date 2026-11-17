@@ -59,7 +59,6 @@ PI_LOG_PATH = "valetudo/collect.log"         # the Pi collector's log (README's 
 KEY_COMPACT = "valetudo/panel_compact"       # compact mode: strip and big button only
 KEY_ONCE_TIMERS = "valetudo/once_timers"     # "label|due Unix time" of one-off cleanings
 ONCE_GRACE_S = 3600                          # deleted an hour after their start time
-COMPACT_FOLD_MS = 800                        # compact mode: fold again after leaving
 KEY_GOTO_QUIET = "valetudo/goto_quiet"   # "Go to" without cleaning (emulated go-to only)
 KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all runs
 
@@ -666,14 +665,11 @@ class ValetudoPanel(QgsDockWidget):
     def eventFilter(self, obj, event):
         if obj is getattr(self, "strip", None) \
                 and event.type() == QEvent.Type.MouseButtonRelease:
-            self.toggle_details()
+            if self.is_compact():   # compact mode: the strip folds / unfolds the panel
+                self._show_body(not self.tabs.isVisible())
+            else:
+                self.toggle_details()
             return True
-        if obj is getattr(self, "_compact_watch", None) and self.is_compact():
-            if event.type() == QEvent.Type.Enter:      # hovering: unfold
-                self._compact_timer.stop()
-                self._show_body(True)
-            elif event.type() == QEvent.Type.Leave:    # left: fold again a bit later
-                self._compact_timer.start()
         return super().eventFilter(obj, event)
 
     def toggle_details(self):
@@ -763,21 +759,15 @@ class ValetudoPanel(QgsDockWidget):
         return getattr(self, "_compact", False)
 
     def set_compact(self, compact):
-        """Only the strip and the big button; hovering the panel unfolds the rest."""
+        """Only the strip and the big button; a click on the strip unfolds or folds
+        the rest. Nothing folds by itself (focus or mouse moving elsewhere)."""
         self._compact = compact
         QgsSettings().setValue(KEY_COMPACT, compact)
-        if not hasattr(self, "_compact_timer"):
-            self._compact_timer = QTimer(self)
-            self._compact_timer.setSingleShot(True)
-            self._compact_timer.setInterval(COMPACT_FOLD_MS)
-            self._compact_timer.timeout.connect(lambda: self._show_body(False))
-            self._compact_watch = self.widget()
-            self._compact_watch.installEventFilter(self)
+        self.strip.setToolTip(tr("Click to unfold or fold the panel") if compact
+                              else tr("Click for details"))
         self._show_body(not compact)
 
     def _show_body(self, visible):
-        if self.is_compact() and visible is False and self.widget().underMouse():
-            return
         for widget in (self.tabs, self.lbl_feedback):
             widget.setVisible(visible)
         if self.is_compact() and not visible:
