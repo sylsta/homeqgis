@@ -116,8 +116,14 @@ class ValetudoClient(QObject):
                 body = bytes(reply.readAll())
                 if raw:
                     data = body.decode("utf-8", "replace")
+                elif not body.strip():
+                    data = None
                 else:
-                    data = json.loads(body) if body.strip() else None
+                    try:
+                        data = json.loads(body)
+                    except ValueError:
+                        # Commands answer plain text ("OK"), not JSON: that is a success.
+                        data = body.decode("utf-8", "replace").strip()
                 if callback:
                     callback(data)
             except Exception as exc:
