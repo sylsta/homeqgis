@@ -13,7 +13,7 @@ from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 from . import room_groups
 from .client import ValetudoClient
 from .i18n import tr
-from .icons import icon
+from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_INTERVAL, KEY_NOTIFY_DOCK, KEY_PI_HOST, KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT,
@@ -120,12 +120,12 @@ class ValetudoOptionsFactory(QgsOptionsWidgetFactory):
     """Registered with iface.registerOptionsWidgetFactory() while the plugin is loaded."""
 
     def __init__(self, on_applied=None):
-        super().__init__(tr("Valetudo"), icon("status_panel"))
+        super().__init__(tr("Valetudo"), icon(LOGO))
         self._on_applied = on_applied
         self._page = None
 
     def icon(self):
-        return icon("status_panel")
+        return icon(LOGO)
 
     def createWidget(self, parent):
         self._page = ValetudoOptionsPage(parent, self._on_applied)

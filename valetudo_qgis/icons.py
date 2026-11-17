@@ -5,6 +5,7 @@ import os
 from qgis.PyQt.QtGui import QIcon
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), "icons")
+LOGO = "valetudo_logo_small"   # the plugin's own icon: Plugin Manager, menu, panel, Options
 
 
 def icon(name):
