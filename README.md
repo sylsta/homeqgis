@@ -209,7 +209,12 @@ started (local time of the Pi):
   and a dot per reading;
 - `wifi_YYYY-MM-DD_HH-MM.tif`: the signal map as a GeoTIFF in the plugin's frame
   (no CRS): drop it in QGIS and it lines up with the plugin's map layers;
-- `latest.png` and `latest.tif`, links to the newest.
+- `latest.png` and `latest.tif`, links to the newest;
+- `wifi_full.csv` / `.png` / `.tif`: the **full map**, rebuilt after each new run
+  from all runs: the readings are first averaged per map cell, so that places the
+  robot visits often do not outweigh the others, and areas missed by one run are
+  filled by the others. `--days N` keeps only the last N days in it (Wi-Fi changes
+  when the router or the furniture move); `--reset` starts it again from now.
 
 Set up on the Pi, once:
 
@@ -223,10 +228,10 @@ crontab -e    # then add:
 # */5 * * * * python3 $HOME/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20
 ```
 
-In QGIS, *Load latest Wi-Fi map from the Pi* (Advanced tab) fetches the newest run
-over SSH (the Pi as set in *Settings > Options > Valetudo*, tab *Raspberry Pi*) and
+In QGIS, *Load Wi-Fi map from the Pi* (Advanced tab) fetches over SSH the newest
+run, or the full map when **Full map (all runs)** (just under the button) is ticked, (the Pi as set in *Settings > Options > Valetudo*, tab *Raspberry Pi*) and
 adds it to a "Wi-Fi maps (Pi)" group: the map, styled with the plugin's thresholds,
-and its readings as points. The files are kept in the QGIS profile folder
+and its readings as points (one per map cell for the full map). The files are kept in the QGIS profile folder
 (`valetudo_wifi_maps/`), so a saved project finds them again; loading the same run
 again replaces its layers. It needs key-based login from your PC to the Pi.
 

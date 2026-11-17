@@ -32,6 +32,7 @@ from .ssh_reboot import SshReboot
 from .status_panel import (
     DOCK_COMPONENT_PROBLEMS,
     KEY_GOTO_QUIET,
+    KEY_PI_MAP_FULL,
     preset_labels,
     state_label as dock_state_label,
     ValetudoPanel,
@@ -102,8 +103,9 @@ def command_hints():
                                   "“Wi-Fi survey” layer, then build the Wi-Fi map."),
         "robot_survey_remove": tr("Stop the Wi-Fi recorder on the robot and delete it with "
                                   "its readings."),
-        "pi_wifi_map": tr("Add the newest Wi-Fi map built on the Raspberry Pi to the map, "
-                          "with its readings (set the Pi in the settings)."),
+        "pi_wifi_map": tr("Add a Wi-Fi map built on the Raspberry Pi to the map, with its "
+                          "readings: the latest run, or all runs combined with “Full map” "
+                          "ticked (set the Pi in the settings)."),
         "wifi_map": tr("Build the Wi-Fi map again from the survey points "
                        "(only the selected ones, if any)."),
     }
@@ -213,7 +215,7 @@ class ValetudoPlugin:
                          self.remove_robot_survey)
         self.robot_survey = RobotSurvey()
         self.robot_survey.finished.connect(self._on_robot_survey_finished)
-        self._new_action("pi_wifi_map", tr("Load latest Wi-Fi map from the Pi"),
+        self._new_action("pi_wifi_map", tr("Load Wi-Fi map from the Pi"),
                          self.load_pi_wifi_map)
         self.pi_ssh = RobotSurvey()   # the same one-shot SSH runner, towards the Pi
         self.pi_ssh.finished.connect(self._on_pi_wifi_map)
@@ -1073,10 +1075,12 @@ class ValetudoPlugin:
         cfg = load_settings()
         if not cfg["pi_host"]:
             return
+        full = QgsSettings().value(KEY_PI_MAP_FULL, False, type=bool)
         if self.pi_ssh.run("pi_map", cfg["pi_host"], cfg["pi_user"], cfg["pi_port"],
-                           pi_maps.fetch_command(cfg["pi_wifi_dir"])):
+                           pi_maps.fetch_command(cfg["pi_wifi_dir"], full)):
             self._update_pi_actions()
-            self._message(tr("Reading the latest Wi-Fi map from the Pi…"), Qgis.MessageLevel.Info)
+            self._message(tr("Reading the full Wi-Fi map from the Pi…") if full else
+                          tr("Reading the latest Wi-Fi map from the Pi…"), Qgis.MessageLevel.Info)
 
     def _on_pi_wifi_map(self, _operation, ok, _text, detail):
         if self._unloaded:
@@ -1090,6 +1094,8 @@ class ValetudoPlugin:
         problems = {
             "error=no_folder": tr("the folder “{folder}” does not exist on the Pi"),
             "error=no_map": tr("no map in “{folder}” yet (none built by the Pi)"),
+            "error=no_full_map": tr("no full map in “{folder}” yet (the Pi builds it after "
+                                    "its next run; update its script if needed)"),
         }
         if not data:
             text = problems.get(detail, tr("SSH failed: {detail}")).format(

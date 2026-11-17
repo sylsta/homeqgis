@@ -13,7 +13,11 @@ Meant to run every few minutes from cron. Each time, it:
      wifi_YYYY-MM-DD_HH-MM.tif   the signal map as a GeoTIFF (needs GDAL),
                                  in the plugin's frame: it lines up with the
                                  plugin's map layers in QGIS
-   and points latest.png / latest.tif at the newest ones.
+   and points latest.png / latest.tif at the newest ones;
+4. after a new run, rebuilds the full map from all runs (the CSV files of the
+   output folder), wifi_full.csv / .png / .tif: the readings are first averaged
+   per map cell, so that places visited often do not outweigh the others.
+   --days N keeps only the last N days in it; --reset starts it again from now.
 
 The map is an IDW interpolation, clipped to the robot's floor and rooms, with
 the plugin's colours and thresholds (red / yellow / green).
@@ -44,6 +48,8 @@ DATA_NAME = "valetudo_wifi_survey.csv"
 ROBOT_DIRS = ("/data", "/mnt/UDISK", "/mnt/data", "/userdata", "/tmp")
 COLOR_BAD, COLOR_FAIR, COLOR_GOOD = (0xD7, 0x19, 0x1C), (0xFD, 0xD8, 0x35), (0x1A, 0x96, 0x41)
 FIELDS = ["session", "time", "x", "y", "signal", "state", "ssid", "frequency"]
+FULL_NAME = "wifi_full"
+FULL_SINCE = ".full_since"   # Unix time from which runs count in the full map
 
 
 def log(message, args):
@@ -286,6 +292,69 @@ def process_run(rows, map_json, args):
     return name
 
 
+def read_run_files(out_dir):
+    """Readings of every run CSV of the output folder (wifi_YYYY-MM-DD_HH-MM.csv)."""
+    rows = []
+    for name in sorted(os.listdir(out_dir)):
+        if not (name.startswith("wifi_2") and name.endswith(".csv")):
+            continue
+        with open(os.path.join(out_dir, name), newline="") as f:
+            for row in csv.DictReader(f):
+                try:
+                    row.update(session=int(row["session"]), time=int(row["time"]),
+                               x=float(row["x"]), y=float(row["y"]), signal=int(row["signal"]))
+                except (KeyError, TypeError, ValueError):
+                    continue
+                rows.append(row)
+    return rows
+
+
+def cell_means(rows, cell):
+    """One point per map cell: mean position and mean signal of its readings."""
+    cells = {}
+    for row in rows:
+        key = (int(row["x"] // cell), int(row["y"] // cell))
+        acc = cells.setdefault(key, [0.0, 0.0, 0.0, 0])
+        acc[0] += row["x"]
+        acc[1] += row["y"]
+        acc[2] += row["signal"]
+        acc[3] += 1
+    return [{"x": sx / n, "y": sy / n, "signal": round(ss / n)} for sx, sy, ss, n in cells.values()]
+
+
+def process_full(map_json, args):
+    """The full map: all runs since --reset, or of the last --days days."""
+    since = 0
+    since_path = os.path.join(args.out, FULL_SINCE)
+    if os.path.exists(since_path):
+        with open(since_path) as f:
+            since = int(f.read().strip() or 0)
+    if args.days:
+        since = max(since, int(time.time() - args.days * 86400))
+    rows = [r for r in read_run_files(args.out) if r["time"] >= since]
+    base = os.path.join(args.out, FULL_NAME)
+    with open(base + ".csv", "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+    points = cell_means(rows, args.cell)
+    if len(points) < 3:
+        for suffix in (".png", ".tif"):   # too little left (e.g. after --reset): no map
+            if os.path.exists(base + suffix):
+                os.remove(base + suffix)
+        log(f"{FULL_NAME}: {len(rows)} reading(s), too few for a map", args)
+        return
+    floor, walls, pixel_cm = map_masks(map_json) if map_json else (set(), set(), 5)
+    grid, origin, cell = idw_grid(points, args, floor, pixel_cm)
+    render_png(base + ".png", points, grid, origin, cell, floor, walls, pixel_cm, args)
+    try:
+        write_geotiff(base + ".tif", grid, origin, cell)
+    except Exception as exc:
+        print(f"{FULL_NAME}: GeoTIFF not written: {exc}", file=sys.stderr)
+    runs = len({r["session"] for r in rows})
+    log(f"{FULL_NAME}: {len(rows)} readings of {runs} run(s), {len(points)} cells", args)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--robot", default="192.168.50.20", help="robot address")
@@ -304,10 +373,23 @@ def main():
     parser.add_argument("--opacity", type=int, default=70, help="signal over the floor, %%")
     parser.add_argument("--png-scale", type=int, default=3, help="PNG pixels per map pixel")
     parser.add_argument("--all", action="store_true", help="redo every run, even done ones")
+    parser.add_argument("--days", type=int, default=0,
+                        help="full map: only the readings of the last N days (0: all)")
+    parser.add_argument("--reset", action="store_true",
+                        help="full map: start it again from now (older runs no longer count)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
+    if args.reset:
+        with open(os.path.join(args.out, FULL_SINCE), "w") as f:
+            f.write(str(int(time.time())))
+        log("full map reset: only runs from now on will count", args)
+        try:
+            reset_map = http_json(args, "/robot/state/map")
+        except Exception:
+            reset_map = None
+        process_full(reset_map, args)   # now, not at the next run
     done_path = os.path.join(args.out, ".done_sessions")
     done = set()
     if os.path.exists(done_path) and not args.all:
@@ -351,6 +433,8 @@ def main():
         done.add(session)
     with open(done_path, "w") as f:
         f.write("".join(f"{s}\n" for s in sorted(done)))
+    if todo:
+        process_full(map_json, args)
     return 0
 
 

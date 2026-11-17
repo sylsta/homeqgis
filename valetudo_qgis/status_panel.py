@@ -39,6 +39,7 @@ from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
 KEY_GOTO_QUIET = "valetudo/goto_quiet"   # "Go to" without cleaning (emulated go-to only)
+KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all runs
 
 # Layout: ui/status_panel.ui (Qt Designer). The code fills it at run time and
 # relies on these object names.
@@ -59,7 +60,7 @@ UI_WIDGETS = (
     "btn_pi_console_clear", "txt_pi_console", "lbl_pi_console_prompt", "edit_pi_console",
     "btn_pi_console_run", "btn_pi_console_stop",
     "tab_schedule", "timers", "btn_timer_new", "btn_timer_edit", "btn_timer_delete",
-    "btn_timer_run", "lbl_timers_note", "chk_goto_quiet",
+    "btn_timer_run", "lbl_timers_note", "chk_goto_quiet", "chk_pi_map_full",
 )
 # Collapsible sections -> key of their remembered open/closed state.
 SECTIONS = {
@@ -356,6 +357,9 @@ class ValetudoPanel(QgsDockWidget):
         self.chk_goto_quiet.toggled.connect(
             lambda checked: QgsSettings().setValue(KEY_GOTO_QUIET, checked))
         self.chk_goto_quiet.setVisible(False)
+        self.chk_pi_map_full.setChecked(QgsSettings().value(KEY_PI_MAP_FULL, False, type=bool))
+        self.chk_pi_map_full.toggled.connect(
+            lambda checked: QgsSettings().setValue(KEY_PI_MAP_FULL, checked))
 
         self.preset_combos = {"FanSpeedControlCapability": self.combo_fan_speed,
                               "WaterUsageControlCapability": self.combo_water_usage,
@@ -496,9 +500,18 @@ class ValetudoPanel(QgsDockWidget):
         self._update_dock_group()
         if "live" in act:
             self.map_row.addWidget(self._button(act["live"]))
-        put(self.tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
-                               "reboot", "wifi_survey", "wifi_map", "robot_survey_install",
-                               "robot_survey_import", "robot_survey_remove", "pi_wifi_map"])
+        tools = put(self.tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
+                                      "reboot", "wifi_survey", "wifi_map",
+                                      "robot_survey_install", "robot_survey_import",
+                                      "robot_survey_remove", "pi_wifi_map"])
+        # "Full map" goes right under "Load Wi-Fi map from the Pi", and follows its state.
+        if "pi_wifi_map" in act and tools:
+            last = len(tools) - 1   # put() fills two columns, row by row
+            self.tools_grid.addWidget(self.chk_pi_map_full, last // 2 + 1, last % 2)
+            pi_action = act["pi_wifi_map"]
+            pi_action.changed.connect(
+                lambda: self.chk_pi_map_full.setEnabled(pi_action.isEnabled()))
+            self.chk_pi_map_full.setEnabled(pi_action.isEnabled())
         self._update_rooms_button()
 
     def _update_dock_group(self, *_):

@@ -1726,14 +1726,6 @@ Continuer ?</translation>
         <translation>Wi-Fi {run} · mesures</translation>
     </message>
     <message>
-        <source>Add the newest Wi-Fi map built on the Raspberry Pi to the map, with its readings (set the Pi in the settings).</source>
-        <translation>Ajouter à la carte la dernière carte Wi-Fi construite sur le Raspberry Pi, avec ses mesures (définissez le Pi dans les paramètres).</translation>
-    </message>
-    <message>
-        <source>Load latest Wi-Fi map from the Pi</source>
-        <translation>Charger la dernière carte Wi-Fi du Pi</translation>
-    </message>
-    <message>
         <source>the folder “{folder}” does not exist on the Pi</source>
         <translation>le dossier « {folder} » n’existe pas sur le Pi</translation>
     </message>
@@ -1768,6 +1760,34 @@ Continuer ?</translation>
     <message>
         <source>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it, and “Load latest Wi-Fi map from the Pi” reads the maps folder (relative to the user's home, as written by pi/valetudo_wifi_collect.py).</source>
         <translation>Facultatif : un Raspberry Pi ou une autre machine Linux de votre réseau, joint avec votre clé SSH. Avec une adresse, le panneau affiche une console pour lui, et « Charger la dernière carte Wi-Fi du Pi » lit le dossier des cartes (relatif au dossier personnel de l’utilisateur, tel qu’écrit par pi/valetudo_wifi_collect.py).</translation>
+    </message>
+    <message>
+        <source>all runs</source>
+        <translation>tous les passages</translation>
+    </message>
+    <message>
+        <source>Add a Wi-Fi map built on the Raspberry Pi to the map, with its readings: the latest run, or all runs combined with “Full map” ticked (set the Pi in the settings).</source>
+        <translation>Ajouter à la carte une carte Wi-Fi construite sur le Raspberry Pi, avec ses mesures : le dernier passage, ou tous les passages réunis avec « Carte complète » coché (définissez le Pi dans les paramètres).</translation>
+    </message>
+    <message>
+        <source>Load Wi-Fi map from the Pi</source>
+        <translation>Charger la carte Wi-Fi du Pi</translation>
+    </message>
+    <message>
+        <source>no full map in “{folder}” yet (the Pi builds it after its next run; update its script if needed)</source>
+        <translation>pas encore de carte complète dans « {folder} » (le Pi la construit après son prochain passage ; mettez son script à jour si besoin)</translation>
+    </message>
+    <message>
+        <source>Reading the full Wi-Fi map from the Pi…</source>
+        <translation>Lecture de la carte Wi-Fi complète sur le Pi…</translation>
+    </message>
+    <message>
+        <source>Full map (all runs)</source>
+        <translation>Carte complète (tous les passages)</translation>
+    </message>
+    <message>
+        <source>Ticked: load the map of all runs combined. Unticked: the latest run only.</source>
+        <translation>Coché : charger la carte de tous les passages réunis. Décoché : le dernier passage seulement.</translation>
     </message>
 </context>
 </TS>

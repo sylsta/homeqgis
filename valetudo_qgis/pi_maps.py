@@ -1,7 +1,8 @@
 """Wi-Fi maps built on the Raspberry Pi (pi/valetudo_wifi_collect.py) -> QGIS layers.
 
-Over SSH, the Pi sends its newest run as a tar archive: the GeoTIFF the
-'latest.tif' link points to, and the CSV of the same run. They are kept in
+Over SSH, the Pi sends a run as a tar archive, its GeoTIFF and its CSV: the
+newest run (the one the 'latest.tif' link points to), or the full map of all
+runs (wifi_full). They are kept in
 the QGIS profile folder (valetudo_wifi_maps/), so a saved project still finds
 them, and added to a "Wi-Fi maps (Pi)" group: the map styled with the
 plugin's thresholds, the readings as coloured points.
@@ -26,6 +27,7 @@ from .i18n import tr
 from .wifi_survey import style_wifi_points, style_wifi_raster
 
 LOCAL_DIR = "valetudo_wifi_maps"
+FULL_NAME = "wifi_full"
 RUN_NAME = re.compile(r"^wifi_(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})$")
 
 
@@ -39,20 +41,24 @@ def local_dir():
     return path
 
 
-def fetch_command(folder):
-    """Remote command: tar of the newest run (map + readings) on stdout.
-    Errors go to stderr as error=<key> (no_folder, no_map)."""
+def fetch_command(folder, full=False):
+    """Remote command: tar of the newest run, or of the full map, on stdout.
+    Errors go to stderr as error=<key> (no_folder, no_map, no_full_map)."""
     folder = (folder or "valetudo_wifi").strip()
     if folder.startswith("~/"):
         folder = folder[2:]          # ssh starts in the home folder
     quoted = "'" + folder.replace("'", "'\\''") + "'"
+    pick = (f'[ -f {FULL_NAME}.tif ] || {{ echo error=no_full_map >&2; exit 3; }}; '
+            f"n={FULL_NAME}" if full else
+            "n=$(readlink latest.tif) || { echo error=no_map >&2; exit 3; }; n=${n%.tif}")
     return (f"cd {quoted} 2>/dev/null || {{ echo error=no_folder >&2; exit 2; }}; "
-            "n=$(readlink latest.tif) || { echo error=no_map >&2; exit 3; }; "
-            'n=${n%.tif}; tar -cf - "$n.tif" "$n.csv" 2>/dev/null; true')
+            f'{pick}; tar -cf - "$n.tif" "$n.csv" 2>/dev/null; true')
 
 
 def run_label(name):
-    """'wifi_2026-11-17_18-26' -> '2026-11-17 18:26' (else the name itself)."""
+    """'wifi_2026-11-17_18-26' -> '2026-11-17 18:26'; the full map -> 'all runs'."""
+    if name == FULL_NAME:
+        return tr("all runs")
     match = RUN_NAME.match(name)
     if not match:
         return name

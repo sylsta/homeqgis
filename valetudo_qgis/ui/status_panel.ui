@@ -633,6 +633,16 @@
                <property name="verticalSpacing">
                 <number>4</number>
                </property>
+               <item row="99" column="0">
+                <widget class="QCheckBox" name="chk_pi_map_full">
+                 <property name="text">
+                  <string>Full map (all runs)</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>Ticked: load the map of all runs combined. Unticked: the latest run only.</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
