@@ -191,6 +191,39 @@ own interface. Times are shown in local time; Valetudo stores them in UTC, so
 after a change to or from summer time a cleaning starts one hour off until it is
 saved again. The robot's clock must be right (see Valetudo's NTP settings).
 
+**Wi-Fi maps built on a Raspberry Pi** (`pi/valetudo_wifi_collect.py`, not part of the
+plugin zip): with the Wi-Fi recorder installed on the robot, a Pi (or any Linux
+machine always on) fetches each run once the robot is back on its dock and builds
+its map, without QGIS. Every few minutes (cron), the script asks Valetudo whether
+the robot is docked; if the robot's readings file has a run it has not processed
+yet, it fetches the file over SSH and writes, named after the time the run
+started (local time of the Pi):
+
+- `wifi_YYYY-MM-DD_HH-MM.csv`: the readings of that run;
+- `wifi_YYYY-MM-DD_HH-MM.png`: walls, floor, the interpolated signal (IDW,
+  clipped to the floor; red ≤ −80 dBm, yellow −67, green ≥ −50, as in the plugin)
+  and a dot per reading;
+- `wifi_YYYY-MM-DD_HH-MM.tif`: the signal map as a GeoTIFF in the plugin's frame
+  (no CRS): drop it in QGIS and it lines up with the plugin's map layers;
+- `latest.png` and `latest.tif`, links to the newest.
+
+Set up on the Pi, once:
+
+```sh
+sudo apt install python3-numpy python3-gdal      # GDAL only for the GeoTIFF
+ssh-keygen -t ed25519                            # if this user has no key yet
+ssh-copy-id root@192.168.50.20                   # key login to the robot
+mkdir -p ~/valetudo && cp valetudo_wifi_collect.py ~/valetudo/
+python3 ~/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20 -v   # try it
+crontab -e    # then add:
+# */5 * * * * python3 $HOME/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20
+```
+
+Output goes to `~/valetudo_wifi` (`--out` to change). Thresholds, cell size and IDW
+coefficient have options (`--help`); `--all` rebuilds every run (e.g. after
+changing a threshold). Run names come from the robot's clock: keep it synchronised
+(Valetudo's NTP settings).
+
 **SSH console** tab: type a command, press Enter, and it runs on the robot
 (`ssh <user>@<robot>`, same key-based login and settings as the reboot); its
 output appears below, errors in red, with the exit code when it is not 0. The
