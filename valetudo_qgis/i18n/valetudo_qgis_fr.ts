@@ -1265,5 +1265,9 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <source>Clean the {n} ticked room(s).</source>
         <translation>Nettoyer la/les {n} pièce(s) cochée(s).</translation>
     </message>
+    <message>
+        <source>All rooms</source>
+        <translation>Toutes les pièces</translation>
+    </message>
 </context>
 </TS>

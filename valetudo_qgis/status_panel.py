@@ -29,6 +29,8 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QTabWidget,
     QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -370,12 +372,17 @@ class ValetudoPanel(QgsDockWidget):
         # enabled/checked state as the menu): quick buttons, then the command list.
         # -- Commands: direct buttons, grouped by what you want to do ------------------
         self.grp_clean, clean = self._group(root_layout, tr("Clean"))
-        # Rooms as plain checkboxes, two per line; right-click one to edit it.
-        self.rooms = QWidget()
-        self._rooms_grid = QGridLayout(self.rooms)
-        self._rooms_grid.setContentsMargins(0, 0, 0, 0)
-        self._rooms_grid.setSpacing(2)
-        self._room_boxes = []
+        # Rooms in a checkable tree: "All rooms" (tri-state) above one checkbox per
+        # room. Right-click a room to rename, join or split it.
+        self.rooms = QTreeWidget()
+        self.rooms.setHeaderHidden(True)
+        self.rooms.setColumnCount(1)
+        self.rooms.setMaximumHeight(170)
+        self.rooms.setToolTip(tr("Tick rooms to clean them. Right-click a room to rename, "
+                                 "join or split it."))
+        self.rooms.itemChanged.connect(self._on_room_item_changed)
+        self.rooms.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.rooms.customContextMenuRequested.connect(self._on_rooms_context_menu)
         self.rooms.setVisible(False)
         clean.addWidget(self.rooms, 0, 0, 1, 2)
         self.btn_rooms = QPushButton()
@@ -578,26 +585,50 @@ class ValetudoPanel(QgsDockWidget):
             return
         self._segments = rows
         self._checked_rooms &= {r[0] for r in rows}
-        self._clear_room_boxes()
-        tooltip = tr("Tick rooms to clean them. Right-click a room to rename, join or split it.")
-        for index, (seg_id, name) in enumerate(rows):
-            box = QCheckBox(name)
-            box.setChecked(seg_id in self._checked_rooms)
-            box.setToolTip(tooltip)
-            box.toggled.connect(lambda on, i=seg_id: self._on_room_toggled(i, on))
-            box.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-            box.customContextMenuRequested.connect(
-                lambda pos, b=box, i=seg_id, n=name: self._room_menu(i, n, b.mapToGlobal(pos)))
-            self._rooms_grid.addWidget(box, index // 2, index % 2)
-            self._room_boxes.append(box)
+        self.rooms.blockSignals(True)
+        self.rooms.clear()
+        if rows:
+            # Parent: checks / unchecks every room, partial when only some are ticked.
+            parent = QTreeWidgetItem([tr("All rooms")])
+            parent.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
+                            | Qt.ItemFlag.ItemIsAutoTristate)
+            self.rooms.addTopLevelItem(parent)
+            for seg_id, name in rows:
+                child = QTreeWidgetItem([name])
+                child.setData(0, Qt.ItemDataRole.UserRole, seg_id)
+                child.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
+                               | Qt.ItemFlag.ItemNeverHasChildren)
+                # The check state must be set for Qt to draw the checkbox at all.
+                child.setCheckState(0, Qt.CheckState.Checked if seg_id in self._checked_rooms
+                                    else Qt.CheckState.Unchecked)
+                parent.addChild(child)
+            parent.setExpanded(True)
+        self.rooms.blockSignals(False)
         self.rooms.setVisible(bool(rows))
         self._update_rooms_button()
 
     def _clear_room_boxes(self):
-        for box in self._room_boxes:
-            self._rooms_grid.removeWidget(box)
-            box.deleteLater()
-        self._room_boxes = []
+        self.rooms.blockSignals(True)
+        self.rooms.clear()
+        self.rooms.blockSignals(False)
+
+    def _on_room_item_changed(self, *_):
+        """Read the ticked rooms back from the tree (children only)."""
+        checked = set()
+        for i in range(self.rooms.topLevelItemCount()):
+            parent = self.rooms.topLevelItem(i)
+            for j in range(parent.childCount()):
+                child = parent.child(j)
+                if child.checkState(0) == Qt.CheckState.Checked:
+                    checked.add(child.data(0, Qt.ItemDataRole.UserRole))
+        self._checked_rooms = checked
+        self._update_rooms_button()
+
+    def _on_rooms_context_menu(self, pos):
+        item = self.rooms.itemAt(pos)
+        seg_id = item.data(0, Qt.ItemDataRole.UserRole) if item is not None else None
+        if seg_id is not None:   # a room, not the "All rooms" line
+            self._room_menu(seg_id, item.text(0), self.rooms.viewport().mapToGlobal(pos))
 
     def _room_menu(self, seg_id, name, global_pos):
         if self.client is None:
@@ -641,13 +672,6 @@ class ValetudoPanel(QgsDockWidget):
         if answer == QMessageBox.StandardButton.Yes and self.client is not None:
             self._checked_rooms -= {seg_a, seg_b}
             self.client.join_segments(seg_a, seg_b)
-
-    def _on_room_toggled(self, seg_id, checked):
-        if checked:
-            self._checked_rooms.add(seg_id)
-        else:
-            self._checked_rooms.discard(seg_id)
-        self._update_rooms_button()
 
     def _update_rooms_button(self):
         """Shown when the robot knows its rooms; says how many are ticked."""

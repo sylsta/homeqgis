@@ -39,7 +39,9 @@ Eureka J15 Pro Ultra · Connected        [Docked]
 ████████████████████ 99 %
 ⚠ error, only when there is one
 ┌ Clean ─────────────────────────────────────┐
-│ ☐ Kitchen        ☐ Hallway   (checkboxes)  │
+│ ▾ ☐ All rooms                              │
+│     ☐ Hallway                              │
+│     ☐ Kitchen                              │
 │ [Clean everything] [Clean room(s)]         │
 │ [Clean a zone…]    [Go to…]                │
 └────────────────────────────────────────────┘
@@ -56,7 +58,8 @@ Robot · Camera · Maintenance · Advanced   (tabs)
 
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
   stay pressed until you have drawn the zone or clicked the point on the map.
-- Rooms are checkboxes, two per line; *Clean room(s)* cleans the ticked ones.
+- Rooms are a checkable tree: *All rooms* ticks or unticks them all (partial when
+  only some are ticked); *Clean room(s)* cleans the ticked ones.
 - **Edit rooms**: right-click a room → *Rename…*, *Join with ▸* another
   room, or *Split with a line on the map…* (click the two ends of the cut line,
   from wall to wall; right-click or Esc cancels). Each edit asks for confirmation;
