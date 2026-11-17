@@ -23,6 +23,8 @@ from .icons import has_icon, icon
 from .map_layers import ValetudoLayers, layer_names
 from .map_tools import GoToMapTool, LineMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
+from . import robot_survey
+from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
 from .settings import load_settings
 from .ssh_reboot import SshReboot
@@ -37,6 +39,7 @@ from .status_panel import (
 from .wifi_survey import WifiSurvey, build_wifi_map, layer_names as wifi_layer_names
 
 KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
+KEY_ROBOT_SURVEY_DIR = "valetudo/robot_survey_dir"   # set once the survey is on the robot
 MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
 WATCH_INTERVAL_MS = 60_000  # background check of the dock station, panel open or not
 
@@ -90,6 +93,12 @@ def command_hints():
         "reboot": tr("Reboot the robot over SSH (asks first)."),
         "wifi_survey": tr("Record the robot's Wi-Fi signal where it goes; "
                           "click again to stop and build the Wi-Fi map."),
+        "robot_survey_install": tr("Install a Wi-Fi recorder on the robot: it records the "
+                                   "signal whenever the robot moves, even when QGIS is closed."),
+        "robot_survey_import": tr("Bring the readings recorded on the robot into the "
+                                  "“Wi-Fi survey” layer, then build the Wi-Fi map."),
+        "robot_survey_remove": tr("Stop the Wi-Fi recorder on the robot and delete it with "
+                                  "its readings."),
         "wifi_map": tr("Build the Wi-Fi map again from the survey points "
                        "(only the selected ones, if any)."),
     }
@@ -190,6 +199,15 @@ class ValetudoPlugin:
         self._new_action("wifi_survey", tr("Record Wi-Fi survey"), self.toggle_wifi_survey,
                          checkable=True)
         self._new_action("wifi_map", tr("Build Wi-Fi map"), self.build_wifi_map)
+        self._new_action("robot_survey_install", tr("Record Wi-Fi on the robot…"),
+                         self.install_robot_survey)
+        self._new_action("robot_survey_import", tr("Import Wi-Fi from the robot"),
+                         self.import_robot_survey)
+        self._new_action("robot_survey_remove", tr("Remove Wi-Fi recorder from robot…"),
+                         self.remove_robot_survey)
+        self.robot_survey = RobotSurvey()
+        self.robot_survey.finished.connect(self._on_robot_survey_finished)
+        self._update_robot_survey_actions()
         self.survey = WifiSurvey(QgsProject.instance())
         self.survey.sampleAdded.connect(self._on_wifi_sample)
         self.goto_emulator = GoToEmulator()
@@ -285,6 +303,8 @@ class ValetudoPlugin:
         self._hide_edit_bar()
         if getattr(self, "boot", None) is not None:
             self.boot.stop()
+        if getattr(self, "robot_survey", None) is not None:
+            self.robot_survey.stop()
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
         if self.survey is not None:
@@ -356,6 +376,7 @@ class ValetudoPlugin:
         if self.panel is not None:
             self.panel.attach(self.client)
         self.client.fetch_capabilities(quiet=True)   # retried once the robot answers
+        self._ensure_robot_survey()   # started again if the robot has rebooted
         return self.client
 
     def _drop_client(self):
@@ -791,6 +812,148 @@ class ValetudoPlugin:
             self.iface.messageBar().pushMessage(
                 "Valetudo", tr("SSH reboot failed: {detail}").format(detail=detail),
                 level=Qgis.MessageLevel.Critical, duration=0)
+
+    # -- Wi-Fi survey recorded on the robot ------------------------------------------
+
+    def _ssh_target(self):
+        """(host, user, port, settings) or None when no robot address is set."""
+        cfg = load_settings()
+        host = QUrl(cfg["url"]).host() if cfg["url"] else ""
+        return (host, cfg["ssh_user"], cfg["ssh_port"], cfg) if host else None
+
+    def _update_robot_survey_actions(self):
+        installed = bool(QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str))
+        for key in ("robot_survey_import", "robot_survey_remove"):
+            if key in self.act:
+                self.act[key].setEnabled(installed)
+
+    def _robot_survey_run(self, operation, command, stdin=b""):
+        target = self._ssh_target()
+        if target is None:
+            return False
+        host, user, port, _cfg = target
+        if not self.robot_survey.run(operation, host, user, port, command, stdin):
+            self._message(tr("Another Wi-Fi recorder operation is running."),
+                          Qgis.MessageLevel.Info)
+            return False
+        return True
+
+    def install_robot_survey(self, *_):
+        if self._ssh_target() is None and not self.configure():
+            return
+        target = self._ssh_target()
+        if target is None:
+            return
+        host, user, _port, cfg = target
+        answer = QMessageBox.question(
+            self.iface.mainWindow(), tr("Record Wi-Fi on the robot"),
+            tr("Install the Wi-Fi recorder on the robot ({user}@{host}) and start it?\n\n"
+               "From then on, whenever the robot moves (cleaning, returning to its dock…), "
+               "it records its Wi-Fi signal and position on the robot itself, every {interval} s, "
+               "even when QGIS is closed. Use “Import Wi-Fi from the robot” to bring the "
+               "readings into QGIS.\n\n"
+               "It uses SSH with your key, as the reboot does. After a robot reboot, the "
+               "plugin starts it again the next time it connects.").format(
+                user=user, host=host, interval=max(1, round(cfg["wifi_interval_s"]))),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        with open(robot_survey.SCRIPT_PATH, "rb") as f:
+            script = f.read()
+        if self._robot_survey_run("install", robot_survey.install_command(
+                cfg["wifi_interval_s"], cfg["wifi_min_step_cm"]), script):
+            self._message(tr("Installing the Wi-Fi recorder on the robot…"),
+                          Qgis.MessageLevel.Info)
+
+    def _ensure_robot_survey(self):
+        directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
+        target = self._ssh_target()
+        if directory and target is not None and not self.robot_survey.is_busy():
+            cfg = target[3]
+            self._robot_survey_run("ensure", robot_survey.ensure_command(
+                directory, cfg["wifi_interval_s"], cfg["wifi_min_step_cm"]))
+
+    def import_robot_survey(self, *_):
+        directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
+        if directory and self._robot_survey_run("import", robot_survey.import_command(directory)):
+            self._message(tr("Reading the Wi-Fi survey from the robot…"), Qgis.MessageLevel.Info)
+
+    def remove_robot_survey(self, *_):
+        directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
+        if not directory:
+            return
+        answer = QMessageBox.question(
+            self.iface.mainWindow(), tr("Remove Wi-Fi recorder from robot"),
+            tr("Stop the Wi-Fi recorder on the robot and delete it, with the readings not "
+               "imported yet?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+        if answer == QMessageBox.StandardButton.Yes:
+            self._robot_survey_run("remove", robot_survey.remove_command(directory))
+
+    def _on_robot_survey_finished(self, operation, ok, output, detail):
+        if self._unloaded:
+            return
+        if detail == "ssh_missing":
+            self._message(tr("ssh not found: install an SSH client."), Qgis.MessageLevel.Critical)
+            return
+        values = robot_survey.parse_keys(output)
+        if operation == "ensure":
+            if values.get("missing"):   # removed from the robot by other means
+                QgsSettings().remove(KEY_ROBOT_SURVEY_DIR)
+                self._update_robot_survey_actions()
+            return   # quiet: runs at each connection
+        if not ok and operation != "import":
+            self.iface.messageBar().pushMessage(
+                "Valetudo", tr("Wi-Fi recorder: SSH failed: {detail}").format(
+                    detail=values.get("error") or detail),
+                level=Qgis.MessageLevel.Critical, duration=0)
+            return
+        if operation == "install":
+            QgsSettings().setValue(KEY_ROBOT_SURVEY_DIR, values.get("dir", ""))
+            self._update_robot_survey_actions()
+            tools = set(values.get("tool", "").split(","))
+            problems = []
+            if not tools & {"wget", "curl"}:
+                problems.append(tr("neither wget nor curl on the robot"))
+            if not values.get("position"):
+                problems.append(tr("the robot position could not be read"))
+            if not values.get("signal"):
+                problems.append(tr("the Wi-Fi signal could not be read"))
+            if problems:
+                self.iface.messageBar().pushMessage(
+                    "Valetudo", tr("Wi-Fi recorder installed in {dir}, but: {problems}. "
+                                   "It will not record until this is solved.").format(
+                        dir=values.get("dir", "?"), problems="; ".join(problems)),
+                    level=Qgis.MessageLevel.Warning, duration=0)
+            else:
+                self._message(tr("Wi-Fi recorder running on the robot (in {dir}; now: {signal} "
+                                 "dBm). It records whenever the robot moves.").format(
+                    dir=values.get("dir", "?"), signal=values.get("signal")),
+                    Qgis.MessageLevel.Success)
+        elif operation == "import":
+            rows = robot_survey.parse_rows(output)
+            if not rows:
+                self._message(tr("No Wi-Fi readings on the robot yet: they are recorded "
+                                 "while it moves."), Qgis.MessageLevel.Info)
+                return
+            self._prepare_project()   # the points are in the robot's own frame
+            if not self.layers.exists() and self.client is not None:
+                self.client.fetch_map()   # the readings mean more on top of the map
+            added = self.survey.add_rows(rows, load_settings())
+            sessions = len({r["session"] for r in rows})
+            self._message(tr("{added} new point(s) imported ({total} reading(s) in {sessions} "
+                             "run(s) on the robot).").format(added=added, total=len(rows),
+                                                             sessions=sessions),
+                          Qgis.MessageLevel.Success)
+            if added and self.survey.layer() is not None \
+                    and self.survey.layer().featureCount() >= 3:
+                self.build_wifi_map()
+        elif operation == "remove":
+            QgsSettings().remove(KEY_ROBOT_SURVEY_DIR)
+            self._update_robot_survey_actions()
+            self._message(tr("Wi-Fi recorder removed from the robot."), Qgis.MessageLevel.Success)
 
     # -- boot monitor -------------------------------------------------------------
 

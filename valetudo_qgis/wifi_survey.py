@@ -81,6 +81,37 @@ class WifiSurvey(QObject):
         self._layer_id = lyr.id()
         return lyr
 
+    def add_rows(self, rows, cfg):
+        """Add readings recorded on the robot (robot_survey.parse_rows()).
+
+        A reading already in the layer (same time, to the second) is skipped,
+        so importing the robot's file again only adds the new ones.
+        Returns the number of points added."""
+        if not self.is_running():
+            self.cfg = cfg
+        lyr = self._ensure_layer()
+        idx = lyr.fields().indexOf("time")
+        known = set()
+        for feature in lyr.getFeatures():
+            value = feature[idx]
+            if isinstance(value, QDateTime) and value.isValid():
+                known.add(value.toSecsSinceEpoch())
+        features = []
+        for row in rows:
+            if row["time"] in known:
+                continue
+            known.add(row["time"])
+            f = QgsFeature(lyr.fields())
+            f.setGeometry(QgsGeometry.fromPointXY(v2q(row["x"], row["y"])))
+            f.setAttributes([int(row["signal"]), row.get("frequency", ""), row.get("ssid", ""),
+                             QDateTime.fromSecsSinceEpoch(int(row["time"]))])
+            features.append(f)
+        if features:
+            lyr.dataProvider().addFeatures(features)
+            lyr.updateExtents()
+            lyr.triggerRepaint()
+        return len(features)
+
     # -- recording ------------------------------------------------------------------
 
     def is_running(self):

@@ -135,6 +135,31 @@ settings, tab *Wi-Fi survey*. Check first in the Swagger UI that the robot's
 `WifiConfigurationCapability` returns a fresh `signal` at each call: if it is cached,
 use a longer reading interval.
 
+**Wi-Fi survey recorded on the robot** (Advanced tab), so that QGIS does not have to
+stay open: *Record Wi-Fi on the robot…* installs a small shell script on the robot
+over SSH (same key-based login and settings as the reboot) and starts it. From then
+on, whenever the robot moves (cleaning, returning to its dock, moving, manual
+control), the script records its Wi-Fi signal (read from `/proc/net/wireless`, so
+always fresh) and its position from Valetudo's map, at the reading interval and
+minimum distance of the *Wi-Fi survey* settings; each run is kept apart. Docked or
+idle, it only checks the robot state every 10 s. *Import Wi-Fi from the robot*
+brings the readings into the "Wi-Fi survey" layer (readings already imported are
+skipped) and builds the Wi-Fi map. *Remove Wi-Fi recorder from robot…* stops it and
+deletes it with its readings.
+
+- The script and its readings go to the first writable folder among `/data`,
+  `/mnt/UDISK`, `/mnt/data`, `/userdata` and `/tmp` (the message after the install
+  says which). In `/tmp` they are lost at each robot reboot.
+- The robot does not start it at boot by itself: the plugin starts it again each
+  time it connects to the robot. To have it start with the robot, add this line to
+  the robot's own boot script, the one that starts Valetudo (with the folder
+  given at install):
+  `sh /data/valetudo_wifi_survey.sh /data/valetudo_wifi_survey.csv 2 20 &`
+- It needs `wget` or `curl` on the robot; the install message says if something
+  is missing. It reads Valetudo locally without a password: it does not work if
+  Valetudo's HTTP authentication is turned on.
+- The file is limited to the last 50,000 readings (about 2.5 MB).
+
 **Reboot robot (SSH)…** (Valetudo menu and status panel): Valetudo deliberately
 has no reboot API, so the plugin runs `ssh <user>@<robot> reboot` after a
 confirmation. It needs an SSH client and key-based login to the robot
@@ -205,6 +230,8 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
 | `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |
 | `rooms_tree.py`              | Checkable rooms tree with room groups (panel, editor)   |
+| `robot_survey.py`            | Installs / starts / reads the Wi-Fi recorder over SSH   |
+| `robot/valetudo_wifi_survey.sh` | Wi-Fi recorder that runs on the robot (BusyBox sh)   |
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
 | `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |

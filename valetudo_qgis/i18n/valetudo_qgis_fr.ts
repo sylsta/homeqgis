@@ -1529,5 +1529,101 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <source>Enabled</source>
         <translation>Activé</translation>
     </message>
+    <message>
+        <source>Install a Wi-Fi recorder on the robot: it records the signal whenever the robot moves, even when QGIS is closed.</source>
+        <translation>Installer un enregistreur Wi-Fi sur le robot : il enregistre le signal chaque fois que le robot se déplace, même quand QGIS est fermé.</translation>
+    </message>
+    <message>
+        <source>Bring the readings recorded on the robot into the “Wi-Fi survey” layer, then build the Wi-Fi map.</source>
+        <translation>Récupérer les mesures enregistrées sur le robot dans la couche « Relevé Wi-Fi », puis construire la carte Wi-Fi.</translation>
+    </message>
+    <message>
+        <source>Stop the Wi-Fi recorder on the robot and delete it with its readings.</source>
+        <translation>Arrêter l’enregistreur Wi-Fi du robot et le supprimer avec ses mesures.</translation>
+    </message>
+    <message>
+        <source>Record Wi-Fi on the robot…</source>
+        <translation>Enregistrer le Wi-Fi sur le robot…</translation>
+    </message>
+    <message>
+        <source>Import Wi-Fi from the robot</source>
+        <translation>Importer le Wi-Fi depuis le robot</translation>
+    </message>
+    <message>
+        <source>Remove Wi-Fi recorder from robot…</source>
+        <translation>Retirer l’enregistreur Wi-Fi du robot…</translation>
+    </message>
+    <message>
+        <source>Record Wi-Fi on the robot</source>
+        <translation>Enregistrer le Wi-Fi sur le robot</translation>
+    </message>
+    <message>
+        <source>Remove Wi-Fi recorder from robot</source>
+        <translation>Retirer l’enregistreur Wi-Fi du robot</translation>
+    </message>
+    <message>
+        <source>Stop the Wi-Fi recorder on the robot and delete it, with the readings not imported yet?</source>
+        <translation>Arrêter l’enregistreur Wi-Fi du robot et le supprimer, avec les mesures pas encore importées ?</translation>
+    </message>
+    <message>
+        <source>Another Wi-Fi recorder operation is running.</source>
+        <translation>Une autre opération sur l’enregistreur Wi-Fi est en cours.</translation>
+    </message>
+    <message>
+        <source>Installing the Wi-Fi recorder on the robot…</source>
+        <translation>Installation de l’enregistreur Wi-Fi sur le robot…</translation>
+    </message>
+    <message>
+        <source>Reading the Wi-Fi survey from the robot…</source>
+        <translation>Lecture du relevé Wi-Fi sur le robot…</translation>
+    </message>
+    <message>
+        <source>Install the Wi-Fi recorder on the robot ({user}@{host}) and start it?
+
+From then on, whenever the robot moves (cleaning, returning to its dock…), it records its Wi-Fi signal and position on the robot itself, every {interval} s, even when QGIS is closed. Use “Import Wi-Fi from the robot” to bring the readings into QGIS.
+
+It uses SSH with your key, as the reboot does. After a robot reboot, the plugin starts it again the next time it connects.</source>
+        <translation>Installer l’enregistreur Wi-Fi sur le robot ({user}@{host}) et le démarrer ?
+
+Ensuite, chaque fois que le robot se déplace (nettoyage, retour à la base…), il enregistre son signal Wi-Fi et sa position sur le robot lui-même, toutes les {interval} s, même quand QGIS est fermé. Utilisez « Importer le Wi-Fi depuis le robot » pour récupérer les mesures dans QGIS.
+
+Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du robot, l’extension le relance à sa prochaine connexion.</translation>
+    </message>
+    <message>
+        <source>neither wget nor curl on the robot</source>
+        <translation>ni wget ni curl sur le robot</translation>
+    </message>
+    <message>
+        <source>the robot position could not be read</source>
+        <translation>la position du robot n’a pas pu être lue</translation>
+    </message>
+    <message>
+        <source>the Wi-Fi signal could not be read</source>
+        <translation>le signal Wi-Fi n’a pas pu être lu</translation>
+    </message>
+    <message>
+        <source>Wi-Fi recorder: SSH failed: {detail}</source>
+        <translation>Enregistreur Wi-Fi : échec SSH : {detail}</translation>
+    </message>
+    <message>
+        <source>No Wi-Fi readings on the robot yet: they are recorded while it moves.</source>
+        <translation>Pas encore de mesures Wi-Fi sur le robot : elles sont enregistrées pendant ses déplacements.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi recorder removed from the robot.</source>
+        <translation>Enregistreur Wi-Fi retiré du robot.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi recorder installed in {dir}, but: {problems}. It will not record until this is solved.</source>
+        <translation>Enregistreur Wi-Fi installé dans {dir}, mais : {problems}. Il n’enregistrera rien tant que ce n’est pas réglé.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi recorder running on the robot (in {dir}; now: {signal} dBm). It records whenever the robot moves.</source>
+        <translation>Enregistreur Wi-Fi en marche sur le robot (dans {dir} ; actuellement : {signal} dBm). Il enregistre chaque fois que le robot se déplace.</translation>
+    </message>
+    <message>
+        <source>{added} new point(s) imported ({total} reading(s) in {sessions} run(s) on the robot).</source>
+        <translation>{added} nouveau(x) point(s) importé(s) ({total} mesure(s) en {sessions} passage(s) sur le robot).</translation>
+    </message>
 </context>
 </TS>
