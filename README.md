@@ -225,8 +225,9 @@ crontab -e    # then add:
 
 Output goes to `~/valetudo_wifi` (`--out` to change). Thresholds, cell size and IDW
 coefficient have options (`--help`); `--all` rebuilds every run (e.g. after
-changing a threshold). Run names come from the robot's clock: keep it synchronised
-(Valetudo's NTP settings).
+changing a threshold). Run names come from the robot's clock, shown in the Pi's
+time zone: keep the robot synchronised (Valetudo's NTP settings) and set the Pi's
+time zone (`sudo timedatectl set-timezone Europe/Paris`).
 
 **Robot console** tab: type a command, press Enter, and it runs on the robot
 (`ssh <user>@<robot>`, same key-based login and settings as the reboot); its

@@ -230,6 +230,7 @@ def write_geotiff(path, grid, origin, cell):
         from osgeo import gdal
     except ImportError:
         return False
+    gdal.UseExceptions()   # explicit (GDAL warns otherwise); errors become exceptions
     height, width = grid.shape
     ds = gdal.GetDriverByName("GTiff").Create(path, width, height, 1, gdal.GDT_Float32,
                                               ["COMPRESS=DEFLATE"])
@@ -271,9 +272,14 @@ def process_run(rows, map_json, args):
     grid, origin, cell = idw_grid(rows, args, floor, pixel_cm)
     render_png(base + ".png", rows, grid, origin, cell, floor, walls, pixel_cm, args)
     link_latest(args.out, name, ".png")
-    if write_geotiff(base + ".tif", grid, origin, cell):
+    try:
+        written = write_geotiff(base + ".tif", grid, origin, cell)
+    except Exception as exc:   # GDAL error: keep the CSV and PNG of this run
+        print(f"{name}: GeoTIFF not written: {exc}", file=sys.stderr)
+        written = None
+    if written:
         link_latest(args.out, name, ".tif")
-    else:
+    elif written is False:
         log("GDAL not found: no GeoTIFF (sudo apt install python3-gdal)", args)
     log(f"{name}: {len(rows)} readings -> csv, png" + (", tif" if os.path.exists(base + ".tif")
                                                        else ""), args)
