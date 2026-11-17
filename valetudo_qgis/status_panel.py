@@ -622,7 +622,7 @@ class ValetudoPanel(QgsDockWidget):
         if rows:
             groups = [(tr("All rooms"), [f"#{seg_id}" for seg_id, _ in rows])]
             groups += list(getattr(self, "_room_groups", []))
-            for index, (title, entries) in enumerate(groups):
+            for title, entries in groups:
                 parent = self._group_item(title)
                 self.rooms.addTopLevelItem(parent)
                 seen = set()
@@ -639,7 +639,7 @@ class ValetudoPanel(QgsDockWidget):
                         seen.add(seg_id)
                         parent.addChild(self._room_item(seg_id, names[seg_id]))
                 parent.setExpanded(QgsSettings().value(
-                    f"valetudo/room_group_open/{title}", index == 0, type=bool))
+                    f"valetudo/room_group_open/{title}", False, type=bool))   # collapsed by default
         self.rooms.blockSignals(False)
         self.rooms.setVisible(bool(rows))
         self._update_rooms_button()
