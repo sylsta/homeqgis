@@ -94,8 +94,13 @@ Robot · Camera · Maintenance · Advanced · Log · SSH console · Schedule   (
   (Valetudo's log file, live), SSH console (commands on the robot), Schedule
   (cleanings the robot starts by itself).
 - **Go to…** on robots without Valetudo's go-to (e.g. Eureka J15 Pro Ultra): a 60 cm
-  zone clean at that spot, then a pause as soon as the robot is within 50 cm (it
-  cleans on its way; a first-time confirmation says so).
+  zone clean at that spot, then a pause as soon as the robot is within 50 cm.
+  With **Go to: travel without cleaning** ticked (under the button, on by default),
+  the plugin first reads the robot's fan speed, water usage and mode, switches to
+  the quietest ones it offers (mode "vacuum" so the mops stay up, water off, fan off
+  or lowest), and puts yours back when the trip ends, whatever its end. If the robot
+  refuses a change, the trip is cancelled and nothing is left changed. Most robots
+  have no "fan off" in Valetudo: they still vacuum gently on the way.
 
 The panel refreshes itself while visible (every 5 s while the robot works, every
 30 s otherwise), even when the robot is docked. Sections fold with their arrow
@@ -235,6 +240,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
 | `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
+| `quiet_travel.py`            | Quiet presets for "Go to", restored afterwards          |
 | `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |
 | `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |

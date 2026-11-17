@@ -27,9 +27,12 @@ from . import robot_survey
 from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
 from .settings import load_settings
+from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
 from .status_panel import (
     DOCK_COMPONENT_PROBLEMS,
+    KEY_GOTO_QUIET,
+    preset_labels,
     state_label as dock_state_label,
     ValetudoPanel,
     dock_component_advice,
@@ -212,6 +215,12 @@ class ValetudoPlugin:
         self.survey.sampleAdded.connect(self._on_wifi_sample)
         self.goto_emulator = GoToEmulator()
         self.goto_emulator.finished.connect(self._on_goto_finished)
+        self.quiet_travel = QuietTravel()
+        self.quiet_travel.ready.connect(self._on_quiet_ready)
+        self.quiet_travel.failed.connect(self._on_quiet_failed)
+        self.quiet_travel.restored.connect(
+            lambda: self._message(tr("Your fan, water and mode settings are restored."),
+                                  Qgis.MessageLevel.Info))
         self.boot = BootMonitor()
         self.boot.stage.connect(self._on_boot_stage)
         self.boot.logTail.connect(self._on_boot_log_tail)
@@ -382,6 +391,8 @@ class ValetudoPlugin:
     def _drop_client(self):
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
+        if getattr(self, "quiet_travel", None) is not None:
+            self.quiet_travel.forget()   # the robot keeps the quiet settings
         if self.survey is not None and self.survey.is_running():
             self.survey.stop()
         if "wifi_survey" in self.act:
@@ -761,11 +772,55 @@ class ValetudoPlugin:
                 return
             if dont_ask.isChecked():
                 QgsSettings().setValue(KEY_GOTO_ZONE_OK, True)
+        if self.goto_emulator.is_running() or self.quiet_travel.is_active():
+            self.goto_emulator.stop()
+            self.quiet_travel.restore(client)   # previous trip: back to the user's settings
+        if QgsSettings().value(KEY_GOTO_QUIET, True, type=bool):
+            caps = self.capabilities
+            if caps is not None and not any(cap in caps for cap, _kind, _prefs in QUIET_PRESETS):
+                self._message(tr("This robot's fan, water and mode cannot be changed: "
+                                 "it will clean on its way."), Qgis.MessageLevel.Warning)
+            else:
+                # Quiet settings first; the trip starts once they are applied.
+                self._goto_point = point
+                self.quiet_travel.prepare(client, caps)
+                return
+        self._start_goto(client, point)
+
+    def _start_goto(self, client, point):
         self.goto_emulator.start(client, point)
         self._message(tr("Robot on its way; it will be paused on arrival."),
                       Qgis.MessageLevel.Info)
 
+    def _on_quiet_ready(self, applied):
+        point, self._goto_point = getattr(self, "_goto_point", None), None
+        if self._unloaded or point is None or self.client is None:
+            self.quiet_travel.restore()
+            return
+        labels = preset_labels()
+        names = {"OperationModeControlCapability": tr("Mode"),
+                 "WaterUsageControlCapability": tr("Water usage"),
+                 "FanSpeedControlCapability": tr("Fan speed")}
+        changes = ", ".join(f"{names.get(cap, cap)}: {labels.get(value, value)}"
+                            for cap, value in applied)
+        self.goto_emulator.start(self.client, point)
+        self._message(tr("Robot on its way without cleaning ({changes}); it will be paused on "
+                         "arrival, then your settings restored.").format(
+                             changes=changes or tr("settings already at their lowest")),
+                      Qgis.MessageLevel.Info)
+
+    def _on_quiet_failed(self, error):
+        self._goto_point = None
+        self.iface.messageBar().pushMessage(
+            "Valetudo", tr("“Go to” cancelled: the robot's settings could not be changed for "
+                           "a trip without cleaning ({error}). Untick “travel without "
+                           "cleaning” to go anyway.").format(error=error),
+            level=Qgis.MessageLevel.Warning, duration=0)
+
     def _on_goto_finished(self, result, detail):
+        if self.quiet_travel.is_active() and self.client is not None:
+            # After the pause on arrival (sent just before this signal).
+            QTimer.singleShot(1000, lambda: self.client and self.quiet_travel.restore(self.client))
         if result == "arrived":
             self._message(tr("Robot arrived ({distance} cm from the point) and paused. "
                              "Use “Return to dock” to send it back.").format(distance=detail),

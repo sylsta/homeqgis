@@ -1625,5 +1625,33 @@ Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du
         <source>{added} new point(s) imported ({total} reading(s) in {sessions} run(s) on the robot).</source>
         <translation>{added} nouveau(x) point(s) importé(s) ({total} mesure(s) en {sessions} passage(s) sur le robot).</translation>
     </message>
+    <message>
+        <source>Your fan, water and mode settings are restored.</source>
+        <translation>Vos réglages d’aspiration, d’eau et de mode sont rétablis.</translation>
+    </message>
+    <message>
+        <source>This robot's fan, water and mode cannot be changed: it will clean on its way.</source>
+        <translation>L’aspiration, l’eau et le mode de ce robot ne peuvent pas être modifiés : il nettoiera en chemin.</translation>
+    </message>
+    <message>
+        <source>Robot on its way without cleaning ({changes}); it will be paused on arrival, then your settings restored.</source>
+        <translation>Robot en route sans nettoyer ({changes}) ; il sera mis en pause à l’arrivée, puis vos réglages rétablis.</translation>
+    </message>
+    <message>
+        <source>“Go to” cancelled: the robot's settings could not be changed for a trip without cleaning ({error}). Untick “travel without cleaning” to go anyway.</source>
+        <translation>« Aller à » annulé : les réglages du robot n’ont pas pu être modifiés pour un trajet sans nettoyage ({error}). Décochez « trajet sans nettoyer » pour y aller quand même.</translation>
+    </message>
+    <message>
+        <source>settings already at their lowest</source>
+        <translation>réglages déjà au minimum</translation>
+    </message>
+    <message>
+        <source>Go to: travel without cleaning</source>
+        <translation>Aller à : trajet sans nettoyer</translation>
+    </message>
+    <message>
+        <source>This robot's “Go to” is a small cleaning job. Ticked, the plugin lifts the mops (vacuum-only mode), turns the water off and the fan to its lowest for the trip, then restores your settings.</source>
+        <translation>Sur ce robot, « Aller à » est un petit nettoyage. Coché, l’extension relève les serpillières (mode aspiration seule), coupe l’eau et met l’aspiration au minimum pendant le trajet, puis rétablit vos réglages.</translation>
+    </message>
 </context>
 </TS>

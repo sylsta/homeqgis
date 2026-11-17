@@ -280,6 +280,12 @@ class ValetudoClient(QObject):
         self._command(capability, {"name": name}, PRESET_CAPABILITIES.get(capability, capability),
                       path_suffix="/preset")
 
+    def put_preset(self, capability, name, on_done=None, on_error=None):
+        """Select a preset silently (no commandDone): for automatic changes."""
+        body = QByteArray(json.dumps({"name": name}).encode())
+        reply = self.nam.put(self._request(f"/robot/capabilities/{capability}/preset"), body)
+        self._track(reply, lambda _data: on_done and on_done(), quiet=True, on_error=on_error)
+
     def set_toggle(self, capability, enabled):
         """Switch an on/off capability (e.g. the camera light)."""
         self._command(capability, {"action": "enable" if enabled else "disable"},

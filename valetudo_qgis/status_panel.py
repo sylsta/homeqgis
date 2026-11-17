@@ -38,6 +38,7 @@ from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minu
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
+KEY_GOTO_QUIET = "valetudo/goto_quiet"   # "Go to" without cleaning (emulated go-to only)
 
 # Layout: ui/status_panel.ui (Qt Designer). The code fills it at run time and
 # relies on these object names.
@@ -53,7 +54,7 @@ UI_WIDGETS = (
     "txt_log", "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
     "txt_console", "lbl_console_prompt", "edit_console", "btn_console_run", "btn_console_stop",
     "tab_schedule", "timers", "btn_timer_new", "btn_timer_edit", "btn_timer_delete",
-    "btn_timer_run", "lbl_timers_note",
+    "btn_timer_run", "lbl_timers_note", "chk_goto_quiet",
 )
 CONSOLE_HISTORY = 100
 # Collapsible sections -> key of their remembered open/closed state.
@@ -344,6 +345,11 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_rooms.clicked.connect(self._clean_rooms)
         self.btn_rooms.setVisible(False)
         self._segments = []
+        # Shown only for robots whose "Go to" is a small cleaning job (no native go-to).
+        self.chk_goto_quiet.setChecked(QgsSettings().value(KEY_GOTO_QUIET, True, type=bool))
+        self.chk_goto_quiet.toggled.connect(
+            lambda checked: QgsSettings().setValue(KEY_GOTO_QUIET, checked))
+        self.chk_goto_quiet.setVisible(False)
 
         self.preset_combos = {"FanSpeedControlCapability": self.combo_fan_speed,
                               "WaterUsageControlCapability": self.combo_water_usage}
@@ -626,6 +632,7 @@ class ValetudoPanel(QgsDockWidget):
             self.segmentsChanged.emit([])
             self._update_rooms_button()
             self.camera_light.setVisible(False)
+            self.chk_goto_quiet.setVisible(False)
             self._set_badge(None)
             self.lbl_error.setVisible(False)
             self._timers, self._timer_props = [], None
@@ -1082,6 +1089,8 @@ class ValetudoPanel(QgsDockWidget):
     def _on_capabilities(self, capabilities):
         self.capabilities = set(capabilities)
         caps = self.capabilities
+        self.chk_goto_quiet.setVisible("GoToLocationCapability" not in caps
+                                       and "ZoneCleaningCapability" in caps)
 
         any_preset = False
         for capability, combo in self.preset_combos.items():
