@@ -30,9 +30,12 @@ from . import room_groups
 from .i18n import tr
 from .icons import icon
 from .log_tail import LOG_PATH, LogTail
+from . import schedule
+from .rooms_tree import RoomsTree
 from .settings import load_settings
 from .ssh_console import SshConsole
-from .ui_loader import load_ui
+from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minutes
+from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
 
@@ -49,6 +52,8 @@ UI_WIDGETS = (
     "lbl_features", "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear",
     "txt_log", "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
     "txt_console", "lbl_console_prompt", "edit_console", "btn_console_run", "btn_console_stop",
+    "tab_schedule", "timers", "btn_timer_new", "btn_timer_edit", "btn_timer_delete",
+    "btn_timer_run", "lbl_timers_note",
 )
 CONSOLE_HISTORY = 100
 # Collapsible sections -> key of their remembered open/closed state.
@@ -101,10 +106,13 @@ def _flag_labels():
     }
 
 
-def _preset_labels():
+def preset_labels():
     return {
         "off": tr("Off"), "min": tr("Minimum"), "low": tr("Low"), "medium": tr("Medium"),
         "high": tr("High"), "max": tr("Maximum"), "turbo": tr("Turbo"), "custom": tr("Custom"),
+        # operation modes
+        "vacuum": tr("Vacuum"), "mop": tr("Mop"), "vacuum_and_mop": tr("Vacuum and mop"),
+        "vacuum_then_mop": tr("Vacuum, then mop"),
     }
 
 
@@ -263,14 +271,6 @@ def state_label(state):
     return _label(_state_labels(), state)
 
 
-def _set_row_visible(form, field, visible):
-    """QFormLayout.setRowVisible() only exists from Qt 6.4: hide label and field."""
-    label = form.labelForField(field)
-    if label is not None:
-        label.setVisible(visible)
-    field.setVisible(visible)
-
-
 def _label(mapping, value):
     return mapping.get(value, value) if value is not None else "—"
 
@@ -301,6 +301,7 @@ def _format_time(iso):
 class ValetudoPanel(QgsDockWidget):
     clientRequested = pyqtSignal()   # the panel was shown but no client exists yet
     splitRequested = pyqtSignal(str, str)   # room id, room name: draw the cut on the map
+    segmentsChanged = pyqtSignal(list)      # [(room id, name)] known on the robot
 
     def __init__(self, parent=None):
         super().__init__(parent)   # title and object name come from the .ui
@@ -335,16 +336,14 @@ class ValetudoPanel(QgsDockWidget):
 
         # Rooms in a checkable tree: "All rooms" (tri-state) above one checkbox per
         # room. Right-click a room to rename, join or split it.
-        self.rooms.setColumnCount(1)
-        self.rooms.itemChanged.connect(self._on_room_item_changed)
+        self.rooms_ctl = RoomsTree(self.rooms, expanded_key="valetudo/room_group_open")
+        self.rooms_ctl.checkedChanged.connect(self._update_rooms_button)
         self.rooms.customContextMenuRequested.connect(self._on_rooms_context_menu)
-        self.rooms.itemExpanded.connect(lambda item: self._on_group_expanded(item, True))
-        self.rooms.itemCollapsed.connect(lambda item: self._on_group_expanded(item, False))
         self.rooms.setVisible(False)
         self.btn_rooms.setIcon(icon("clean_rooms"))
         self.btn_rooms.clicked.connect(self._clean_rooms)
         self.btn_rooms.setVisible(False)
-        self._segments, self._checked_rooms = [], set()
+        self._segments = []
 
         self.preset_combos = {"FanSpeedControlCapability": self.combo_fan_speed,
                               "WaterUsageControlCapability": self.combo_water_usage}
@@ -384,6 +383,18 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_console_clear.clicked.connect(self.txt_console.clear)
         self._console_history, self._console_index = [], 0
         self._on_console_state("closed", "")
+
+        # Schedule: Valetudo's timers (run by the robot); fetched when the tab is shown.
+        self._timers, self._timer_props = [], None
+        self.timers.itemChanged.connect(self._on_timer_item_changed)
+        self.timers.itemDoubleClicked.connect(lambda *_: self._edit_timer())
+        self.timers.itemSelectionChanged.connect(self._update_timer_buttons)
+        self.btn_timer_new.clicked.connect(self._new_timer)
+        self.btn_timer_edit.clicked.connect(self._edit_timer)
+        self.btn_timer_delete.clicked.connect(self._delete_timer)
+        self.btn_timer_run.clicked.connect(self._run_timer)
+        self.segmentsChanged.connect(lambda *_: self._render_timers())
+        self._render_timers()
 
         # Sections remember whether they are open, under our own keys.
         for name, key in SECTIONS.items():
@@ -425,6 +436,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_camera()
         self._update_log()
         self._update_console()
+        self._update_schedule()
 
     @staticmethod
     def _button(action, hide_when_disabled=False):
@@ -487,94 +499,19 @@ class ValetudoPanel(QgsDockWidget):
         if rows == self._segments:
             return
         self._segments = rows
-        self._checked_rooms &= {r[0] for r in rows}
-        self._rebuild_rooms_tree()
+        self.rooms_ctl.set_rooms(rows)
+        self.rooms.setVisible(bool(rows))
+        self._update_rooms_button()
+        self.segmentsChanged.emit(rows)
 
     def set_room_groups(self, groups):
         """Groups from the room groups file: [(title, [entry, …]), …]."""
-        self._room_groups = groups
-        self._rebuild_rooms_tree()
+        self._room_groups = list(groups)
+        self.rooms_ctl.set_groups(groups)
 
-    def _room_item(self, seg_id, name):
-        item = QTreeWidgetItem([name])
-        item.setData(0, Qt.ItemDataRole.UserRole, seg_id)
-        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                      | Qt.ItemFlag.ItemNeverHasChildren)
-        # The check state must be set for Qt to draw the checkbox at all.
-        item.setCheckState(0, Qt.CheckState.Checked if seg_id in self._checked_rooms
-                           else Qt.CheckState.Unchecked)
-        return item
-
-    def _group_item(self, title):
-        # Ticks / unticks its rooms; partial when only some are ticked.
-        item = QTreeWidgetItem([title])
-        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                      | Qt.ItemFlag.ItemIsAutoTristate)
-        return item
-
-    def _rebuild_rooms_tree(self):
-        """"All rooms" first, then the groups of the room groups file, in file order."""
-        rows = self._segments
-        names = dict(rows)
-        self.rooms.blockSignals(True)
-        self.rooms.clear()
-        if rows:
-            groups = [(tr("All rooms"), [f"#{seg_id}" for seg_id, _ in rows])]
-            groups += list(getattr(self, "_room_groups", []))
-            for title, entries in groups:
-                parent = self._group_item(title)
-                self.rooms.addTopLevelItem(parent)
-                seen = set()
-                for entry in entries:
-                    seg_id = room_groups.resolve(entry, rows)
-                    if seg_id is None:
-                        # Typo or room renamed on the robot: show it, greyed.
-                        missing = QTreeWidgetItem([entry])
-                        missing.setFlags(Qt.ItemFlag.ItemNeverHasChildren)
-                        missing.setToolTip(0, tr("Not found on the robot."))
-                        missing.setText(0, f"{entry}  ({tr('not found on the robot')})")
-                        parent.addChild(missing)
-                    elif seg_id not in seen:
-                        seen.add(seg_id)
-                        parent.addChild(self._room_item(seg_id, names[seg_id]))
-                parent.setExpanded(QgsSettings().value(
-                    f"valetudo/room_group_open/{title}", False, type=bool))   # collapsed by default
-        self.rooms.blockSignals(False)
-        self.rooms.setVisible(bool(rows))
-        self._update_rooms_button()
-
-    def _clear_room_boxes(self):
-        self.rooms.blockSignals(True)
-        self.rooms.clear()
-        self.rooms.blockSignals(False)
-
-    def _room_items(self):
-        """Every room line of the tree (a room can be in several groups)."""
-        for i in range(self.rooms.topLevelItemCount()):
-            parent = self.rooms.topLevelItem(i)
-            for j in range(parent.childCount()):
-                child = parent.child(j)
-                if child.data(0, Qt.ItemDataRole.UserRole) is not None:
-                    yield child
-
-    def _on_room_item_changed(self, item, *_):
-        """A room line changed: same state for that room in every group, then read back."""
-        seg_id = item.data(0, Qt.ItemDataRole.UserRole) if item is not None else None
-        if getattr(self, "_syncing", False) or seg_id is None:
-            return
-        state = item.checkState(0)
-        self._syncing = True
-        try:
-            for other in self._room_items():
-                if other is not item and other.data(0, Qt.ItemDataRole.UserRole) == seg_id \
-                        and other.checkState(0) != state:
-                    other.setCheckState(0, state)
-        finally:
-            self._syncing = False
-        self._checked_rooms = {child.data(0, Qt.ItemDataRole.UserRole)
-                               for child in self._room_items()
-                               if child.checkState(0) == Qt.CheckState.Checked}
-        self._update_rooms_button()
+    @property
+    def _checked_rooms(self):
+        return set(self.rooms_ctl.checked)
 
     def _on_rooms_context_menu(self, pos):
         item = self.rooms.itemAt(pos)
@@ -590,10 +527,6 @@ class ValetudoPanel(QgsDockWidget):
     def edit_room_groups(self, *_):
         """Open the room groups file in the system's text editor (created if needed)."""
         QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file()))
-
-    def _on_group_expanded(self, item, expanded):
-        if item.parent() is None:
-            QgsSettings().setValue(f"valetudo/room_group_open/{item.text(0)}", expanded)
 
     def _room_menu(self, seg_id, name, global_pos):
         if self.client is None:
@@ -637,7 +570,7 @@ class ValetudoPanel(QgsDockWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No)
         if answer == QMessageBox.StandardButton.Yes and self.client is not None:
-            self._checked_rooms -= {seg_a, seg_b}
+            self.rooms_ctl.uncheck({seg_a, seg_b})
             self.client.join_segments(seg_a, seg_b)
 
     def _update_rooms_button(self):
@@ -657,7 +590,7 @@ class ValetudoPanel(QgsDockWidget):
 
     def checked_room_ids(self):
         """Ticked rooms, in list order."""
-        return [seg_id for seg_id, _name in self._segments if seg_id in self._checked_rooms]
+        return self.rooms_ctl.checked_ids()
 
     def _sync_run_button(self, *_):
         action = self._current_command()
@@ -686,13 +619,16 @@ class ValetudoPanel(QgsDockWidget):
                 box.setVisible(False)
             _set_row_visible(self.status_form, self.lbl_attachments, False)
             self.lbl_features.setText("—")
-            self._segments, self._checked_rooms = [], set()
-            self._clear_room_boxes()
+            self._segments = []
+            self.rooms_ctl.clear()
             self.rooms.setVisible(False)
+            self.segmentsChanged.emit([])
             self._update_rooms_button()
             self.camera_light.setVisible(False)
             self._set_badge(None)
             self.lbl_error.setVisible(False)
+            self._timers, self._timer_props = [], None
+            self._render_timers()
             return
         client.reachable.connect(self._on_reachable)
         client.robotInfoReceived.connect(self._on_robot_info)
@@ -708,9 +644,12 @@ class ValetudoPanel(QgsDockWidget):
         client.segmentsReceived.connect(self._on_segments)
         client.toggleReceived.connect(self._on_toggle)
         client.mapPeeked.connect(self.update_map)
+        client.timersReceived.connect(self._on_timers)
+        client.timerPropertiesReceived.connect(self._on_timer_properties)
         client.commandDone.connect(lambda *_: QTimer.singleShot(1500, self.refresh))
         self._robot_text = ""
         self._version_text = ""
+        self._update_schedule()
         client.fetch_robot_info(quiet=True)
         client.fetch_version(quiet=True)
         if self.isVisible():
@@ -724,6 +663,143 @@ class ValetudoPanel(QgsDockWidget):
     def _on_toggle(self, capability, enabled):
         if capability == "CameraLightControlCapability":
             self.camera_light.setChecked(enabled)   # setChecked does not emit clicked
+
+    # -- schedule (Valetudo timers) -------------------------------------------------
+
+    def _update_schedule(self):
+        """Read the timers each time the Schedule tab is shown."""
+        if self.client is None or not self.isVisible() \
+                or self.tabs.currentWidget() is not self.tab_schedule:
+            return
+        self.client.fetch_timers()
+        if self._timer_props is None:
+            self.client.fetch_timer_properties()
+
+    def _on_timer_properties(self, properties):
+        self._timer_props = properties
+
+    def _on_timers(self, timers):
+        offset = utc_offset_minutes()
+        self._timers = sorted(timers, key=lambda t: schedule.sort_key(t, offset))
+        self._render_timers()
+
+    def _days_text(self, days):
+        days = set(days)
+        if len(days) == 7:
+            return tr("Every day")
+        if days == {1, 2, 3, 4, 5}:
+            return tr("Weekdays")
+        if days == {0, 6}:
+            return tr("Weekends")
+        names = day_names()
+        return " ".join(names[d] for d in sorted(days, key=lambda d: (d - 1) % 7))
+
+    def _cleaning_text(self, timer):
+        action = timer.get("action") or {}
+        params = action.get("params") or {}
+        if action.get("type") == "segment_cleanup":
+            text = ", ".join(self.rooms_ctl.name(i) for i in params.get("segment_ids") or [])
+            if int(params.get("iterations") or 1) > 1:
+                text += f" ×{int(params['iterations'])}"
+        elif action.get("type") == "full_cleanup":
+            text = tr("Whole home")
+        else:
+            text = action.get("type") or "?"
+        labels = preset_labels()
+        extras = [labels.get(v, v) for v in schedule.pre_action_values(timer).values() if v]
+        return " · ".join([text] + extras)
+
+    def _render_timers(self):
+        offset = utc_offset_minutes()
+        selected = self._selected_timer_id()
+        self.timers.blockSignals(True)
+        self.timers.clear()
+        for timer in self._timers:
+            days, hour, minute = schedule.local_schedule(timer, offset)
+            item = QTreeWidgetItem([timer.get("label") or tr("(no name)"), self._days_text(days),
+                                    f"{hour:02d}:{minute:02d}", self._cleaning_text(timer)])
+            item.setData(0, Qt.ItemDataRole.UserRole, timer.get("id"))
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+                          | Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemNeverHasChildren)
+            item.setCheckState(0, Qt.CheckState.Checked if timer.get("enabled")
+                               else Qt.CheckState.Unchecked)
+            item.setToolTip(3, item.text(3))
+            self.timers.addTopLevelItem(item)
+            if timer.get("id") == selected:
+                item.setSelected(True)
+        self.timers.blockSignals(False)
+        for column in range(3):
+            self.timers.resizeColumnToContents(column)
+        self.lbl_timers_note.setText(
+            tr("Run by the robot itself, even when QGIS is closed. Local times ({offset}).")
+            .format(offset=format_offset(offset)) if self.client is not None
+            else tr("Not connected."))
+        self._update_timer_buttons()
+
+    def _selected_timer_id(self):
+        items = self.timers.selectedItems()
+        return items[0].data(0, Qt.ItemDataRole.UserRole) if items else None
+
+    def _selected_timer(self):
+        timer_id = self._selected_timer_id()
+        return next((t for t in self._timers if t.get("id") == timer_id), None)
+
+    def _update_timer_buttons(self, *_):
+        connected = self.client is not None
+        selected = self._selected_timer() is not None
+        self.btn_timer_new.setEnabled(connected)
+        for button in (self.btn_timer_edit, self.btn_timer_delete, self.btn_timer_run):
+            button.setEnabled(connected and selected)
+
+    def _on_timer_item_changed(self, item, column):
+        """The checkbox turns a timer on or off (saved on the robot at once)."""
+        timer_id = item.data(0, Qt.ItemDataRole.UserRole)
+        timer = next((t for t in self._timers if t.get("id") == timer_id), None)
+        enabled = item.checkState(0) == Qt.CheckState.Checked
+        if column != 0 or timer is None or self.client is None \
+                or bool(timer.get("enabled")) == enabled:
+            return
+        timer["enabled"] = enabled
+        self.client.save_timer(timer)
+
+    def _open_timer_dialog(self, timer):
+        dialog = TimerDialog(self, timer, self._segments, getattr(self, "_room_groups", []),
+                             self.client, self.capabilities, self._timer_props)
+        if dialog.exec() and self.client is not None:
+            self.client.save_timer(dialog.timer())
+
+    def _new_timer(self, *_):
+        if self.client is not None:
+            self._open_timer_dialog(schedule.new_timer())
+
+    def _edit_timer(self, *_):
+        timer = self._selected_timer()
+        if timer is not None and self.client is not None:
+            self._open_timer_dialog(dict(timer))
+
+    def _delete_timer(self, *_):
+        timer = self._selected_timer()
+        if timer is None or self.client is None:
+            return
+        name = timer.get("label") or tr("(no name)")
+        if QMessageBox.question(
+                self, tr("Delete scheduled cleaning"),
+                tr("Delete “{name}” from the robot?").format(name=name),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
+            self.client.delete_timer(timer["id"])
+
+    def _run_timer(self, *_):
+        timer = self._selected_timer()
+        if timer is None or self.client is None:
+            return
+        name = timer.get("label") or tr("(no name)")
+        if QMessageBox.question(
+                self, tr("Run scheduled cleaning now"),
+                tr("Start “{name}” now?").format(name=name),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
+            self.client.run_timer(timer["id"])
 
     # -- SSH console ---------------------------------------------------------------
 
@@ -920,6 +996,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_camera()
         self._update_log()
         self._update_console()
+        self._update_schedule()
         if not visible:
             self._timer.stop()
             self._age_timer.stop()
@@ -1038,7 +1115,7 @@ class ValetudoPanel(QgsDockWidget):
             return
         current = combo.currentData()
         combo.clear()
-        labels = _preset_labels()
+        labels = preset_labels()
         for name in presets:
             combo.addItem(labels.get(name, name), name)
         if current is not None:

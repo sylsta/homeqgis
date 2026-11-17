@@ -116,6 +116,9 @@ def command_labels():
         "rename_room": tr("Rename room"),
         "join_rooms": tr("Join rooms"),
         "split_room": tr("Split room"),
+        "timer_save": tr("Save scheduled cleaning"),
+        "timer_delete": tr("Delete scheduled cleaning"),
+        "timer_run": tr("Run scheduled cleaning now"),
     }
 
 

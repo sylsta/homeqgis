@@ -1381,5 +1381,153 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <source>Not connected.</source>
         <translation>Non connecté.</translation>
     </message>
+    <message>
+        <source>Save scheduled cleaning</source>
+        <translation>Enregistrer le nettoyage programmé</translation>
+    </message>
+    <message>
+        <source>Delete scheduled cleaning</source>
+        <translation>Supprimer le nettoyage programmé</translation>
+    </message>
+    <message>
+        <source>Run scheduled cleaning now</source>
+        <translation>Lancer maintenant le nettoyage programmé</translation>
+    </message>
+    <message>
+        <source>Vacuum</source>
+        <translation>Aspiration</translation>
+    </message>
+    <message>
+        <source>Vacuum and mop</source>
+        <translation>Aspiration et lavage</translation>
+    </message>
+    <message>
+        <source>Vacuum, then mop</source>
+        <translation>Aspiration, puis lavage</translation>
+    </message>
+    <message>
+        <source>Every day</source>
+        <translation>Tous les jours</translation>
+    </message>
+    <message>
+        <source>Weekdays</source>
+        <translation>En semaine</translation>
+    </message>
+    <message>
+        <source>Weekends</source>
+        <translation>Le week-end</translation>
+    </message>
+    <message>
+        <source>(no name)</source>
+        <translation>(sans nom)</translation>
+    </message>
+    <message>
+        <source>Whole home</source>
+        <translation>Tout le logement</translation>
+    </message>
+    <message>
+        <source>Run by the robot itself, even when QGIS is closed. Local times ({offset}).</source>
+        <translation>Exécuté par le robot lui-même, même quand QGIS est fermé. Heures locales ({offset}).</translation>
+    </message>
+    <message>
+        <source>Delete “{name}” from the robot?</source>
+        <translation>Supprimer « {name} » du robot ?</translation>
+    </message>
+    <message>
+        <source>Start “{name}” now?</source>
+        <translation>Lancer « {name} » maintenant ?</translation>
+    </message>
+    <message>
+        <source>Unchanged</source>
+        <translation>Inchangé</translation>
+    </message>
+    <message>
+        <source>The robot does not know its rooms yet.</source>
+        <translation>Le robot ne connaît pas encore ses pièces.</translation>
+    </message>
+    <message>
+        <source>Tick at least one day.</source>
+        <translation>Cochez au moins un jour.</translation>
+    </message>
+    <message>
+        <source>Tick at least one room.</source>
+        <translation>Cochez au moins une pièce.</translation>
+    </message>
+    <message>
+        <source>Run by the robot itself, even when QGIS is closed. Times are local ({offset}); Valetudo stores them in UTC, so after a change to or from summer time the cleaning starts one hour off until it is saved again.</source>
+        <translation>Exécuté par le robot lui-même, même quand QGIS est fermé. Les heures sont locales ({offset}) ; Valetudo les enregistre en UTC : après un passage à l’heure d’été ou d’hiver, le nettoyage démarre avec une heure d’écart jusqu’à ce qu’il soit enregistré de nouveau.</translation>
+    </message>
+    <message>
+        <source>Order: {rooms}</source>
+        <translation>Ordre : {rooms}</translation>
+    </message>
+    <message>
+        <source>Schedule</source>
+        <translation>Programmation</translation>
+    </message>
+    <message>
+        <source>Tick to turn a scheduled cleaning on or off; double-click to edit it.</source>
+        <translation>Cochez pour activer ou désactiver un nettoyage programmé ; double-cliquez pour le modifier.</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>Nom</translation>
+    </message>
+    <message>
+        <source>Days</source>
+        <translation>Jours</translation>
+    </message>
+    <message>
+        <source>Time</source>
+        <translation>Heure</translation>
+    </message>
+    <message>
+        <source>New…</source>
+        <translation>Nouveau…</translation>
+    </message>
+    <message>
+        <source>Edit…</source>
+        <translation>Modifier…</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Supprimer</translation>
+    </message>
+    <message>
+        <source>Run now</source>
+        <translation>Lancer maintenant</translation>
+    </message>
+    <message>
+        <source>Start the selected cleaning now, whatever its days and time.</source>
+        <translation>Lancer maintenant le nettoyage sélectionné, quels que soient ses jours et son heure.</translation>
+    </message>
+    <message>
+        <source>Scheduled cleaning</source>
+        <translation>Nettoyage programmé</translation>
+    </message>
+    <message>
+        <source>e.g. Weekday mopping</source>
+        <translation>ex. : Lavage en semaine</translation>
+    </message>
+    <message>
+        <source>Selected rooms</source>
+        <translation>Pièces choisies</translation>
+    </message>
+    <message>
+        <source>Clean the rooms in the order ticked</source>
+        <translation>Nettoyer les pièces dans l’ordre où elles sont cochées</translation>
+    </message>
+    <message>
+        <source>Passes</source>
+        <translation>Passages</translation>
+    </message>
+    <message>
+        <source>Mode</source>
+        <translation>Mode</translation>
+    </message>
+    <message>
+        <source>Enabled</source>
+        <translation>Activé</translation>
+    </message>
 </context>
 </TS>

@@ -54,7 +54,7 @@ Eureka J15 Pro Ultra · Connected        [Docked]
 └────────────────────────────────────────────┘
 [Show on map]     map + live tracking + robot kept in view
 Result of the last command
-Robot · Camera · Maintenance · Advanced · Log · SSH console   (tabs)
+Robot · Camera · Maintenance · Advanced · Log · SSH console · Schedule   (tabs)
 ```
 
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
@@ -91,7 +91,8 @@ Robot · Camera · Maintenance · Advanced · Log · SSH console   (tabs)
   states, fan speed and water usage, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go
   zones and walls, watch boot, reboot; Wi-Fi, events, boot log, features), Log
-  (Valetudo's log file, live), SSH console (commands on the robot).
+  (Valetudo's log file, live), SSH console (commands on the robot), Schedule
+  (cleanings the robot starts by itself).
 - **Go to…** on robots without Valetudo's go-to (e.g. Eureka J15 Pro Ultra): a 60 cm
   zone clean at that spot, then a pause as soon as the robot is within 50 cm (it
   cleans on its way; a first-time confirmation says so).
@@ -148,6 +149,18 @@ as the reboot, and reconnects by itself 10 s after the link drops (e.g. while th
 robot reboots). *Scroll to new lines* keeps the newest line in view; untick it to
 read older lines in peace. *Clear* empties the view (not the file).
 
+**Schedule** tab: Valetudo's own timers, run by the robot itself, even when QGIS
+is closed. One line per scheduled cleaning (name, days, time, what); tick it to turn
+it on or off, double-click or *Edit…* to change it, *Run now* to start it at once.
+The editor sets the name, the days and time, *Whole home* or *Selected rooms*
+(the same rooms tree as the Clean group, with your room groups; optionally in the
+order ticked, and the number of passes), and the fan speed, water usage and mode
+to apply first (only those the robot supports; *Unchanged* leaves them as they
+are). Changes are saved on the robot at once, so they also appear in Valetudo's
+own interface. Times are shown in local time; Valetudo stores them in UTC, so
+after a change to or from summer time a cleaning starts one hour off until it is
+saved again. The robot's clock must be right (see Valetudo's NTP settings).
+
 **SSH console** tab: type a command, press Enter, and it runs on the robot
 (`ssh <user>@<robot>`, same key-based login and settings as the reboot); its
 output appears below, errors in red, with the exit code when it is not 0. The
@@ -189,6 +202,9 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `ssh_reboot.py`              | Robot reboot over SSH (key-based, non-blocking)         |
 | `log_tail.py`                | Follows the robot's Valetudo log over SSH (`tail -f`)   |
 | `ssh_console.py`             | Command console on the robot over SSH                   |
+| `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
+| `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |
+| `rooms_tree.py`              | Checkable rooms tree with room groups (panel, editor)   |
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
 | `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |

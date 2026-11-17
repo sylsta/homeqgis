@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ValetudoQgis</class>
+ <widget class="QDialog" name="ValetudoTimerDialog">
+  <property name="windowTitle">
+   <string>Scheduled cleaning</string>
+  </property>
+  <layout class="QVBoxLayout" name="root_layout">
+   <item>
+    <layout class="QFormLayout" name="timer_form">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+     </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lbl_label">
+       <property name="text">
+        <string>Name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="edit_label">
+       <property name="maxLength">
+        <number>24</number>
+       </property>
+       <property name="placeholderText">
+        <string>e.g. Weekday mopping</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="lbl_days">
+       <property name="text">
+        <string>Days</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="days_layout">
+       <item>
+        <widget class="QCheckBox" name="chk_day_1">
+         <property name="text">
+          <string notr="true">1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chk_day_2">
+         <property name="text">
+          <string notr="true">2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chk_day_3">
+         <property name="text">
+          <string notr="true">3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chk_day_4">
+         <property name="text">
+          <string notr="true">4</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chk_day_5">
+         <property name="text">
+          <string notr="true">5</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chk_day_6">
+         <property name="text">
+          <string notr="true">6</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chk_day_7">
+         <property name="text">
+          <string notr="true">7</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="days_spacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint">
+          <size>
+           <width>0</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="lbl_time">
+       <property name="text">
+        <string>Time</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QTimeEdit" name="time_edit">
+       <property name="displayFormat">
+        <string notr="true">HH:mm</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lbl_what">
+       <property name="text">
+        <string>Clean</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="what_layout" stretch="0,1">
+       <item>
+        <widget class="QRadioButton" name="radio_everything">
+         <property name="text">
+          <string>Whole home</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radio_rooms">
+         <property name="text">
+          <string>Selected rooms</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QTreeWidget" name="rooms">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="headerHidden">
+        <bool>true</bool>
+       </property>
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <widget class="QCheckBox" name="chk_custom_order">
+       <property name="text">
+        <string>Clean the rooms in the order ticked</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="QLabel" name="lbl_order">
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="lbl_iterations">
+       <property name="text">
+        <string>Passes</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QSpinBox" name="spin_iterations">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="lbl_fan">
+       <property name="text">
+        <string>Fan speed</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QComboBox" name="combo_fan_speed"/>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="lbl_water">
+       <property name="text">
+        <string>Water usage</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QComboBox" name="combo_water_usage"/>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="lbl_mode">
+       <property name="text">
+        <string>Mode</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QComboBox" name="combo_operation_mode"/>
+     </item>
+     <item row="11" column="0" colspan="2">
+      <widget class="QCheckBox" name="chk_enabled">
+       <property name="text">
+        <string>Enabled</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0" colspan="2">
+      <widget class="QLabel" name="lbl_note">
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="button_box">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

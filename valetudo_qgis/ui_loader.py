@@ -23,3 +23,11 @@ def load_ui(name, widget, required=()):
     missing = [n for n in required if getattr(widget, n, None) is None]
     if missing:
         raise RuntimeError(f"{name}: missing object(s) {', '.join(missing)}")
+
+
+def set_row_visible(form, field, visible):
+    """QFormLayout.setRowVisible() only exists from Qt 6.4: hide label and field."""
+    label = form.labelForField(field)
+    if label is not None:
+        label.setVisible(visible)
+    field.setVisible(visible)

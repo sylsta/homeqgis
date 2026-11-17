@@ -862,6 +862,104 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_schedule">
+       <attribute name="title">
+        <string>Schedule</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="schedule_layout">
+        <item>
+         <widget class="QTreeWidget" name="timers">
+          <property name="rootIsDecorated">
+           <bool>false</bool>
+          </property>
+          <property name="uniformRowHeights">
+           <bool>true</bool>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>Tick to turn a scheduled cleaning on or off; double-click to edit it.</string>
+          </property>
+          <column>
+           <property name="text">
+            <string>Name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Days</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Time</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Cleaning</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="schedule_buttons">
+          <item>
+           <widget class="QToolButton" name="btn_timer_new">
+            <property name="text">
+             <string>New…</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_timer_edit">
+            <property name="text">
+             <string>Edit…</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_timer_delete">
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_timer_run">
+            <property name="text">
+             <string>Run now</string>
+            </property>
+            <property name="toolTip">
+             <string>Start the selected cleaning now, whatever its days and time.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="schedule_buttons_spacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbl_timers_note">
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

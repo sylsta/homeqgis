@@ -56,6 +56,8 @@ class ValetudoClient(QObject):
     mapPeeked = pyqtSignal(dict)               # map read for the panel only (no layers)
     restrictionsReceived = pyqtSignal(dict)    # no-go zones and virtual walls
     segmentsReceived = pyqtSignal(list)        # rooms: [{"id": "16", "name": "Kitchen"}, …]
+    timersReceived = pyqtSignal(list)          # Valetudo timers (dicts with their "id")
+    timerPropertiesReceived = pyqtSignal(dict)  # supportedActions, supportedPreActions
     commandDone = pyqtSignal(str)
     reachable = pyqtSignal(bool)              # emitted after every request
     error = pyqtSignal(str)
@@ -88,6 +90,13 @@ class ValetudoClient(QObject):
     def _put(self, path, payload, callback=None):
         body = QByteArray(json.dumps(payload).encode())
         self._track(self.nam.put(self._request(path), body), callback)
+
+    def _post(self, path, payload, callback=None):
+        body = QByteArray(json.dumps(payload).encode())
+        self._track(self.nam.post(self._request(path), body), callback)
+
+    def _delete(self, path, callback=None):
+        self._track(self.nam.deleteResource(self._request(path)), callback)
 
     def _track(self, reply, callback, on_finish=None, quiet=False, on_error=None, raw=False):
         """quiet=True: background request, failures only emit reachable(False).
@@ -275,6 +284,49 @@ class ValetudoClient(QObject):
         """Switch an on/off capability (e.g. the camera light)."""
         self._command(capability, {"action": "enable" if enabled else "disable"},
                       TOGGLE_CAPABILITIES.get(capability, capability))
+
+    # -- timers (Valetudo's own schedule, run by the robot) -------------------------
+
+    @staticmethod
+    def _timers_list(data):
+        """GET /timers: {id: timer, …} (possibly wrapped in "timers") -> [timer with id]."""
+        if isinstance(data, dict) and isinstance(data.get("timers"), dict):
+            data = data["timers"]
+        if isinstance(data, dict):
+            return [dict(timer, id=timer.get("id") or key) for key, timer in data.items()
+                    if isinstance(timer, dict)]
+        return [t for t in data if isinstance(t, dict)] if isinstance(data, list) else []
+
+    def fetch_timers(self, quiet=True):
+        self._get("/timers", lambda d: self.timersReceived.emit(self._timers_list(d)),
+                  quiet=quiet)
+
+    def fetch_timer_properties(self, quiet=True):
+        self._get("/timers/properties",
+                  lambda d: self.timerPropertiesReceived.emit(d if isinstance(d, dict) else {}),
+                  quiet=quiet)
+
+    TIMER_FIELDS = ("id", "enabled", "label", "dow", "hour", "minute", "action", "pre_actions")
+
+    def save_timer(self, timer):
+        """Create (no id) or replace (with id) a timer; the list is fetched again.
+
+        Only the documented fields are sent: Valetudo refuses any other one."""
+        timer = {k: v for k, v in timer.items() if k in self.TIMER_FIELDS}
+        done = lambda _data: (self.commandDone.emit("timer_save"), self.fetch_timers())
+        if timer.get("id"):
+            self._put(f"/timers/{timer['id']}", timer, done)
+        else:
+            self._post("/timers", {k: v for k, v in timer.items() if k != "id"}, done)
+
+    def delete_timer(self, timer_id):
+        self._delete(f"/timers/{timer_id}",
+                     lambda _data: (self.commandDone.emit("timer_delete"), self.fetch_timers()))
+
+    def run_timer(self, timer_id):
+        """Start a stored timer now, whatever its days and time."""
+        self._put(f"/timers/{timer_id}/action", {"action": "execute_now"},
+                  lambda _data: self.commandDone.emit("timer_run"))
 
     # -- room (segment) editing ----------------------------------------------------
 
