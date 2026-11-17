@@ -11,6 +11,7 @@ import email.utils
 import json
 import time
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QObject, QUrl, QTimer, QByteArray, pyqtSignal
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import QgsApplication, QgsNetworkAccessManager, QgsPointXY
@@ -110,6 +111,12 @@ class ValetudoClient(QObject):
         self._replies.add(reply)
 
         def finished():
+            if sip.isdeleted(self):
+                # The client was deleted (reconnection, plugin reloaded) while this
+                # request was under way: nobody is left to tell, drop the answer.
+                if not sip.isdeleted(reply):
+                    reply.deleteLater()
+                return
             self._replies.discard(reply)
             try:
                 if reply.error() != QNetworkReply.NetworkError.NoError:
@@ -266,6 +273,19 @@ class ValetudoClient(QObject):
         self._map_pending = True
         self._get("/robot/state/map", self.mapReceived.emit,
                   on_finish=lambda: setattr(self, "_map_pending", False), quiet=quiet)
+
+    def close(self):
+        """Stop polling and cancel the requests under way, before deleting the client:
+        their answers would otherwise arrive for an object that no longer exists."""
+        self._timer.stop()
+        for reply in list(self._replies):
+            try:
+                reply.finished.disconnect()
+                reply.abort()
+                reply.deleteLater()
+            except (TypeError, RuntimeError):   # already finished or deleted
+                pass
+        self._replies.clear()
 
     def start_polling(self, interval_ms=2000):
         """Background map refresh: failures are reported through reachable() only."""

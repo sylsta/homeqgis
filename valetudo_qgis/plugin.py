@@ -423,7 +423,7 @@ class ValetudoPlugin:
         if "wifi_survey" in self.act:
             self.act["wifi_survey"].setChecked(False)
         if self.client:
-            self.client.stop_polling()
+            self.client.close()   # stops polling, cancels requests under way
             self.client.deleteLater()
             self.client = None
             if self.panel is not None:
