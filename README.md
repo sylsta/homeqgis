@@ -297,7 +297,8 @@ line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`
 
 **Home Assistant** (*Settings > Options > Valetudo*, tab *Home Assistant*): the
 address of your Home Assistant server (`http://localhost:8123/` by default) and a
-long-lived access token, created in Home Assistant on your profile page
+long-lived access token (optional: without it the plugin can only check that Home
+Assistant answers), created in Home Assistant on your profile page
 (*Security > Long-lived access tokens*). The token is stored encrypted in the QGIS
 authentication database (QGIS may ask for its master password). **Test
 connection** reads the server's name and version.

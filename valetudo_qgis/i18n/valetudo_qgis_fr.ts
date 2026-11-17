@@ -1992,10 +1992,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>pas d’API Home Assistant à cette adresse</translation>
     </message>
     <message>
-        <source>Enter the address and the access token first.</source>
-        <translation>Saisissez d’abord l’adresse et le jeton d’accès.</translation>
-    </message>
-    <message>
         <source>The Home Assistant token was not saved: the QGIS master password is needed to store it encrypted.</source>
         <translation>Le jeton Home Assistant n’a pas été enregistré : le mot de passe principal de QGIS est nécessaire pour le stocker chiffré.</translation>
     </message>
@@ -2016,12 +2012,20 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Jeton d’accès</translation>
     </message>
     <message>
-        <source>Long-lived access token</source>
-        <translation>Jeton d’accès longue durée</translation>
+        <source>Enter the server address first.</source>
+        <translation>Saisissez d’abord l’adresse du serveur.</translation>
     </message>
     <message>
-        <source>Optional: your Home Assistant server. Create the token in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</source>
-        <translation>Facultatif : votre serveur Home Assistant. Créez le jeton dans Home Assistant, sur votre page de profil (Sécurité › Jetons d’accès longue durée). Il est conservé chiffré dans la base d’authentification de QGIS, qui peut demander votre mot de passe principal.</translation>
+        <source>Home Assistant found. Without an access token, the plugin cannot read or control it.</source>
+        <translation>Home Assistant trouvé. Sans jeton d’accès, le plugin ne peut ni le lire ni le piloter.</translation>
+    </message>
+    <message>
+        <source>Optional: long-lived access token</source>
+        <translation>Facultatif : jeton d’accès longue durée</translation>
+    </message>
+    <message>
+        <source>Optional: your Home Assistant server. The token is optional too, but without it the plugin can only check that Home Assistant is there. Create it in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</source>
+        <translation>Facultatif : votre serveur Home Assistant. Le jeton est facultatif lui aussi, mais sans lui le plugin peut seulement vérifier que Home Assistant est là. Créez-le dans Home Assistant, sur votre page de profil (Sécurité › Jetons d’accès longue durée). Il est conservé chiffré dans la base d’authentification de QGIS, qui peut demander votre mot de passe principal.</translation>
     </message>
 </context>
 </TS>

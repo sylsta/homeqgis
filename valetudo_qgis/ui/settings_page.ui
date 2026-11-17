@@ -594,7 +594,7 @@
           <enum>QLineEdit::Password</enum>
          </property>
          <property name="placeholderText">
-          <string>Long-lived access token</string>
+          <string>Optional: long-lived access token</string>
          </property>
         </widget>
        </item>
@@ -622,7 +622,7 @@
           <bool>true</bool>
          </property>
          <property name="text">
-          <string>Optional: your Home Assistant server. Create the token in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</string>
+          <string>Optional: your Home Assistant server. The token is optional too, but without it the plugin can only check that Home Assistant is there. Create it in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</string>
          </property>
         </widget>
        </item>

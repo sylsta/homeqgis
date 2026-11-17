@@ -1,6 +1,8 @@
 """Minimal Home Assistant REST client (https://developers.home-assistant.io/docs/api/rest/).
 
-Every request carries ``Authorization: Bearer <long-lived access token>``.
+With a long-lived access token, every request carries
+``Authorization: Bearer <token>``. Without one, Home Assistant answers its API
+with 401 only: enough to know it is there, nothing more.
 """
 
 import json
@@ -11,6 +13,9 @@ from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import QgsNetworkAccessManager
 
 from .i18n import tr
+
+
+UNAUTHORISED = "401"   # error text of a request made without a token, answered 401
 
 
 def api_url(base_url, path):
@@ -29,7 +34,8 @@ class HomeAssistantClient(QObject):
     def _request(self, path, timeout_ms):
         req = QNetworkRequest(QUrl(api_url(self.base_url, path)))
         req.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
-        req.setRawHeader(b"Authorization", f"Bearer {self.token}".encode())
+        if self.token:
+            req.setRawHeader(b"Authorization", f"Bearer {self.token}".encode())
         if timeout_ms and hasattr(req, "setTransferTimeout"):
             req.setTransferTimeout(timeout_ms)
         return req
@@ -61,7 +67,7 @@ class HomeAssistantClient(QObject):
                 status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
                 if reply.error() != QNetworkReply.NetworkError.NoError:
                     if on_error:
-                        on_error(error_message(status, reply.errorString()))
+                        on_error(error_message(status, reply.errorString(), self.token))
                     return
                 raw = bytes(reply.readAll()).decode("utf-8", "replace")
                 try:
@@ -76,9 +82,9 @@ class HomeAssistantClient(QObject):
         reply.finished.connect(finished)
 
 
-def error_message(status, fallback):
+def error_message(status, fallback, token=""):
     if status == 401:
-        return tr("the access token was refused")
+        return tr("the access token was refused") if token else UNAUTHORISED
     if status == 404:
         return tr("no Home Assistant API at this address")
     return fallback

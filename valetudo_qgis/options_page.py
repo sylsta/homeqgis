@@ -12,7 +12,7 @@ from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 
 from . import room_groups
 from .client import ValetudoClient
-from .ha_client import HomeAssistantClient
+from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .i18n import tr
 from .icons import LOGO, icon
 from .settings import (
@@ -101,10 +101,14 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._test_client.probe("/robot", ok, failed, timeout_ms=5000)
 
     def _test_home_assistant(self, *_):
-        """Read the Home Assistant configuration with the values being edited."""
+        """Ask Home Assistant who it is, with the values being edited.
+
+        The token is optional: without one, Home Assistant only says it is
+        there (401), which the test reports as found.
+        """
         url, token = self.ha_url.text().strip(), self.ha_token.text().strip()
-        if not url or not token:
-            self.lbl_ha_test.setText(tr("Enter the address and the access token first."))
+        if not url:
+            self.lbl_ha_test.setText(tr("Enter the server address first."))
             return
         if self._ha_client is not None:
             self._ha_client.close()
@@ -121,7 +125,13 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             self.btn_ha_test.setEnabled(True)
 
         def failed(error):
-            self.lbl_ha_test.setText("✗ " + tr("Connection failed: {error}").format(error=error))
+            if error == UNAUTHORISED:
+                self.lbl_ha_test.setText("✓ " + tr(
+                    "Home Assistant found. Without an access token, the plugin "
+                    "cannot read or control it."))
+            else:
+                self.lbl_ha_test.setText(
+                    "✗ " + tr("Connection failed: {error}").format(error=error))
             self.btn_ha_test.setEnabled(True)
 
         self._ha_client.get("/config", ok, failed, timeout_ms=5000)

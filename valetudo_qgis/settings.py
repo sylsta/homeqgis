@@ -79,7 +79,12 @@ def ha_token():
     """The Home Assistant access token ("" if none, or if it cannot be decrypted)."""
     try:
         from qgis.core import QgsApplication
-        value = QgsApplication.authManager().authSetting(HA_TOKEN_SETTING, "", True)
+        manager = QgsApplication.authManager()
+        # Without a stored token, do not decrypt anything: that would ask for
+        # the master password for nothing.
+        if not manager.existsAuthSetting(HA_TOKEN_SETTING):
+            return ""
+        value = manager.authSetting(HA_TOKEN_SETTING, "", True)
     except Exception:   # authentication database unavailable
         return ""
     return str(value or "").strip()
