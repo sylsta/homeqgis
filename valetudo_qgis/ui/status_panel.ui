@@ -35,6 +35,19 @@
         <number>2</number>
        </property>
        <item>
+        <widget class="QToolButton" name="btn_details">
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+         <property name="arrowType">
+          <enum>Qt::RightArrow</enum>
+         </property>
+         <property name="toolTip">
+          <string>Show the details</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="lbl_logo"/>
        </item>
        <item>

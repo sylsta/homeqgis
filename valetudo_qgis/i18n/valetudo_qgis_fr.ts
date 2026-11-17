@@ -2043,5 +2043,13 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Found, no access token</source>
         <translation>Trouvé, sans jeton d’accès</translation>
     </message>
+    <message>
+        <source>Show the details</source>
+        <translation>Afficher les détails</translation>
+    </message>
+    <message>
+        <source>Hide the details</source>
+        <translation>Masquer les détails</translation>
+    </message>
 </context>
 </TS>

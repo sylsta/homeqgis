@@ -37,7 +37,7 @@ The panel (titled *Connection*), from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
+│ ▸ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
 │   (click it: robot, Raspberry Pi and Home Assistant details)       │
 ├──┬───────────────────────────────────────────────────┤
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
@@ -61,7 +61,8 @@ The panel (titled *Connection*), from top to bottom:
   but no access token is set, *Offline*; hidden when there is neither a token nor
   an answer; hover it for the server's name and version), *Show on map*
   and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact
-  mode). **Click the strip** to show or hide the details: connection, robot model,
+  mode). **Click the ▸ arrow** (or the strip) to show or hide the details, folded
+  each time QGIS starts: connection, robot model,
   Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with
   how far off, when it differs from the computer's by more than 2 minutes) and
   uptime, the state and battery, with *Show on map* and *Refresh now* on the first

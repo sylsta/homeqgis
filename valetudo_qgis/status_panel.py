@@ -54,7 +54,6 @@ from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minu
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
-KEY_DETAILS = "valetudo/panel_details"       # details under the status strip: shown or not
 KEY_TERMINAL = "valetudo/panel_terminal"     # "robot/console", "pi/log"…
 PI_LOG_PATH = "valetudo/collect.log"         # the Pi collector's log (README's cron line)
 KEY_COMPACT = "valetudo/panel_compact"       # compact mode: strip and big button only
@@ -67,7 +66,7 @@ KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all r
 # relies on these object names.
 UI_WIDGETS = (
     # strip, details, action bar
-    "strip", "strip_layout", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
+    "strip", "strip_layout", "btn_details", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
     "btn_warning", "sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
     "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu",
     "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
@@ -392,7 +391,11 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_job.setVisible(False)
         self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.strip.installEventFilter(self)
-        self.details.setVisible(QgsSettings().value(KEY_DETAILS, False, type=bool))
+        # Details: always folded when QGIS starts; the arrow (or a click on the strip)
+        # unfolds them.
+        self._details_open = False
+        self.details.setVisible(False)
+        self.btn_details.clicked.connect(self.toggle_details)
 
         # -- details: connection, robot, Raspberry Pi ------------------------------------
         self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
@@ -704,10 +707,13 @@ class ValetudoPanel(QgsDockWidget):
             return True
         return super().eventFilter(obj, event)
 
-    def toggle_details(self):
-        visible = not self.details.isVisible()
-        self.details.setVisible(visible)
-        QgsSettings().setValue(KEY_DETAILS, visible)
+    def toggle_details(self, *_):
+        self._details_open = not self._details_open
+        self.details.setVisible(self._details_open)
+        self.btn_details.setArrowType(Qt.ArrowType.DownArrow if self._details_open
+                                      else Qt.ArrowType.RightArrow)
+        self.btn_details.setToolTip(tr("Hide the details") if self._details_open
+                                    else tr("Show the details"))
 
     def _update_primary(self, *_):
         """Start when docked or idle, Pause while working, Resume when paused."""
@@ -754,7 +760,7 @@ class ValetudoPanel(QgsDockWidget):
         tab = next((t for _, t in self._problems.values() if t), None)
         if tab in self._tab_keys:
             self.tabs.setCurrentIndex(self._tab_keys.index(tab))
-        if not self.details.isVisible() and any(t is None for _, t in self._problems.values()):
+        if not self._details_open and any(t is None for _, t in self._problems.values()):
             self.toggle_details()
 
     def _update_job(self):
@@ -805,7 +811,7 @@ class ValetudoPanel(QgsDockWidget):
         if self.is_compact() and not visible:
             self.details.setVisible(False)
         elif visible:
-            self.details.setVisible(QgsSettings().value(KEY_DETAILS, False, type=bool))
+            self.details.setVisible(self._details_open)
 
     # -- terminal -------------------------------------------------------------------------
 
