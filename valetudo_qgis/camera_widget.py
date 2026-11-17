@@ -33,6 +33,7 @@ class CameraWidget(QWidget):
         self._frames = 0
         self._fps_clock = time.monotonic()
         self._error_detail = ""
+        self._startup = ""   # seconds to the first image, as text
 
         self.stream = CameraStream(self)
         self.stream.frameReady.connect(self._on_frame)
@@ -128,7 +129,10 @@ class CameraWidget(QWidget):
         fps = round(self._frames / max(now - self._fps_clock, 1e-3))
         self._frames, self._fps_clock = 0, now
         if self.stream.is_running() and self._image is not None and not self._error_detail:
-            self.lbl_status.setText(tr("Playing · {fps} fps").format(fps=fps))
+            text = tr("Playing · {fps} fps").format(fps=fps)
+            if self._startup:
+                text += " · " + tr("first image after {seconds} s").format(seconds=self._startup)
+            self.lbl_status.setText(text)
 
     def _on_state(self, state, detail):
         running = state not in ("stopped", "ffmpeg_missing")
@@ -137,6 +141,7 @@ class CameraWidget(QWidget):
             self.lbl_status.setText(tr("Connecting…"))
         elif state == "playing":
             self._error_detail = ""
+            self._startup = detail
             self._fps_clock, self._frames = time.monotonic(), 0
             self._fps_timer.start()
             self.lbl_status.setText(tr("Playing"))

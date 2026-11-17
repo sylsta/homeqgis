@@ -12,6 +12,7 @@ that the panel turns into translated messages.
 
 import os
 import shutil
+import time
 
 from qgis.PyQt.QtCore import QObject, QProcess, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QImage
@@ -102,6 +103,7 @@ class CameraStream(QObject):
         process.finished.connect(self._on_finished)
         self._process = process
         self._first_frame = True
+        self._t0 = time.monotonic()
         self.stateChanged.emit("connecting", "")
         process.start(self._program, self._args)
 
@@ -130,7 +132,9 @@ class CameraStream(QObject):
             if not image.isNull():
                 if self._first_frame:
                     self._first_frame = False
-                    self.stateChanged.emit("playing", "")
+                    # detail: seconds from launch to the first image (mostly the
+                    # wait for the robot's next full image, a key frame)
+                    self.stateChanged.emit("playing", f"{time.monotonic() - self._t0:.1f}")
                 self.frameReady.emit(image)
 
     def _on_stderr(self):

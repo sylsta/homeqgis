@@ -76,6 +76,7 @@ STATE_COLORS = {
 }
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
+CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
 ACTIVE_STATES = {"cleaning", "returning", "moving", "manual_control"}
 LOW_PERCENT = 10
 LOW_MINUTES = 600  # 10 h
@@ -368,6 +369,12 @@ class ValetudoPanel(QgsDockWidget):
         self.camera_page = self.tab_camera
         self.camera = CameraWidget()
         self.camera_layout.insertWidget(0, self.camera)
+        # Coming back to the tab soon after leaving it shows the video at once,
+        # instead of reconnecting and waiting for the robot's next full image.
+        self._camera_grace = QTimer(self)
+        self._camera_grace.setSingleShot(True)
+        self._camera_grace.setInterval(CAMERA_GRACE_MS)
+        self._camera_grace.timeout.connect(self.camera.stop)
         self.camera_light.setVisible(False)    # shown if the robot supports it
         self.camera_light.clicked.connect(self._on_camera_light_clicked)  # user only
 
@@ -839,18 +846,24 @@ class ValetudoPanel(QgsDockWidget):
         if hasattr(self.tabs, "setTabVisible"):   # Qt >= 5.15
             self.tabs.setTabVisible(index, self._pi_target() is not None)
 
+    def settings_changed(self):
+        """Called by the plugin after the Options page saved changes."""
+        self._update_console()
+
     def _update_console(self):
         self._update_pi_tab()
         for console in self.consoles:
             console.update(self.isVisible(), self.tabs.currentWidget())
 
     def _update_camera(self):
-        """Play only while the panel is visible and the Camera tab is shown."""
+        """Play while the panel is visible and the Camera tab is shown; keep playing
+        CAMERA_GRACE_MS after that, so that a quick return is instant."""
         if self.isVisible() and self.tabs.currentWidget() is self.camera_page:
+            self._camera_grace.stop()
             if not self.camera.stream.is_running():
                 self.camera.play()
-        else:
-            self.camera.stop()
+        elif self.camera.stream.is_running() and not self._camera_grace.isActive():
+            self._camera_grace.start()
 
     # -- robot log ------------------------------------------------------------------
 
@@ -910,6 +923,7 @@ class ValetudoPanel(QgsDockWidget):
 
     def shutdown(self):
         """Called by the plugin on unload."""
+        self._camera_grace.stop()
         self.camera.shutdown()
         self.log_tail.stop(quiet=True)
         for console in self.consoles:

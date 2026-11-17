@@ -109,7 +109,10 @@ The panel refreshes itself while visible (every 5 s while the robot works, every
 
 **Camera**: robots that expose a raw H.264 stream over TCP (default
 `tcp://<robot>:8555`). Needs **ffmpeg** (found in the `PATH`, or set its path in
-the settings). The stream reconnects by itself if it drops, and **Save snapshot**
+the settings). It starts at the robot's next full image (key frame), so the first
+image can take a few seconds (the status shows how long); after leaving the tab, the
+stream keeps running for a minute so that coming back is instant. The stream
+reconnects by itself if it drops, and **Save snapshot**
 saves the current image as PNG.
 
 **No-go zones and virtual walls**: *Edit no-go zones and walls* loads the

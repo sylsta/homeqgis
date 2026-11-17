@@ -509,6 +509,7 @@ class ValetudoPlugin:
             self._get_client(prompt=False)   # reconnect the visible panel at once
         if self.panel is not None:
             self.panel.camera.restart_if_running()
+            self.panel.settings_changed()   # e.g. Pi address: show or hide its console
 
     def _center_on_robot(self, map_json, force=False):
         """Recentre on the robot when it leaves the middle of the view (no constant jitter)."""

@@ -1713,5 +1713,9 @@ Continuer ?</translation>
         <source>Runs on the Raspberry Pi, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
         <translation>S’exécute sur le Raspberry Pi, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables ne le sont pas.</translation>
     </message>
+    <message>
+        <source>first image after {seconds} s</source>
+        <translation>première image après {seconds} s</translation>
+    </message>
 </context>
 </TS>
