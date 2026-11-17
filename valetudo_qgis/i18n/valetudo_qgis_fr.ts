@@ -56,10 +56,6 @@
         <translation>Paramètres…</translation>
     </message>
     <message>
-        <source>Project switched to “No CRS” (robot's local frame, in cm).</source>
-        <translation>Projet passé en « Pas de SCR » (repère local du robot, en cm).</translation>
-    </message>
-    <message>
         <source>Command “{command}” sent.</source>
         <translation>Commande « {command} » envoyée.</translation>
     </message>
@@ -1790,8 +1786,8 @@ Continuer ?</translation>
         <translation>Coché : charger la carte de tous les passages réunis. Décoché : le dernier passage seulement.</translation>
     </message>
     <message>
-        <source>Show the robot on the map when QGIS starts (if it answers)</source>
-        <translation>Afficher le robot sur la carte au démarrage de QGIS (s’il répond)</translation>
+        <source>Show the robot on the map when QGIS starts with an empty project</source>
+        <translation>Afficher le robot sur la carte quand QGIS démarre avec un projet vide</translation>
     </message>
     <message>
         <source>Wi-Fi {signal} dBm</source>

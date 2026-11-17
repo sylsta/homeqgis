@@ -101,9 +101,10 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
   line that does not cross the room), its own message is shown.
 - **Show on map** (top right, next to the connection status) loads the map,
   refreshes the robot live and keeps it in view (recentring only when it nears the
-  edge). Click again to stop. It is turned on by itself when QGIS starts if the
-  robot answers within a minute (*Settings > Options > Valetudo*, *Connection*:
-  "Show the robot on the map when QGIS starts").
+  edge). Click again to stop. It is turned on by itself when QGIS starts with an
+  empty project and the robot answers within a minute (*Settings > Options >
+  Valetudo*, *Connection*: "Show the robot on the map when QGIS starts with an
+  empty project"); a project with layers is left untouched.
 - **Tabs**: Robot (state details with the parts fitted to the robot, dock station
   states, fan speed, water usage and mode — vacuum only, mop only or both —, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go

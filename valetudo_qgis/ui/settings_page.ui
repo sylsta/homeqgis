@@ -81,7 +81,7 @@
        <item row="3" column="0" colspan="2">
         <widget class="QCheckBox" name="live_at_start">
          <property name="text">
-          <string>Show the robot on the map when QGIS starts (if it answers)</string>
+          <string>Show the robot on the map when QGIS starts with an empty project</string>
          </property>
         </widget>
        </item>

@@ -481,7 +481,9 @@ class ValetudoPlugin:
         if ok and self._live_at_start and not self._unloaded:
             self._live_at_start = False   # once per QGIS session
             live = self.act.get("live")
-            if live is not None and live.isEnabled() and not live.isChecked():
+            # Only into an empty project: never add the robot's map to one the user opened.
+            if live is not None and live.isEnabled() and not live.isChecked() \
+                    and not QgsProject.instance().mapLayers():
                 live.trigger()   # same as a click: checked, then toggle_live(True)
         previous, self._reachable = self._reachable, ok
         if ok and self.capabilities is None and self.client is not None:
@@ -1236,12 +1238,10 @@ class ValetudoPlugin:
             self._center_on_robot(map_json)   # keep the robot in view while tracking
 
     def _prepare_project(self):
-        """Switch the project to "No CRS": we work in the robot's own frame."""
+        """Switch the project to "No CRS", silently: we work in the robot's own frame."""
         project = QgsProject.instance()
         if project.crs().isValid():
             project.setCrs(QgsCoordinateReferenceSystem())
-            self._message(tr("Project switched to “No CRS” (robot's local frame, in cm)."),
-                          Qgis.MessageLevel.Info)
 
     def _on_error(self, msg):
         self._message(msg, Qgis.MessageLevel.Warning)
