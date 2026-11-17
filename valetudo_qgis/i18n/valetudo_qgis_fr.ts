@@ -2039,5 +2039,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Home Assistant answers at {url}. Add an access token in Settings › Options › Valetudo to use it.</source>
         <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › Valetudo pour l’utiliser.</translation>
     </message>
+    <message>
+        <source>Found, no access token</source>
+        <translation>Trouvé, sans jeton d’accès</translation>
+    </message>
 </context>
 </TS>

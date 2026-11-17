@@ -48,7 +48,7 @@ from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
 from .settings import has_ha_token, ha_token, load_settings
-from .ha_client import UNAUTHORISED, HomeAssistantClient
+from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
 from .console_tab import ConsoleTab
 from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minutes
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
@@ -69,7 +69,10 @@ UI_WIDGETS = (
     # strip, details, action bar
     "strip", "strip_layout", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
     "btn_warning", "sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
-    "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu",
+    "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
+    "ha_header", "lbl_ha_logo", "lbl_ha_connection", "btn_ha_refresh", "lbl_ha_name",
+    "lbl_ha_info", "details", "header_layout", "lbl_connection", "btn_refresh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
     "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
@@ -405,8 +408,17 @@ class ValetudoPanel(QgsDockWidget):
         for name in ("sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
                      "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip"):
             getattr(self, name).setVisible(False)
+        self.lbl_details_logo.setPixmap(icon(LOGO).pixmap(20, 20))
+        self.lbl_ha_logo.setPixmap(icon(HA_LOGO).pixmap(20, 20))
+        self.btn_ha_refresh.setIcon(theme("/mActionRefresh.svg"))
+        self.btn_ha_refresh.clicked.connect(self._refresh_ha)
+        self.ha_header.setVisible(False)
         self._ha_client = None
         self._ha_token = None        # read (decrypted) once, when first needed
+        self._ha_state = None        # None (hidden), "connecting", "online", "no_token", "offline"
+        self._ha = {}                # url, name, version, time zone, clock, start, error
+        self._ha_last_ok = None      # time.monotonic() of the last answer
+        self._ha_last_ok_clock = ""
         self._ha_timer = QTimer(self)
         self._ha_timer.setInterval(HA_INTERVAL_MS)
         self._ha_timer.timeout.connect(self._refresh_ha)
@@ -575,10 +587,11 @@ class ValetudoPanel(QgsDockWidget):
         """Coloured pill with the robot state, readable at a glance."""
         color = STATE_COLORS.get(state, "#757575")
         text = _label(_state_labels(), state) if state else tr("Unknown")
-        self.lbl_badge.setText(text)
-        self.lbl_badge.setStyleSheet(
-            f"background-color: {color}; color: white; font-weight: bold;"
-            "border-radius: 9px; padding: 2px 10px;")
+        for badge in (self.lbl_badge, self.lbl_badge_details):
+            badge.setText(text)
+            badge.setStyleSheet(
+                f"background-color: {color}; color: white; font-weight: bold;"
+                "border-radius: 9px; padding: 2px 10px;")
 
     def _on_tab_changed(self, index):
         if 0 <= index < len(self._tab_keys):
@@ -631,6 +644,12 @@ class ValetudoPanel(QgsDockWidget):
             live.setDefaultAction(act["live"])
             live.setAutoRaise(True)
             self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_menu), live)
+            # …and in the details, next to the connection line
+            live_details = QToolButton()
+            live_details.setDefaultAction(act["live"])
+            live_details.setAutoRaise(True)
+            self.header_layout.insertWidget(self.header_layout.indexOf(self.btn_refresh),
+                                            live_details)
         # ⋮ menu: occasional commands
         for key in ("locate", None, "watch_boot", "reboot", None, "settings"):
             if key is None:
@@ -1369,32 +1388,100 @@ class ValetudoPanel(QgsDockWidget):
             self._ha_token = ha_token()   # may ask for the QGIS master password, once
         if self._ha_client is not None:
             self._ha_client.close()
-        self._ha_client = HomeAssistantClient(url, self._ha_token, self)
+        client = self._ha_client = HomeAssistantClient(url, self._ha_token, self)
+        self._ha["url"] = url
+        if self._ha_state is None and has_token:
+            self._ha_state = "connecting"
+            self._update_ha_header()
 
         def ok(config):
             config = config if isinstance(config, dict) else {}
-            name = config.get("location_name") or "Home Assistant"
-            version = config.get("version", "")
-            self._show_ha("#2e7d32", tr("Online"),
-                          f"{name} ({version}) · {url}" if version else f"{name} · {url}")
+            self._ha.update(name=config.get("location_name") or "",
+                            version=config.get("version") or "",
+                            time_zone=config.get("time_zone") or "",
+                            time=client.server_time, received_at=client.received_at,
+                            error="")
+            self._ha_state = "online"
+            self._ha_last_ok = time.monotonic()
+            self._ha_last_ok_clock = QDateTime.currentDateTime().toString("HH:mm:ss")
+            self._update_ha_header()
+            # Uptime: the "Uptime" integration's sensor (its state is the start time)
+            client.get("/states/sensor.uptime", uptime_ok,
+                       lambda _error: self._set_ha_start(None), timeout_ms=5000)
+
+        def uptime_ok(state):
+            start = parse_timestamp(state.get("state")) if isinstance(state, dict) else None
+            self._set_ha_start(start)
 
         def failed(error):
+            self._ha["error"] = error
             if error == UNAUTHORISED:   # there, but no token to go further
-                self._show_ha("#ef6c00", tr("No token"), tr(
-                    "Home Assistant answers at {url}. Add an access token in "
-                    "Settings › Options › Valetudo to use it.").format(url=url))
+                self._ha_state = "no_token"
             elif has_token:
-                self._show_ha("#c62828", tr("Offline"), f"{url}: {error}")
+                self._ha_state = "offline"
             else:   # no token and nothing answers: no Home Assistant, nothing to show
-                self._show_ha(None)
+                self._ha_state = None
+            self._update_ha_header()
 
-        self._ha_client.get("/config", ok, failed, timeout_ms=5000)
+        client.get("/config", ok, failed, timeout_ms=5000)
 
-    def _show_ha(self, color, text="", tooltip=""):
-        for widget in (self.sep_ha, self.lbl_ha_strip_logo, self.lbl_ha_strip):
-            widget.setVisible(color is not None)
-        if color is not None:
-            self._set_strip_status(self.lbl_ha_strip, color, text, tooltip)
+    def _set_ha_start(self, start):
+        self._ha["start"] = start
+        self._update_ha_header()
+
+    def _update_ha_header(self):
+        """Home Assistant in the strip (status) and in the details (three lines)."""
+        state = self._ha_state
+        shown = state is not None
+        for widget in (self.sep_ha, self.lbl_ha_strip_logo, self.lbl_ha_strip, self.ha_header):
+            widget.setVisible(shown)
+        if not shown:
+            return
+        ha, url = self._ha, self._ha.get("url", "")
+        if state == "connecting":
+            color, short = "#9e9e9e", tr("Connecting…")
+            long = short
+        elif state == "online":
+            seconds = int(time.monotonic() - self._ha_last_ok)
+            color, short = "#2e7d32", tr("Online")
+            long = tr("Connected · updated {seconds} s ago").format(seconds=seconds)
+        elif state == "no_token":
+            color, short = "#ef6c00", tr("No token")
+            long = tr("Found, no access token")
+        else:
+            color, short = "#c62828", tr("Offline")
+            long = tr("Unreachable · last update {time}").format(
+                time=self._ha_last_ok_clock or "—")
+        self.lbl_ha_connection.setText(f"<span style='color:{color}'>●</span> {long}")
+        self.lbl_ha_connection.setToolTip(ha.get("error", "") if state == "offline" else "")
+        # Second line: Home Assistant <version> · <home name> · <time zone>
+        if state == "no_token":
+            name = tr("Home Assistant answers at {url}. Add an access token in "
+                      "Settings › Options › Valetudo to use it.").format(url=url)
+        else:
+            version = ha.get("version", "")
+            name = " · ".join(p for p in (
+                f"Home Assistant {version}" if version else "Home Assistant",
+                ha.get("name"), ha.get("time_zone")) if p)
+        self.lbl_ha_name.setTextFormat(Qt.TextFormat.PlainText)
+        self.lbl_ha_name.setText(name)
+        # Third line: address · Home Assistant's clock · uptime
+        host = QUrl(url).host() or url
+        online = state == "online"
+        uptime = None
+        if online and ha.get("start") and ha.get("time"):
+            uptime = max(0, ha["time"] - ha["start"])
+        line, wrong = host_info.info_line(host, ha.get("time") if online else None,
+                                          ha.get("received_at"), uptime, self._local_time)
+        self.lbl_ha_info.setText(line)
+        self.lbl_ha_info.setStyleSheet("color: #ef6c00;" if wrong else "")
+        if state == "offline":
+            tip = ha.get("error", "")
+        elif state == "no_token":
+            tip = name
+        else:
+            tip = " · ".join(p for p in (ha.get("name"), ha.get("version"), url) if p)
+        self._set_strip_status(self.lbl_ha_strip, color, short, tip)
 
     @staticmethod
     def _local_time(epoch):
@@ -1519,6 +1606,8 @@ class ValetudoPanel(QgsDockWidget):
 
     def _update_header(self):
         self._update_pi_header()
+        if self._ha_state == "online":
+            self._update_ha_header()
         if self.client is None or self._reachable is None:
             return
         if self._reachable:
@@ -1637,10 +1726,11 @@ class ValetudoPanel(QgsDockWidget):
             elif cls == "BatteryStateAttribute":
                 level = int(attr.get("level") or 0)
                 flag = attr.get("flag")
-                self.bar_battery.setValue(level)
                 self._battery = level
                 suffix = f" · {_label(flags, flag)}" if flag and flag != "none" else ""
-                self.bar_battery.setFormat(f"{level} %{suffix}")
+                for bar in (self.bar_battery, self.bar_battery_details):
+                    bar.setValue(level)
+                    bar.setFormat(f"{level} %{suffix}")
             elif cls == "PresetSelectionStateAttribute":
                 for capability, ptype in PRESET_ROWS.items():
                     if attr.get("type") == ptype:

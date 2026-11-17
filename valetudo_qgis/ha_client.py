@@ -5,7 +5,9 @@ With a long-lived access token, every request carries
 with 401 only: enough to know it is there, nothing more.
 """
 
+import email.utils
 import json
+import time
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QByteArray, QObject, QUrl
@@ -30,6 +32,9 @@ class HomeAssistantClient(QObject):
         self.token = token
         self.nam = QgsNetworkAccessManager.instance()
         self._replies = set()
+        # Home Assistant's own clock, from the Date header of the last answer
+        self.server_time = None
+        self.received_at = None
 
     def _request(self, path, timeout_ms):
         req = QNetworkRequest(QUrl(api_url(self.base_url, path)))
@@ -69,6 +74,12 @@ class HomeAssistantClient(QObject):
                     if on_error:
                         on_error(error_message(status, reply.errorString(), self.token))
                     return
+                stamp = bytes(reply.rawHeader(QByteArray(b"Date"))).decode("latin-1").strip()
+                try:
+                    self.server_time = email.utils.parsedate_to_datetime(stamp).timestamp()
+                    self.received_at = time.time()
+                except (TypeError, ValueError, IndexError):
+                    pass
                 raw = bytes(reply.readAll()).decode("utf-8", "replace")
                 try:
                     data = json.loads(raw) if raw.strip() else None
@@ -88,3 +99,12 @@ def error_message(status, fallback, token=""):
     if status == 404:
         return tr("no Home Assistant API at this address")
     return fallback
+
+
+def parse_timestamp(text):
+    """ISO 8601 state of a timestamp sensor (e.g. sensor.uptime) -> epoch, or None."""
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(str(text).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
