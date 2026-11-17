@@ -1395,9 +1395,13 @@ class ValetudoPanel(QgsDockWidget):
         pi = self._pi or {}
         self.lbl_pi_name.setTextFormat(Qt.TextFormat.PlainText)
         self.lbl_pi_name.setText(" · ".join(p for p in (pi.get("hostname"), pi.get("uname")) if p))
+        # Offline: its last clock and uptime are no longer true, only the address is
+        online = bool(self._pi_ok)
         line, wrong = host_info.info_line(pi.get("ip") or (self._pi_target() or [""])[0],
-                                          pi.get("time"), pi.get("received_at"),
-                                          pi.get("uptime"), self._local_time)
+                                          pi.get("time") if online else None,
+                                          pi.get("received_at"),
+                                          pi.get("uptime") if online else None,
+                                          self._local_time)
         self.lbl_pi_info.setText(line)
         self.lbl_pi_info.setStyleSheet("color: #ef6c00;" if wrong else "")
         # System tab: the same, as a card
@@ -1641,6 +1645,8 @@ class ValetudoPanel(QgsDockWidget):
 
     def _on_reachable(self, ok):
         self._reachable = ok
+        if not ok:
+            self._show_unreachable()
         if ok and self.client is not None and not self._robot_text:
             self.client.fetch_robot_info(quiet=True)   # robot was off when we connected
             self.client.fetch_version(quiet=True)
@@ -1648,6 +1654,30 @@ class ValetudoPanel(QgsDockWidget):
             self._last_ok = time.monotonic()
             self._last_ok_clock = QDateTime.currentDateTime().toString("HH:mm:ss")
         self._update_header()
+
+    def _show_unreachable(self):
+        """The robot no longer answers: its last state, battery, Wi-Fi, clock and
+        uptime are no longer true, so they are not shown (they come back with the
+        next answer)."""
+        for badge in (self.lbl_badge, self.lbl_badge_details):
+            badge.setText(tr("Unreachable"))
+            badge.setStyleSheet("background-color: #9e9e9e; color: white; font-weight: bold;"
+                                "border-radius: 9px; padding: 2px 10px;")
+        for bar in (self.bar_battery, self.bar_battery_details):
+            bar.setValue(0)
+            bar.setFormat("—")
+            bar.setEnabled(False)
+        self.lbl_state.setText(tr("Unreachable"))
+        self.lbl_wifi_strip.setText("")
+        self.lbl_wifi_strip.setToolTip("")
+        self._wifi_html, self._wifi_tip = "", ""
+        self.lbl_wifi_now.setText(tr("The robot does not answer."))
+        self._host = {}
+        self._update_robot_info()
+        self._update_robot_label()
+        self._state, self._job, self._battery = None, None, None
+        self._update_primary()
+        self._update_job()
 
     def _update_header(self):
         self._update_pi_header()
@@ -1774,6 +1804,7 @@ class ValetudoPanel(QgsDockWidget):
                 self._battery = level
                 suffix = f" · {_label(flags, flag)}" if flag and flag != "none" else ""
                 for bar in (self.bar_battery, self.bar_battery_details):
+                    bar.setEnabled(True)
                     bar.setValue(level)
                     bar.setFormat(f"{level} %{suffix}")
             elif cls == "PresetSelectionStateAttribute":

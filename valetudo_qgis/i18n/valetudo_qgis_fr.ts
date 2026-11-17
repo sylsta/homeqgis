@@ -2095,5 +2095,13 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Optional: with an address, the Terminal tab gets a Home Assistant console and log. On Home Assistant OS, install the Terminal &amp; SSH add-on and set its SSH port in the add-on's Network settings, then either paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option, or set a password in its options and here (kept encrypted, like the token; needs OpenSSH 8.4 or newer). The log command runs there: Home Assistant OS keeps its log in the system journal, read with ha core logs.</source>
         <translation>Facultatif : avec une adresse, l’onglet Terminal propose une console et un journal Home Assistant. Sur Home Assistant OS, installez le module complémentaire Terminal &amp; SSH et choisissez son port SSH dans ses réglages Réseau, puis collez votre clé publique (~/.ssh/id_ed25519.pub) dans son option authorized_keys, ou définissez un mot de passe dans ses options et ici (conservé chiffré, comme le jeton ; nécessite OpenSSH 8.4 ou plus récent). La commande du journal s’exécute là-bas : Home Assistant OS garde son journal dans le journal système, lu avec ha core logs.</translation>
     </message>
+    <message>
+        <source>Unreachable</source>
+        <translation>Injoignable</translation>
+    </message>
+    <message>
+        <source>The robot does not answer.</source>
+        <translation>Le robot ne répond pas.</translation>
+    </message>
 </context>
 </TS>
