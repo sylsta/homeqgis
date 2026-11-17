@@ -28,7 +28,7 @@ from qgis.gui import QgsDockWidget
 from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
-from .icons import icon
+from .icons import LOGO, icon
 from .log_tail import LOG_PATH, LogTail
 from . import schedule
 from .rooms_tree import RoomsTree
@@ -46,7 +46,7 @@ KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all r
 UI_WIDGETS = (
     "lbl_connection", "btn_refresh", "lbl_robot", "lbl_badge", "bar_battery", "lbl_error",
     "grp_clean", "clean_grid", "rooms", "btn_rooms", "grp_robot", "robot_grid",
-    "grp_dock", "dock_grid", "map_row", "lbl_feedback", "tabs", "tab_camera",
+    "grp_dock", "dock_grid", "header_layout", "lbl_logo", "lbl_feedback", "tabs", "tab_camera",
     "camera_layout", "camera_light", "status_form", "lbl_state", "lbl_dock", "dock_form",
     "settings_form", "combo_fan_speed", "combo_water_usage", "combo_operation_mode",
     "lbl_attachments",
@@ -337,6 +337,7 @@ class ValetudoPanel(QgsDockWidget):
     def _build_ui(self):
         load_ui("status_panel.ui", self, UI_WIDGETS)
         self.setObjectName("ValetudoStatusPanel")   # QGIS restores the dock by this name
+        self.lbl_logo.setPixmap(icon(LOGO).pixmap(20, 20))
         self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.refresh)
         self._set_badge(None)
@@ -498,8 +499,10 @@ class ValetudoPanel(QgsDockWidget):
         for action in self._dock_actions:
             action.changed.connect(self._update_dock_group)
         self._update_dock_group()
-        if "live" in act:
-            self.map_row.addWidget(self._button(act["live"]))
+        if "live" in act:   # in the header, between the status and the refresh button
+            live = self._button(act["live"])
+            live.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            self.header_layout.insertWidget(self.header_layout.indexOf(self.btn_refresh), live)
         tools = put(self.tools_grid, ["edit_restrictions", "send_restrictions", "watch_boot",
                                       "reboot", "wifi_survey", "wifi_map",
                                       "robot_survey_install", "robot_survey_import",

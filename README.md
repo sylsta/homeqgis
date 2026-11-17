@@ -36,8 +36,9 @@ without restarting QGIS.
 The panel, from top to bottom:
 
 ```
-Eureka J15 Pro Ultra · Connected        [Docked]
-████████████████████ 99 %
+(logo) ● Connected · 12:04:31      [Show on map] [⟳]
+Eureka J15 Pro Ultra · Valetudo 2025.12.0
+[Docked]  ████████████████████ 99 %
 ⚠ error, only when there is one
 ┌ Clean ─────────────────────────────────────┐
 │ ▾ ☐ All rooms                              │
@@ -45,6 +46,7 @@ Eureka J15 Pro Ultra · Connected        [Docked]
 │     ☐ Kitchen                              │
 │ [Clean everything] [Clean room(s)]         │
 │ [Clean a zone…]    [Go to…]                │
+│                    ☐ Without cleaning      │
 └────────────────────────────────────────────┘
 ┌ Robot ─────────────────────────────────────┐
 │ [Pause]   [Dock]   [Locate]                │
@@ -52,7 +54,6 @@ Eureka J15 Pro Ultra · Connected        [Docked]
 ┌ Dock station ── (only if supported) ───────┐
 │ [Empty bin] [Wash mops] [Dry mops]         │
 └────────────────────────────────────────────┘
-[Show on map]     map + live tracking + robot kept in view
 Result of the last command
 Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH console · Schedule
 ```
@@ -85,8 +86,11 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
   from wall to wall; right-click or Esc cancels). Each edit asks for confirmation;
   the room list and the map are then reloaded. If the robot refuses (e.g. a split
   line that does not cross the room), its own message is shown.
-- **Show on map** loads the map, refreshes the robot live and keeps it in view
-  (recentring only when it nears the edge). Click again to stop.
+- **Show on map** (top right, next to the connection status) loads the map,
+  refreshes the robot live and keeps it in view (recentring only when it nears the
+  edge). Click again to stop. It is turned on by itself when QGIS starts if the
+  robot answers within a minute (*Settings > Options > Valetudo*, *Connection*:
+  "Show the robot on the map when QGIS starts").
 - **Tabs**: Robot (state details with the parts fitted to the robot, dock station
   states, fan speed, water usage and mode — vacuum only, mop only or both —, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go

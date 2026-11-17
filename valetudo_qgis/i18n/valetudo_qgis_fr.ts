@@ -1789,5 +1789,9 @@ Continuer ?</translation>
         <source>Ticked: load the map of all runs combined. Unticked: the latest run only.</source>
         <translation>Coché : charger la carte de tous les passages réunis. Décoché : le dernier passage seulement.</translation>
     </message>
+    <message>
+        <source>Show the robot on the map when QGIS starts (if it answers)</source>
+        <translation>Afficher le robot sur la carte au démarrage de QGIS (s’il répond)</translation>
+    </message>
 </context>
 </TS>

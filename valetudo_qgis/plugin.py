@@ -46,6 +46,8 @@ KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
 KEY_ROBOT_SURVEY_DIR = "valetudo/robot_survey_dir"   # set once the survey is on the robot
 MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
 WATCH_INTERVAL_MS = 60_000  # background check of the dock station, panel open or not
+LIVE_AT_START_DELAY_MS = 3_000   # after QGIS has opened a project given at launch
+LIVE_AT_START_WINDOW_MS = 60_000  # robot answering later than that: no automatic start
 
 # Valetudo capability required by each action (absent: always available).
 # Alternatives: an action is also available with any of these capabilities.
@@ -146,6 +148,7 @@ class ValetudoPlugin:
         self.menu = tr("&Valetudo")
         self.act = {}            # key -> QAction
         self._unloaded = False   # set by unload(): late signals and timers do nothing
+        self._live_at_start = False   # "Show on map" pending at start-up
         self._last_map = None    # last map received, for "Follow the robot"
         self.toolbar = None
         self.client = None
@@ -297,6 +300,10 @@ class ValetudoPlugin:
         self._watch.timeout.connect(self._watch_tick)
         self._watch.start()
         QTimer.singleShot(0, self._watch_tick)
+
+        # "Show on map" at start-up, if set and the robot answers (never prompts).
+        self._live_at_start = False
+        QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._start_live_at_start)
 
     def _schedule_groups_reload(self, *_):
         if not self._unloaded:
@@ -458,8 +465,24 @@ class ValetudoPlugin:
                              "then your settings restored.")
         return hint
 
+    def _start_live_at_start(self):
+        """At QGIS start-up: connect quietly; _on_reachable() turns "Show on map" on."""
+        cfg = load_settings()
+        if self._unloaded or not cfg["live_at_start"] or not cfg["url"]:
+            return
+        self._live_at_start = True
+        QTimer.singleShot(LIVE_AT_START_WINDOW_MS,
+                          lambda: setattr(self, "_live_at_start", False))
+        if self._get_client(prompt=False) is not None and self._reachable:
+            self._on_reachable(True)   # already connected (panel or dock watch)
+
     def _on_reachable(self, ok):
         """Report only changes, so an offline robot does not flood the message bar."""
+        if ok and self._live_at_start and not self._unloaded:
+            self._live_at_start = False   # once per QGIS session
+            live = self.act.get("live")
+            if live is not None and live.isEnabled() and not live.isChecked():
+                live.trigger()   # same as a click: checked, then toggle_live(True)
         previous, self._reachable = self._reachable, ok
         if ok and self.capabilities is None and self.client is not None:
             self.client.fetch_capabilities(quiet=True)   # robot was off when we connected

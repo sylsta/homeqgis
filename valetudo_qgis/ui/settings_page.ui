@@ -79,6 +79,13 @@
         </widget>
        </item>
        <item row="3" column="0" colspan="2">
+        <widget class="QCheckBox" name="live_at_start">
+         <property name="text">
+          <string>Show the robot on the map when QGIS starts (if it answers)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="2">
         <layout class="QHBoxLayout" name="test_layout" stretch="0,1">
          <item>
           <widget class="QPushButton" name="btn_test">
@@ -96,14 +103,14 @@
          </item>
         </layout>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="lbl_room_groups">
          <property name="text">
           <string>Room groups</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QPushButton" name="btn_room_groups">
          <property name="text">
           <string>Edit room groups…</string>

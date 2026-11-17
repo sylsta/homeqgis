@@ -16,7 +16,7 @@ from .i18n import tr
 from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
-    KEY_INTERVAL, KEY_NOTIFY_DOCK, KEY_PI_HOST, KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT,
+    KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST, KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT,
     KEY_SSH_USER, KEY_URL, WIFI_DEFAULTS,
     default_camera_url, load_settings,
 )
@@ -25,7 +25,7 @@ from .ui_loader import load_ui
 PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_page.ui)
 
 UI_WIDGETS = (
-    "url", "auth", "interval", "btn_test", "lbl_test", "btn_room_groups",
+    "url", "auth", "interval", "live_at_start", "btn_test", "lbl_test", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
@@ -45,6 +45,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.url.setText(cfg["url"])
         self.auth.setConfigId(cfg["authcfg"])
         self.interval.setValue(cfg["interval_s"])
+        self.live_at_start.setChecked(cfg["live_at_start"])
         # Empty camera URL = derived from the robot address.
         self.camera_url.setText(s.value(KEY_CAMERA_URL, "", type=str))
         self.camera_url.setPlaceholderText(
@@ -98,6 +99,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_URL, self.url.text().strip())
         s.setValue(KEY_AUTH, self.auth.configId())
         s.setValue(KEY_INTERVAL, self.interval.value())
+        s.setValue(KEY_LIVE_AT_START, self.live_at_start.isChecked())
         s.setValue(KEY_CAMERA_URL, self.camera_url.text().strip())
         s.setValue(KEY_FFMPEG, self.ffmpeg.text().strip())
         s.setValue(KEY_CAMERA_WIDTH, self.camera_width.value())

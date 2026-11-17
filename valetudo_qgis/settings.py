@@ -14,6 +14,7 @@ KEY_CAMERA_URL = "valetudo/camera_url"
 KEY_FFMPEG = "valetudo/ffmpeg"
 KEY_CAMERA_WIDTH = "valetudo/camera_width"
 KEY_NOTIFY_DOCK = "valetudo/notify_dock"
+KEY_LIVE_AT_START = "valetudo/live_at_start"   # "Show on map" when QGIS starts
 KEY_SSH_USER = "valetudo/ssh_user"
 KEY_SSH_PORT = "valetudo/ssh_port"
 KEY_PI_HOST = "valetudo/pi_host"   # Raspberry Pi (or other Linux machine): empty = none
@@ -55,6 +56,7 @@ def load_settings():
         "ffmpeg": s.value(KEY_FFMPEG, "", type=str),
         "camera_width": s.value(KEY_CAMERA_WIDTH, 640, type=int),
         "notify_dock": s.value(KEY_NOTIFY_DOCK, True, type=bool),
+        "live_at_start": s.value(KEY_LIVE_AT_START, True, type=bool),
         "ssh_user": s.value(KEY_SSH_USER, "root", type=str) or "root",
         "ssh_port": s.value(KEY_SSH_PORT, 22, type=int),
         "pi_host": s.value(KEY_PI_HOST, "", type=str).strip(),

@@ -6,9 +6,16 @@
    <string>Valetudo status</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,0,0,0,0,1">
+   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,0,0,0,1">
     <item>
-     <layout class="QHBoxLayout" name="header_layout" stretch="1,0">
+     <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
+      <item>
+       <widget class="QLabel" name="lbl_logo">
+        <property name="toolTip">
+         <string notr="true">Valetudo</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QLabel" name="lbl_connection"/>
       </item>
@@ -151,9 +158,6 @@
        </property>
       </layout>
      </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="map_row"/>
     </item>
     <item>
      <widget class="QLabel" name="lbl_feedback">
