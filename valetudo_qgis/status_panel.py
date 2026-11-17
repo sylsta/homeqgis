@@ -51,7 +51,7 @@ UI_WIDGETS = (
     "settings_form", "combo_fan_speed", "combo_water_usage", "combo_operation_mode",
     "lbl_attachments",
     "lbl_position", "consumables_form", "lbl_cur_time", "lbl_cur_area", "lbl_tot_count",
-    "lbl_tot_time", "lbl_tot_area", "tools_grid", "lbl_wifi", "list_events", "txt_boot",
+    "lbl_tot_time", "lbl_tot_area", "tools_grid", "list_events", "txt_boot",
     "lbl_features", "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear",
     "txt_log",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
@@ -67,7 +67,7 @@ SECTIONS = {
     "box_status": "status", "box_dock": "dock", "box_settings": "settings",
     "box_position": "position",
     "box_consumables": "consumables", "box_current": "current", "box_total": "totals",
-    "box_tools": "tools", "box_wifi": "wifi", "box_events": "events", "box_boot": "boot",
+    "box_tools": "tools", "box_events": "events", "box_boot": "boot",
     "box_features": "features",
 }
 STATE_COLORS = {
@@ -319,6 +319,7 @@ class ValetudoPanel(QgsDockWidget):
         self._last_ok_clock = ""
         self._reachable = None
         self._robot_text = self._version_text = ""
+        self._wifi_html, self._wifi_tip = "", ""   # Wi-Fi signal in the header
         self._last_map = 0.0   # time.monotonic() of the last map received
 
         self._timer = QTimer(self)
@@ -435,7 +436,7 @@ class ValetudoPanel(QgsDockWidget):
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
         for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
-                    self.box_wifi, self.box_dock):
+                    self.box_dock):
             box.setVisible(False)   # shown once the robot reports them
         _set_row_visible(self.status_form, self.lbl_attachments, False)
 
@@ -654,7 +655,7 @@ class ValetudoPanel(QgsDockWidget):
             self._timer.stop()
             self._show_disconnected()
             for box in (self.box_settings, self.box_current, self.box_total,
-                        self.box_consumables, self.box_wifi, self.box_dock):
+                        self.box_consumables, self.box_dock):
                 box.setVisible(False)
             _set_row_visible(self.status_form, self.lbl_attachments, False)
             self.lbl_features.setText("—")
@@ -689,6 +690,7 @@ class ValetudoPanel(QgsDockWidget):
         client.commandDone.connect(lambda *_: QTimer.singleShot(1500, self.refresh))
         self._robot_text = ""
         self._version_text = ""
+        self._wifi_html, self._wifi_tip = "", ""
         self._update_schedule()
         client.fetch_robot_info(quiet=True)
         client.fetch_version(quiet=True)
@@ -993,6 +995,8 @@ class ValetudoPanel(QgsDockWidget):
     def _show_disconnected(self):
         self.lbl_connection.setText(f"<span style='color:#9e9e9e'>●</span> {tr('Not connected')}")
         self.lbl_robot.setText("")
+        self.lbl_robot.setToolTip("")
+        self._wifi_html, self._wifi_tip = "", ""
 
     def _on_reachable(self, ok):
         self._reachable = ok
@@ -1027,7 +1031,12 @@ class ValetudoPanel(QgsDockWidget):
         self._update_robot_label()
 
     def _update_robot_label(self):
-        self.lbl_robot.setText(" · ".join(p for p in (self._robot_text, self._version_text) if p))
+        """Second header line: robot model · Valetudo version · Wi-Fi signal."""
+        parts = [html.escape(p) for p in (self._robot_text, self._version_text) if p]
+        if self._wifi_html:
+            parts.append(self._wifi_html)
+        self.lbl_robot.setText(" · ".join(parts))
+        self.lbl_robot.setToolTip(self._wifi_tip)
 
     # -- data --------------------------------------------------------------------
 
@@ -1048,7 +1057,6 @@ class ValetudoPanel(QgsDockWidget):
         self.box_consumables.setVisible("ConsumableMonitoringCapability" in caps)
         self.box_current.setVisible("CurrentStatisticsCapability" in caps)
         self.box_total.setVisible("TotalStatisticsCapability" in caps)
-        self.box_wifi.setVisible("WifiConfigurationCapability" in caps)
 
         labels = _capability_labels()
         name = lambda c: labels.get(c) or _humanize(c)
@@ -1195,14 +1203,29 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_tot_area.setText(_format_area_cm2(stats["area"]) if "area" in stats else "—")
 
     def _on_wifi(self, wifi):
-        details = wifi.get("details") or {}
-        parts = [details.get("ssid")]
-        if details.get("signal") is not None:
-            parts.append(f"{details['signal']} dBm")
-        ips = details.get("ips") or []
-        if ips:
-            parts.append(ips[0])
-        self.lbl_wifi.setText(" · ".join(str(p) for p in parts if p) or "—")
+        """Wi-Fi signal in the header, coloured with the Wi-Fi survey thresholds;
+        network name, band and address in its tooltip."""
+        details = (wifi or {}).get("details") or {}
+        signal = details.get("signal")
+        if signal is None:
+            self._wifi_html, self._wifi_tip = "", ""
+        else:
+            cfg = load_settings()
+            if signal >= cfg["wifi_good_dbm"]:
+                color = "#2e7d32"
+            elif signal >= cfg["wifi_fair_dbm"]:
+                color = "#9e9d24"
+            elif signal > cfg["wifi_bad_dbm"]:
+                color = "#ef6c00"
+            else:
+                color = "#c62828"
+            text = tr("Wi-Fi {signal} dBm").format(signal=signal)
+            self._wifi_html = f"<span style='color:{color}'>{html.escape(text)}</span>"
+            parts = [details.get("ssid"), details.get("frequency"),
+                     (details.get("ips") or [None])[0]]
+            self._wifi_tip = tr("Wi-Fi: {details}").format(
+                details=" · ".join(str(p) for p in parts if p) or "—")
+        self._update_robot_label()
 
     def _on_events(self, events):
         self.list_events.clear()

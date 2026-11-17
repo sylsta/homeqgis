@@ -651,31 +651,6 @@
              </widget>
             </item>
             <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_wifi">
-              <property name="title">
-               <string>Wi-Fi</string>
-              </property>
-              <layout class="QFormLayout" name="wifi_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0" colspan="2">
-                <widget class="QLabel" name="lbl_wifi">
-                 <property name="text">
-                  <string notr="true">—</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
              <widget class="QgsCollapsibleGroupBox" name="box_events">
               <property name="title">
                <string>Recent events</string>
