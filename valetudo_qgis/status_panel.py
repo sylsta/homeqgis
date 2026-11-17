@@ -5,12 +5,13 @@ working, every 30 s otherwise), independently of live map tracking. Sections
 the robot does not support stay hidden.
 """
 
+import html
 import math
 import re
 import time
 
 from qgis.PyQt.QtCore import QDateTime, Qt, QTimer, QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtGui import QDesktopServices, QFontDatabase
 from qgis.PyQt.QtWidgets import (
     QLabel,
     QInputDialog,
@@ -28,6 +29,8 @@ from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from .icons import icon
+from .log_tail import LOG_PATH, LogTail
+from .settings import load_settings
 from .ui_loader import load_ui
 
 KEY_TAB = "valetudo/panel_tab"
@@ -42,7 +45,8 @@ UI_WIDGETS = (
     "settings_form", "combo_fan_speed", "combo_water_usage", "lbl_attachments",
     "lbl_position", "consumables_form", "lbl_cur_time", "lbl_cur_area", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area", "tools_grid", "lbl_wifi", "list_events", "txt_boot",
-    "lbl_features",
+    "lbl_features", "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear",
+    "txt_log",
 )
 # Collapsible sections -> key of their remembered open/closed state.
 SECTIONS = {
@@ -237,6 +241,20 @@ def _event_label(event):
     return cls.replace("ValetudoEvent", "") or "?"
 
 
+LOG_LEVEL_COLORS = {"error": "#c62828", "warn": "#ef6c00", "debug": "#757575",
+                    "trace": "#9e9e9e"}
+
+
+def _log_line_html(line):
+    """One log line, coloured by its level ("[ERROR]", "[WARN]"…) when it has one."""
+    match = re.search(r"\[(ERROR|WARN|WARNING|DEBUG|TRACE)\]", line, re.IGNORECASE)
+    text = html.escape(line) or "&nbsp;"
+    level = match.group(1).lower()[:5] if match else ""
+    color = LOG_LEVEL_COLORS.get("warn" if level.startswith("warn") else level)
+    return f"<span style='white-space:pre; color:{color}'>{text}</span>" if color \
+        else f"<span style='white-space:pre'>{text}</span>"
+
+
 def state_label(state):
     """Translated robot state ("docked" -> "Docked" / "À la base")."""
     return _label(_state_labels(), state)
@@ -339,6 +357,15 @@ class ValetudoPanel(QgsDockWidget):
         self.camera_light.setVisible(False)    # shown if the robot supports it
         self.camera_light.clicked.connect(self._on_camera_light_clicked)  # user only
 
+        # Log: Valetudo's log file, followed over SSH while this tab is shown.
+        self.txt_log.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        self.btn_log_clear.clicked.connect(self.txt_log.clear)
+        self.chk_log_follow.toggled.connect(self._on_log_follow_toggled)
+        self.log_tail = LogTail(self)
+        self.log_tail.linesReceived.connect(self._on_log_lines)
+        self.log_tail.stateChanged.connect(self._on_log_state)
+        self.lbl_log_status.setText(tr("Shown while this tab is open."))
+
         # Sections remember whether they are open, under our own keys.
         for name, key in SECTIONS.items():
             self._remember_section(getattr(self, name), key)
@@ -376,6 +403,7 @@ class ValetudoPanel(QgsDockWidget):
         if 0 <= index < len(self._tab_keys):
             QgsSettings().setValue(KEY_TAB, self._tab_keys[index])
         self._update_camera()
+        self._update_log()
 
     @staticmethod
     def _button(action, hide_when_disabled=False):
@@ -627,6 +655,7 @@ class ValetudoPanel(QgsDockWidget):
         self.client = client
         self.capabilities = None
         self._reachable = None
+        self._update_log()   # the robot address may have changed
         if client is None:
             self._timer.stop()
             self._show_disconnected()
@@ -682,6 +711,56 @@ class ValetudoPanel(QgsDockWidget):
         else:
             self.camera.stop()
 
+    # -- robot log ------------------------------------------------------------------
+
+    def _update_log(self):
+        """Follow the log only while the panel is visible and the Log tab is shown.
+
+        The robot address and SSH user/port come from the settings; a change
+        there reconnects (start() ignores an unchanged target)."""
+        cfg = load_settings()
+        host = QUrl(cfg["url"]).host() if cfg["url"] else ""
+        if self.isVisible() and self.tabs.currentWidget() is self.tab_log:
+            if not host:
+                self.log_tail.stop(quiet=True)
+                self.lbl_log_status.setText(tr("No robot configured."))
+                return
+            self.log_tail.start(host, cfg["ssh_user"], cfg["ssh_port"])
+        else:
+            self.log_tail.stop()
+
+    def _on_log_state(self, state, detail):
+        colors = {"following": "#2e7d32", "failed": "#c62828", "ssh_missing": "#c62828"}
+        texts = {
+            "connecting": tr("Connecting to {host} over SSH…").format(host=detail),
+            "following": tr("Following {path} on {host}.").format(path=LOG_PATH, host=detail),
+            "failed": tr("SSH connection lost or refused: {error}. Retrying in 10 s…")
+                .format(error=detail),
+            "ssh_missing": tr("ssh was not found: install an SSH client."),
+            "stopped": tr("Shown while this tab is open."),
+        }
+        self.lbl_log_status.setStyleSheet(f"color: {colors[state]};" if state in colors else "")
+        self.lbl_log_status.setText(texts.get(state, state))
+        if state in ("failed", "ssh_missing"):
+            self.lbl_log_status.setToolTip(tr("Needs key-based SSH login to the robot "
+                                              "(ssh-copy-id root@<robot>), as for the reboot."))
+
+    def _on_log_lines(self, lines):
+        bar = self.txt_log.verticalScrollBar()
+        at_bottom = bar.value() >= bar.maximum() - 2
+        keep = None if at_bottom or self.chk_log_follow.isChecked() else bar.value()
+        for line in lines:
+            self.txt_log.appendHtml(_log_line_html(line))
+        if keep is None:
+            bar.setValue(bar.maximum())
+        else:
+            bar.setValue(keep)   # reading older lines: do not jump
+
+    def _on_log_follow_toggled(self, checked):
+        if checked:
+            bar = self.txt_log.verticalScrollBar()
+            bar.setValue(bar.maximum())
+
     def clear_boot_log(self):
         self.txt_boot.clear()
 
@@ -691,9 +770,11 @@ class ValetudoPanel(QgsDockWidget):
     def shutdown(self):
         """Called by the plugin on unload."""
         self.camera.shutdown()
+        self.log_tail.stop(quiet=True)
 
     def _on_visibility(self, visible):
         self._update_camera()
+        self._update_log()
         if not visible:
             self._timer.stop()
             self._age_timer.stop()

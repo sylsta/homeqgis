@@ -736,6 +736,54 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_log">
+       <attribute name="title">
+        <string>Log</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="log_layout">
+        <item>
+         <layout class="QHBoxLayout" name="log_header" stretch="1,0,0">
+          <item>
+           <widget class="QLabel" name="lbl_log_status">
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="chk_log_follow">
+            <property name="text">
+             <string>Scroll to new lines</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_log_clear">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPlainTextEdit" name="txt_log">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="lineWrapMode">
+           <enum>QPlainTextEdit::NoWrap</enum>
+          </property>
+          <property name="maximumBlockCount">
+           <number>5000</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

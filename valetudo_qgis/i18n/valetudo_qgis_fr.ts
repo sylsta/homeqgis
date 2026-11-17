@@ -1289,5 +1289,45 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <source>Valetudo</source>
         <translation>Valetudo</translation>
     </message>
+    <message>
+        <source>Log</source>
+        <translation>Journal</translation>
+    </message>
+    <message>
+        <source>Scroll to new lines</source>
+        <translation>Défiler jusqu’aux nouvelles lignes</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Effacer</translation>
+    </message>
+    <message>
+        <source>Shown while this tab is open.</source>
+        <translation>Affiché tant que cet onglet est ouvert.</translation>
+    </message>
+    <message>
+        <source>No robot configured.</source>
+        <translation>Aucun robot configuré.</translation>
+    </message>
+    <message>
+        <source>Connecting to {host} over SSH…</source>
+        <translation>Connexion SSH à {host}…</translation>
+    </message>
+    <message>
+        <source>Following {path} on {host}.</source>
+        <translation>Suivi de {path} sur {host}.</translation>
+    </message>
+    <message>
+        <source>SSH connection lost or refused: {error}. Retrying in 10 s…</source>
+        <translation>Connexion SSH perdue ou refusée : {error}. Nouvel essai dans 10 s…</translation>
+    </message>
+    <message>
+        <source>ssh was not found: install an SSH client.</source>
+        <translation>ssh est introuvable : installez un client SSH.</translation>
+    </message>
+    <message>
+        <source>Needs key-based SSH login to the robot (ssh-copy-id root@&lt;robot&gt;), as for the reboot.</source>
+        <translation>Nécessite une connexion SSH par clé au robot (ssh-copy-id root@&lt;robot&gt;), comme pour le redémarrage.</translation>
+    </message>
 </context>
 </TS>

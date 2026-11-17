@@ -54,7 +54,7 @@ Eureka J15 Pro Ultra · Connected        [Docked]
 └────────────────────────────────────────────┘
 [Show on map]     map + live tracking + robot kept in view
 Result of the last command
-Robot · Camera · Maintenance · Advanced   (tabs)
+Robot · Camera · Maintenance · Advanced · Log   (tabs)
 ```
 
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
@@ -90,7 +90,8 @@ Robot · Camera · Maintenance · Advanced   (tabs)
 - **Tabs**: Robot (state details, dock station states, fan speed and water usage,
   attachments, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go
-  zones and walls, watch boot, reboot; Wi-Fi, events, boot log, features).
+  zones and walls, watch boot, reboot; Wi-Fi, events, boot log, features), Log
+  (Valetudo's log file, live).
 - **Go to…** on robots without Valetudo's go-to (e.g. Eureka J15 Pro Ultra): a 60 cm
   zone clean at that spot, then a pause as soon as the robot is within 50 cm (it
   cleans on its way; a first-time confirmation says so).
@@ -139,6 +140,14 @@ confirmation. It needs an SSH client and key-based login to the robot
 (`ssh-copy-id root@<robot>`); no password is ever stored or asked for. SSH user
 and port are in the settings (`root`, 22 by default).
 
+**Log** tab: follows Valetudo's log file on the robot, `/tmp/valetudo.log`, as
+`ssh root@<robot> 'tail -f /tmp/valetudo.log'` would (last 200 lines, then new
+ones as they come; errors in red, warnings in orange). It only runs while the tab
+is shown and the panel is visible, uses the same key-based SSH login and settings
+as the reboot, and reconnects by itself 10 s after the link drops (e.g. while the
+robot reboots). *Scroll to new lines* keeps the newest line in view; untick it to
+read older lines in peace. *Clear* empties the view (not the file).
+
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and
 times each stage: offline, network up (SSH port answers), Valetudo answers
@@ -167,6 +176,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `camera_widget.py`           | Camera video widget, embedded in the status panel       |
 | `boot_monitor.py`            | Follows and times the robot's boot, stage by stage      |
 | `ssh_reboot.py`              | Robot reboot over SSH (key-based, non-blocking)         |
+| `log_tail.py`                | Follows the robot's Valetudo log over SSH (`tail -f`)   |
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
 | `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
