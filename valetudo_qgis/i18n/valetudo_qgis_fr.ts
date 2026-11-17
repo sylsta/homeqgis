@@ -1330,10 +1330,6 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
         <translation>Nécessite une connexion SSH par clé au robot (ssh-copy-id root@&lt;robot&gt;), comme pour le redémarrage.</translation>
     </message>
     <message>
-        <source>SSH console</source>
-        <translation>Console SSH</translation>
-    </message>
-    <message>
         <source>Connect</source>
         <translation>Connecter</translation>
     </message>
@@ -1676,6 +1672,46 @@ Continue?</source>
 « Trajet sans nettoyer » est coché : pendant le trajet, les serpillières sont relevées (mode aspiration seule), l’eau est coupée et l’aspiration mise au minimum ; vos réglages sont rétablis à l’arrivée. Si le robot n’a pas de vitesse d’aspiration « arrêt », il aspire quand même doucement.
 
 Continuer ?</translation>
+    </message>
+    <message>
+        <source>Needs key-based SSH login: ssh-copy-id {user}@{host}</source>
+        <translation>Nécessite une connexion SSH par clé : ssh-copy-id {user}@{host}</translation>
+    </message>
+    <message>
+        <source>No Raspberry Pi set in the settings.</source>
+        <translation>Aucun Raspberry Pi défini dans les paramètres.</translation>
+    </message>
+    <message>
+        <source>Raspberry Pi</source>
+        <translation>Raspberry Pi</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresse</translation>
+    </message>
+    <message>
+        <source>SSH user</source>
+        <translation>Utilisateur SSH</translation>
+    </message>
+    <message>
+        <source>SSH port</source>
+        <translation>Port SSH</translation>
+    </message>
+    <message>
+        <source>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it.</source>
+        <translation>Facultatif : un Raspberry Pi ou une autre machine Linux de votre réseau, joint avec votre clé SSH. Avec une adresse, le panneau affiche une console pour lui.</translation>
+    </message>
+    <message>
+        <source>Robot console</source>
+        <translation>Console du robot</translation>
+    </message>
+    <message>
+        <source>RPI SSH console</source>
+        <translation>Console SSH RPI</translation>
+    </message>
+    <message>
+        <source>Runs on the Raspberry Pi, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
+        <translation>S’exécute sur le Raspberry Pi, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables ne le sont pas.</translation>
     </message>
 </context>
 </TS>

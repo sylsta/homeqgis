@@ -470,6 +470,74 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_pi">
+      <attribute name="title">
+       <string>Raspberry Pi</string>
+      </attribute>
+      <layout class="QFormLayout" name="pi_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_pi_host">
+         <property name="text">
+          <string>Address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="pi_host">
+         <property name="placeholderText">
+          <string notr="true">192.168.50.1</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_pi_user">
+         <property name="text">
+          <string>SSH user</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="pi_user">
+         <property name="placeholderText">
+          <string notr="true">pi</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_pi_port">
+         <property name="text">
+          <string>SSH port</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="pi_port">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QLabel" name="lbl_pi_hint">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>

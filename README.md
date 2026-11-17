@@ -54,7 +54,7 @@ Eureka J15 Pro Ultra · Connected        [Docked]
 └────────────────────────────────────────────┘
 [Show on map]     map + live tracking + robot kept in view
 Result of the last command
-Robot · Camera · Maintenance · Advanced · Log · SSH console · Schedule   (tabs)
+Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH console · Schedule
 ```
 
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
@@ -91,7 +91,8 @@ Robot · Camera · Maintenance · Advanced · Log · SSH console · Schedule   (
   states, fan speed, water usage and mode — vacuum only, mop only or both —, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go
   zones and walls, watch boot, reboot; Wi-Fi, events, boot log, features), Log
-  (Valetudo's log file, live), SSH console (commands on the robot), Schedule
+  (Valetudo's log file, live), Robot console (commands on the robot), RPI SSH console
+  (commands on the Raspberry Pi, when one is set in the settings), Schedule
   (cleanings the robot starts by itself).
 - **Go to…** on robots without Valetudo's go-to (e.g. Eureka J15 Pro Ultra): a 60 cm
   zone clean at that spot, then a pause as soon as the robot is within 50 cm.
@@ -224,7 +225,7 @@ coefficient have options (`--help`); `--all` rebuilds every run (e.g. after
 changing a threshold). Run names come from the robot's clock: keep it synchronised
 (Valetudo's NTP settings).
 
-**SSH console** tab: type a command, press Enter, and it runs on the robot
+**Robot console** tab: type a command, press Enter, and it runs on the robot
 (`ssh <user>@<robot>`, same key-based login and settings as the reboot); its
 output appears below, errors in red, with the exit code when it is not 0. The
 session opens when the tab is first shown and stays open while the panel is
@@ -234,6 +235,12 @@ one): one command at a time, nothing can be typed into a running command, and
 interactive programs (`vi`, `top`, `less`) do not work: use e.g. `top -b -n 1`.
 Variables set with `export` do not carry over. *Stop* ends a command that does not
 finish (e.g. `tail -f`) by opening a new session.
+
+**RPI SSH console** tab: the same console, on a Raspberry Pi (or any Linux machine
+of your network, e.g. the one that builds the Wi-Fi maps). Set its address, SSH
+user (`pi` by default) and port in *Settings > Options > Valetudo*, tab *Raspberry
+Pi*; the tab appears in the panel once an address is set. It also needs key-based
+login from your PC: `ssh-copy-id pi@192.168.50.1`.
 
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and
@@ -264,7 +271,8 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `boot_monitor.py`            | Follows and times the robot's boot, stage by stage      |
 | `ssh_reboot.py`              | Robot reboot over SSH (key-based, non-blocking)         |
 | `log_tail.py`                | Follows the robot's Valetudo log over SSH (`tail -f`)   |
-| `ssh_console.py`             | Command console on the robot over SSH                   |
+| `ssh_console.py`             | SSH command session (one command at a time)             |
+| `console_tab.py`             | A console tab of the panel (robot, Raspberry Pi)        |
 | `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
 | `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |
 | `rooms_tree.py`              | Checkable rooms tree with room groups (panel, editor)   |

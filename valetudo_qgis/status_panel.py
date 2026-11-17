@@ -10,7 +10,7 @@ import math
 import re
 import time
 
-from qgis.PyQt.QtCore import QDateTime, QEvent, Qt, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtCore import QDateTime, Qt, QTimer, QUrl, pyqtSignal
 from qgis.PyQt.QtGui import QDesktopServices, QFontDatabase
 from qgis.PyQt.QtWidgets import (
     QLabel,
@@ -33,7 +33,7 @@ from .log_tail import LOG_PATH, LogTail
 from . import schedule
 from .rooms_tree import RoomsTree
 from .settings import load_settings
-from .ssh_console import SshConsole
+from .console_tab import ConsoleTab
 from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minutes
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
@@ -52,12 +52,15 @@ UI_WIDGETS = (
     "lbl_position", "consumables_form", "lbl_cur_time", "lbl_cur_area", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area", "tools_grid", "lbl_wifi", "list_events", "txt_boot",
     "lbl_features", "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear",
-    "txt_log", "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
+    "txt_log",
+    "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
     "txt_console", "lbl_console_prompt", "edit_console", "btn_console_run", "btn_console_stop",
+    "tab_pi_console", "lbl_pi_console_status", "btn_pi_console_connect",
+    "btn_pi_console_clear", "txt_pi_console", "lbl_pi_console_prompt", "edit_pi_console",
+    "btn_pi_console_run", "btn_pi_console_stop",
     "tab_schedule", "timers", "btn_timer_new", "btn_timer_edit", "btn_timer_delete",
     "btn_timer_run", "lbl_timers_note", "chk_goto_quiet",
 )
-CONSOLE_HISTORY = 100
 # Collapsible sections -> key of their remembered open/closed state.
 SECTIONS = {
     "box_status": "status", "box_dock": "dock", "box_settings": "settings",
@@ -377,21 +380,24 @@ class ValetudoPanel(QgsDockWidget):
         self.log_tail.stateChanged.connect(self._on_log_state)
         self.lbl_log_status.setText(tr("Shown while this tab is open."))
 
-        # SSH console: opens when its tab is first shown, stays open while the
-        # panel is visible (the working directory is kept), closes when it is hidden.
-        self.txt_console.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
-        self.console = SshConsole(self)
-        self.console.output.connect(self._on_console_output)
-        self.console.commandFinished.connect(self._on_console_command_finished)
-        self.console.stateChanged.connect(self._on_console_state)
-        self.edit_console.returnPressed.connect(self._console_run)
-        self.edit_console.installEventFilter(self)   # ↑ ↓: history
-        self.btn_console_run.clicked.connect(self._console_run)
-        self.btn_console_stop.clicked.connect(self._console_stop)
-        self.btn_console_connect.clicked.connect(self._console_toggle)
-        self.btn_console_clear.clicked.connect(self.txt_console.clear)
-        self._console_history, self._console_index = [], 0
-        self._on_console_state("closed", "")
+        # SSH consoles (robot, Raspberry Pi): open when their tab is first shown, stay
+        # open while the panel is visible, close when it is hidden.
+        def console_widgets(p):
+            return {"status": getattr(self, f"lbl_{p}console_status"),
+                    "connect": getattr(self, f"btn_{p}console_connect"),
+                    "clear": getattr(self, f"btn_{p}console_clear"),
+                    "output": getattr(self, f"txt_{p}console"),
+                    "prompt": getattr(self, f"lbl_{p}console_prompt"),
+                    "edit": getattr(self, f"edit_{p}console"),
+                    "run": getattr(self, f"btn_{p}console_run"),
+                    "stop": getattr(self, f"btn_{p}console_stop")}
+        self.consoles = [
+            ConsoleTab(self.tab_console, console_widgets(""), self._ssh_target,
+                       tr("No robot configured."), self),
+            ConsoleTab(self.tab_pi_console, console_widgets("pi_"), self._pi_target,
+                       tr("No Raspberry Pi set in the settings."), self),
+        ]
+        self._update_pi_tab()
 
         # Schedule: Valetudo's timers (run by the robot); fetched when the tab is shown.
         self._timers, self._timer_props = [], None
@@ -812,126 +818,31 @@ class ValetudoPanel(QgsDockWidget):
                 QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
             self.client.run_timer(timer["id"])
 
-    # -- SSH console ---------------------------------------------------------------
+    # -- SSH consoles ---------------------------------------------------------------
 
     @staticmethod
     def _ssh_target():
-        """(host, user, port) from the settings, or None without a robot address."""
+        """(host, user, port) of the robot from the settings, or None without an address."""
         cfg = load_settings()
         host = QUrl(cfg["url"]).host() if cfg["url"] else ""
         return (host, cfg["ssh_user"] or "root", int(cfg["ssh_port"])) if host else None
 
+    @staticmethod
+    def _pi_target():
+        """(host, user, port) of the Raspberry Pi, or None when none is set."""
+        cfg = load_settings()
+        return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
+
+    def _update_pi_tab(self):
+        """The Pi console tab exists only when a Pi address is set."""
+        index = self.tabs.indexOf(self.tab_pi_console)
+        if hasattr(self.tabs, "setTabVisible"):   # Qt >= 5.15
+            self.tabs.setTabVisible(index, self._pi_target() is not None)
+
     def _update_console(self):
-        if not self.isVisible():
-            self.console.stop()
-            return
-        target = self._ssh_target()
-        if self.console.is_open():
-            if target != self.console.target:   # settings changed: new session
-                self._console_connect(target)
-        elif self.tabs.currentWidget() is self.tab_console and self.console.state == "closed":
-            self._console_connect(target)
-
-    def _console_connect(self, target):
-        if target is None:
-            self.console.stop(quiet=True)
-            self.lbl_console_status.setText(tr("No robot configured."))
-            return
-        self.console.start(*target)
-
-    def _console_toggle(self, *_):
-        if self.console.is_open():
-            self.console.stop()
-        else:
-            self._console_connect(self._ssh_target())
-
-    def _console_stop(self, *_):
-        """No terminal, so no Ctrl+C: end the session and open a new one."""
-        target = self.console.target
-        self._console_append(tr("Command stopped."), "note")
-        self.console.stop(quiet=True)
-        if target is not None:
-            self.console.start(*target)
-
-    def _console_prompt(self):
-        target = self.console.target
-        if target is None or not self.console.is_open():
-            return "#"
-        return f"{target[1]}@{target[0]}:{self.console.cwd or '~'} #"
-
-    def _console_run(self, *_):
-        command = self.edit_console.text().strip()
-        if not command or self.console.state != "ready":
-            return
-        prompt = self._console_prompt()
-        if self.console.run(command):
-            self._console_append(f"{prompt} {command}", "command")
-            if not self._console_history or self._console_history[-1] != command:
-                self._console_history.append(command)
-                del self._console_history[:-CONSOLE_HISTORY]
-            self._console_index = len(self._console_history)
-            self.edit_console.clear()
-
-    def _console_history_step(self, step):
-        history = self._console_history
-        if not history:
-            return
-        self._console_index = max(0, min(len(history), self._console_index + step))
-        self.edit_console.setText(history[self._console_index]
-                                  if self._console_index < len(history) else "")
-
-    def eventFilter(self, obj, event):
-        if obj is getattr(self, "edit_console", None) \
-                and event.type() == QEvent.Type.KeyPress \
-                and event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down):
-            self._console_history_step(-1 if event.key() == Qt.Key.Key_Up else 1)
-            return True
-        return super().eventFilter(obj, event)
-
-    def _console_append(self, text, kind="out"):
-        styles = {"command": "font-weight: bold;", "err": "color: #c62828;",
-                  "note": "color: #757575; font-style: italic;"}
-        style = "white-space:pre; " + styles.get(kind, "")
-        self.txt_console.appendHtml(
-            f"<span style='{style}'>{html.escape(text) or '&nbsp;'}</span>")
-        bar = self.txt_console.verticalScrollBar()
-        bar.setValue(bar.maximum())
-
-    def _on_console_output(self, lines, kind):
-        for line in lines:
-            self._console_append(line, kind)
-
-    def _on_console_command_finished(self, code):
-        if code:
-            self._console_append(tr("(exit code {code})").format(code=code), "note")
-
-    def _on_console_state(self, state, detail):
-        texts = {
-            "connecting": tr("Connecting to {host} over SSH…").format(host=detail),
-            "ready": tr("Connected to {host}.").format(host=detail),
-            "busy": tr("Running…"),
-            "failed": tr("SSH session ended: {error}").format(error=detail),
-            "ssh_missing": tr("ssh was not found: install an SSH client."),
-            "closed": tr("Not connected."),
-        }
-        colors = {"ready": "#2e7d32", "busy": "#1565c0", "failed": "#c62828",
-                  "ssh_missing": "#c62828"}
-        self.lbl_console_status.setStyleSheet(
-            f"color: {colors[state]};" if state in colors else "")
-        self.lbl_console_status.setText(texts.get(state, state))
-        self.lbl_console_status.setToolTip(
-            tr("Needs key-based SSH login to the robot (ssh-copy-id root@<robot>), "
-               "as for the reboot.") if state in ("failed", "ssh_missing") else "")
-        if state == "failed" and detail:
-            self._console_append(texts["failed"], "err")
-        self.btn_console_connect.setText(
-            tr("Disconnect") if self.console.is_open() else tr("Connect"))
-        self.edit_console.setEnabled(state in ("ready", "busy"))
-        self.btn_console_run.setEnabled(state == "ready")
-        self.btn_console_stop.setEnabled(state == "busy")
-        self.lbl_console_prompt.setText(self._console_prompt())
-        if state == "ready":
-            self.edit_console.setFocus()
+        self._update_pi_tab()
+        for console in self.consoles:
+            console.update(self.isVisible(), self.tabs.currentWidget())
 
     def _update_camera(self):
         """Play only while the panel is visible and the Camera tab is shown."""
@@ -1001,7 +912,8 @@ class ValetudoPanel(QgsDockWidget):
         """Called by the plugin on unload."""
         self.camera.shutdown()
         self.log_tail.stop(quiet=True)
-        self.console.stop(quiet=True)
+        for console in self.consoles:
+            console.shutdown()
 
     def _on_visibility(self, visible):
         self._update_camera()
