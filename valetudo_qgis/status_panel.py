@@ -54,7 +54,7 @@ CONSOLE_HISTORY = 100
 # Collapsible sections -> key of their remembered open/closed state.
 SECTIONS = {
     "box_status": "status", "box_dock": "dock", "box_settings": "settings",
-    "box_attachments": "attachments", "box_position": "position",
+    "box_position": "position",
     "box_consumables": "consumables", "box_current": "current", "box_total": "totals",
     "box_tools": "tools", "box_wifi": "wifi", "box_events": "events", "box_boot": "boot",
     "box_features": "features",
@@ -397,8 +397,9 @@ class ValetudoPanel(QgsDockWidget):
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
         for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
-                    self.box_attachments, self.box_wifi, self.box_dock):
+                    self.box_wifi, self.box_dock):
             box.setVisible(False)   # shown once the robot reports them
+        _set_row_visible(self.status_form, self.lbl_attachments, False)
 
     @staticmethod
     def _remember_section(box, key, open_default=True):
@@ -681,9 +682,9 @@ class ValetudoPanel(QgsDockWidget):
             self._timer.stop()
             self._show_disconnected()
             for box in (self.box_settings, self.box_current, self.box_total,
-                        self.box_consumables, self.box_attachments, self.box_wifi,
-                        self.box_dock):
+                        self.box_consumables, self.box_wifi, self.box_dock):
                 box.setVisible(False)
+            _set_row_visible(self.status_form, self.lbl_attachments, False)
             self.lbl_features.setText("—")
             self._segments, self._checked_rooms = [], set()
             self._clear_room_boxes()
@@ -1090,7 +1091,7 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_dock.setText(_label(states, dock_value))
         self.lbl_error.setVisible(bool(error_text))
         self.lbl_error.setText(f"⚠ {error_text}" if error_text else "")
-        self.box_attachments.setVisible(bool(attachments))
+        _set_row_visible(self.status_form, self.lbl_attachments, bool(attachments))
         self._update_dock_components(components)
         self.lbl_attachments.setText("   ".join(attachments))
 
