@@ -23,7 +23,7 @@ from .icons import has_icon, icon
 from .map_layers import ValetudoLayers, layer_names
 from .map_tools import GoToMapTool, LineMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
-from . import robot_survey
+from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
 from .settings import load_settings
@@ -102,6 +102,8 @@ def command_hints():
                                   "“Wi-Fi survey” layer, then build the Wi-Fi map."),
         "robot_survey_remove": tr("Stop the Wi-Fi recorder on the robot and delete it with "
                                   "its readings."),
+        "pi_wifi_map": tr("Add the newest Wi-Fi map built on the Raspberry Pi to the map, "
+                          "with its readings (set the Pi in the settings)."),
         "wifi_map": tr("Build the Wi-Fi map again from the survey points "
                        "(only the selected ones, if any)."),
     }
@@ -211,6 +213,11 @@ class ValetudoPlugin:
                          self.remove_robot_survey)
         self.robot_survey = RobotSurvey()
         self.robot_survey.finished.connect(self._on_robot_survey_finished)
+        self._new_action("pi_wifi_map", tr("Load latest Wi-Fi map from the Pi"),
+                         self.load_pi_wifi_map)
+        self.pi_ssh = RobotSurvey()   # the same one-shot SSH runner, towards the Pi
+        self.pi_ssh.finished.connect(self._on_pi_wifi_map)
+        self._update_pi_actions()
         self._update_robot_survey_actions()
         self.survey = WifiSurvey(QgsProject.instance())
         self.survey.sampleAdded.connect(self._on_wifi_sample)
@@ -316,6 +323,8 @@ class ValetudoPlugin:
             self.boot.stop()
         if getattr(self, "robot_survey", None) is not None:
             self.robot_survey.stop()
+        if getattr(self, "pi_ssh", None) is not None:
+            self.pi_ssh.stop()
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
         if self.survey is not None:
@@ -510,6 +519,7 @@ class ValetudoPlugin:
         if self.panel is not None:
             self.panel.camera.restart_if_running()
             self.panel.settings_changed()   # e.g. Pi address: show or hide its console
+        self._update_pi_actions()
 
     def _center_on_robot(self, map_json, force=False):
         """Recentre on the robot when it leaves the middle of the view (no constant jitter)."""
@@ -1047,6 +1057,64 @@ class ValetudoPlugin:
             QgsSettings().remove(KEY_ROBOT_SURVEY_DIR)
             self._update_robot_survey_actions()
             self._message(tr("Wi-Fi recorder removed from the robot."), Qgis.MessageLevel.Success)
+
+    # -- Wi-Fi maps built on the Raspberry Pi -----------------------------------------
+
+    def _update_pi_actions(self):
+        action = self.act.get("pi_wifi_map")
+        if action is not None:
+            has_pi = bool(load_settings()["pi_host"])
+            busy = getattr(self, "pi_ssh", None) is not None and self.pi_ssh.is_busy()
+            action.setEnabled(has_pi and not busy)
+            action.setToolTip(command_hints()["pi_wifi_map"] if has_pi else
+                              tr("Set the Raspberry Pi in Settings › Options › Valetudo first."))
+
+    def load_pi_wifi_map(self, *_):
+        cfg = load_settings()
+        if not cfg["pi_host"]:
+            return
+        if self.pi_ssh.run("pi_map", cfg["pi_host"], cfg["pi_user"], cfg["pi_port"],
+                           pi_maps.fetch_command(cfg["pi_wifi_dir"])):
+            self._update_pi_actions()
+            self._message(tr("Reading the latest Wi-Fi map from the Pi…"), Qgis.MessageLevel.Info)
+
+    def _on_pi_wifi_map(self, _operation, ok, _text, detail):
+        if self._unloaded:
+            return
+        self._update_pi_actions()
+        cfg = load_settings()
+        data = self.pi_ssh.output_bytes
+        if detail == "ssh_missing":
+            self._message(tr("ssh not found: install an SSH client."), Qgis.MessageLevel.Critical)
+            return
+        problems = {
+            "error=no_folder": tr("the folder “{folder}” does not exist on the Pi"),
+            "error=no_map": tr("no map in “{folder}” yet (none built by the Pi)"),
+        }
+        if not data:
+            text = problems.get(detail, tr("SSH failed: {detail}")).format(
+                folder=cfg["pi_wifi_dir"], detail=detail)
+            self.iface.messageBar().pushMessage(
+                "Valetudo", tr("No Wi-Fi map loaded: {problem}.").format(problem=text),
+                level=Qgis.MessageLevel.Warning, duration=0)
+            return
+        try:
+            run, tif, csv_path = pi_maps.unpack(data)
+            self._prepare_project()   # the map is in the robot's own frame
+            raster, points = pi_maps.add_to_project(QgsProject.instance(), run, tif, csv_path,
+                                                    cfg)
+        except Exception as exc:   # damaged archive, unreadable GeoTIFF…
+            self.iface.messageBar().pushMessage(
+                "Valetudo", tr("No Wi-Fi map loaded: {problem}.").format(problem=str(exc)),
+                level=Qgis.MessageLevel.Warning, duration=0)
+            return
+        if not self.layers.exists():   # nothing else on the map yet: show the Wi-Fi map
+            canvas = self.iface.mapCanvas()
+            canvas.setExtent(raster.extent())
+            canvas.refresh()
+        count = points.featureCount() if points is not None else 0
+        self._message(tr("Wi-Fi map of {run} loaded ({n} reading(s)).").format(
+            run=pi_maps.run_label(run), n=count), Qgis.MessageLevel.Success)
 
     # -- boot monitor -------------------------------------------------------------
 

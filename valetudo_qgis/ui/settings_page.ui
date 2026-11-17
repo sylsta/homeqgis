@@ -526,13 +526,27 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbl_pi_wifi_dir">
+         <property name="text">
+          <string>Wi-Fi maps folder</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="pi_wifi_dir">
+         <property name="placeholderText">
+          <string notr="true">valetudo_wifi</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="2">
         <widget class="QLabel" name="lbl_pi_hint">
          <property name="wordWrap">
           <bool>true</bool>
          </property>
          <property name="text">
-          <string>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it.</string>
+          <string>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it, and “Load latest Wi-Fi map from the Pi” reads the maps folder (relative to the user's home, as written by pi/valetudo_wifi_collect.py).</string>
          </property>
         </widget>
        </item>

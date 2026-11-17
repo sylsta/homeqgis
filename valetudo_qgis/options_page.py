@@ -16,7 +16,7 @@ from .i18n import tr
 from .icons import icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
-    KEY_INTERVAL, KEY_NOTIFY_DOCK, KEY_PI_HOST, KEY_PI_PORT, KEY_PI_USER, KEY_SSH_PORT,
+    KEY_INTERVAL, KEY_NOTIFY_DOCK, KEY_PI_HOST, KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT,
     KEY_SSH_USER, KEY_URL, WIFI_DEFAULTS,
     default_camera_url, load_settings,
 )
@@ -27,7 +27,7 @@ PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_
 UI_WIDGETS = (
     "url", "auth", "interval", "btn_test", "lbl_test", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
-    "pi_host", "pi_user", "pi_port",
+    "pi_host", "pi_user", "pi_port", "pi_wifi_dir",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
 )
 
@@ -57,6 +57,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.pi_host.setText(cfg["pi_host"])
         self.pi_user.setText(cfg["pi_user"])
         self.pi_port.setValue(cfg["pi_port"])
+        self.pi_wifi_dir.setText(cfg["pi_wifi_dir"])
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             if kind is bool:
@@ -106,6 +107,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_PI_HOST, self.pi_host.text().strip())
         s.setValue(KEY_PI_USER, self.pi_user.text().strip() or "pi")
         s.setValue(KEY_PI_PORT, self.pi_port.value())
+        s.setValue(KEY_PI_WIFI_DIR, self.pi_wifi_dir.text().strip() or "valetudo_wifi")
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             s.setValue(f"valetudo/{key}", widget.isChecked() if kind is bool else widget.value())

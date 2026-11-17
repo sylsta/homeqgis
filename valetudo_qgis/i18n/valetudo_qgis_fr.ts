@@ -1698,10 +1698,6 @@ Continuer ?</translation>
         <translation>Port SSH</translation>
     </message>
     <message>
-        <source>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it.</source>
-        <translation>Facultatif : un Raspberry Pi ou une autre machine Linux de votre réseau, joint avec votre clé SSH. Avec une adresse, le panneau affiche une console pour lui.</translation>
-    </message>
-    <message>
         <source>Robot console</source>
         <translation>Console du robot</translation>
     </message>
@@ -1716,6 +1712,62 @@ Continuer ?</translation>
     <message>
         <source>first image after {seconds} s</source>
         <translation>première image après {seconds} s</translation>
+    </message>
+    <message>
+        <source>Wi-Fi maps (Pi)</source>
+        <translation>Cartes Wi-Fi (Pi)</translation>
+    </message>
+    <message>
+        <source>Wi-Fi {run}</source>
+        <translation>Wi-Fi {run}</translation>
+    </message>
+    <message>
+        <source>Wi-Fi {run} · readings</source>
+        <translation>Wi-Fi {run} · mesures</translation>
+    </message>
+    <message>
+        <source>Add the newest Wi-Fi map built on the Raspberry Pi to the map, with its readings (set the Pi in the settings).</source>
+        <translation>Ajouter à la carte la dernière carte Wi-Fi construite sur le Raspberry Pi, avec ses mesures (définissez le Pi dans les paramètres).</translation>
+    </message>
+    <message>
+        <source>Load latest Wi-Fi map from the Pi</source>
+        <translation>Charger la dernière carte Wi-Fi du Pi</translation>
+    </message>
+    <message>
+        <source>the folder “{folder}” does not exist on the Pi</source>
+        <translation>le dossier « {folder} » n’existe pas sur le Pi</translation>
+    </message>
+    <message>
+        <source>no map in “{folder}” yet (none built by the Pi)</source>
+        <translation>pas encore de carte dans « {folder} » (aucune construite par le Pi)</translation>
+    </message>
+    <message>
+        <source>Reading the latest Wi-Fi map from the Pi…</source>
+        <translation>Lecture de la dernière carte Wi-Fi sur le Pi…</translation>
+    </message>
+    <message>
+        <source>Set the Raspberry Pi in Settings › Options › Valetudo first.</source>
+        <translation>Définissez d’abord le Raspberry Pi dans Préférences › Options › Valetudo.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi map of {run} loaded ({n} reading(s)).</source>
+        <translation>Carte Wi-Fi du {run} chargée ({n} mesure(s)).</translation>
+    </message>
+    <message>
+        <source>SSH failed: {detail}</source>
+        <translation>échec SSH : {detail}</translation>
+    </message>
+    <message>
+        <source>No Wi-Fi map loaded: {problem}.</source>
+        <translation>Aucune carte Wi-Fi chargée : {problem}.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi maps folder</source>
+        <translation>Dossier des cartes Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it, and “Load latest Wi-Fi map from the Pi” reads the maps folder (relative to the user's home, as written by pi/valetudo_wifi_collect.py).</source>
+        <translation>Facultatif : un Raspberry Pi ou une autre machine Linux de votre réseau, joint avec votre clé SSH. Avec une adresse, le panneau affiche une console pour lui, et « Charger la dernière carte Wi-Fi du Pi » lit le dossier des cartes (relatif au dossier personnel de l’utilisateur, tel qu’écrit par pi/valetudo_wifi_collect.py).</translation>
     </message>
 </context>
 </TS>

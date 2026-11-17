@@ -19,6 +19,7 @@ KEY_SSH_PORT = "valetudo/ssh_port"
 KEY_PI_HOST = "valetudo/pi_host"   # Raspberry Pi (or other Linux machine): empty = none
 KEY_PI_USER = "valetudo/pi_user"
 KEY_PI_PORT = "valetudo/pi_port"
+KEY_PI_WIFI_DIR = "valetudo/pi_wifi_dir"   # output folder of pi/valetudo_wifi_collect.py
 
 # Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
 WIFI_DEFAULTS = {
@@ -59,6 +60,8 @@ def load_settings():
         "pi_host": s.value(KEY_PI_HOST, "", type=str).strip(),
         "pi_user": s.value(KEY_PI_USER, "pi", type=str).strip() or "pi",
         "pi_port": s.value(KEY_PI_PORT, 22, type=int),
+        "pi_wifi_dir": s.value(KEY_PI_WIFI_DIR, "valetudo_wifi", type=str).strip()
+                       or "valetudo_wifi",
         **{key: s.value(f"valetudo/{key}", default, type=kind)
            for key, (default, kind) in WIFI_DEFAULTS.items()},
     }

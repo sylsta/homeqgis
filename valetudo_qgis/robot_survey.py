@@ -110,6 +110,7 @@ class RobotSurvey(QObject):
         self._process = None
         self._operation = ""
         self._out = self._err = b""
+        self.output_bytes = b""   # raw stdout of the last operation (binary-safe)
 
     def is_busy(self):
         return self._process is not None
@@ -153,6 +154,7 @@ class RobotSurvey(QObject):
         process, self._process = self._process, None
         if process is not None:
             process.deleteLater()
+        self.output_bytes = self._out
         self.finished.emit(self._operation, ok, self._out.decode("utf-8", "replace"), detail)
 
     def _on_error(self, error):

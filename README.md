@@ -223,7 +223,15 @@ crontab -e    # then add:
 # */5 * * * * python3 $HOME/valetudo/valetudo_wifi_collect.py --robot 192.168.50.20
 ```
 
-Output goes to `~/valetudo_wifi` (`--out` to change). Thresholds, cell size and IDW
+In QGIS, *Load latest Wi-Fi map from the Pi* (Advanced tab) fetches the newest run
+over SSH (the Pi as set in *Settings > Options > Valetudo*, tab *Raspberry Pi*) and
+adds it to a "Wi-Fi maps (Pi)" group: the map, styled with the plugin's thresholds,
+and its readings as points. The files are kept in the QGIS profile folder
+(`valetudo_wifi_maps/`), so a saved project finds them again; loading the same run
+again replaces its layers. It needs key-based login from your PC to the Pi.
+
+Output goes to `~/valetudo_wifi` (`--out` to change; then set the same folder in the
+plugin's *Raspberry Pi* settings). Thresholds, cell size and IDW
 coefficient have options (`--help`); `--all` rebuilds every run (e.g. after
 changing a threshold). Run names come from the robot's clock, shown in the Pi's
 time zone: keep the robot synchronised (Valetudo's NTP settings) and set the Pi's
@@ -277,6 +285,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `log_tail.py`                | Follows the robot's Valetudo log over SSH (`tail -f`)   |
 | `ssh_console.py`             | SSH command session (one command at a time)             |
 | `console_tab.py`             | A console tab of the panel (robot, Raspberry Pi)        |
+| `pi_maps.py`                 | Loads the newest Wi-Fi map built on the Pi              |
 | `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
 | `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |
 | `rooms_tree.py`              | Checkable rooms tree with room groups (panel, editor)   |
