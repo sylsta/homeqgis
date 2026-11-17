@@ -37,6 +37,7 @@ TOGGLE_CAPABILITIES = {
 PRESET_CAPABILITIES = {
     "FanSpeedControlCapability": "fan_speed",
     "WaterUsageControlCapability": "water_usage",
+    "OperationModeControlCapability": "operation_mode",
 }
 
 

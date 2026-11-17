@@ -1657,5 +1657,9 @@ Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du
         <source>Already recording on the robot. To install it again, remove it first.</source>
         <translation>Enregistrement déjà en place sur le robot. Pour le réinstaller, retirez-le d’abord.</translation>
     </message>
+    <message>
+        <source>Vacuum only, mop only, or both.</source>
+        <translation>Aspiration seule, lavage seul, ou les deux.</translation>
+    </message>
 </context>
 </TS>

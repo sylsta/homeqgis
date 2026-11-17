@@ -307,6 +307,20 @@
                <item row="1" column="1">
                 <widget class="QComboBox" name="combo_water_usage"/>
                </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="lbl_operation_mode">
+                 <property name="text">
+                  <string>Mode</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="combo_operation_mode">
+                 <property name="toolTip">
+                  <string>Vacuum only, mop only, or both.</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>

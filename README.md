@@ -88,7 +88,7 @@ Robot · Camera · Maintenance · Advanced · Log · SSH console · Schedule   (
 - **Show on map** loads the map, refreshes the robot live and keeps it in view
   (recentring only when it nears the edge). Click again to stop.
 - **Tabs**: Robot (state details with the parts fitted to the robot, dock station
-  states, fan speed and water usage, position), Camera (live video, plays only while this tab is shown;
+  states, fan speed, water usage and mode — vacuum only, mop only or both —, position), Camera (live video, plays only while this tab is shown;
   camera light), Maintenance (consumables, statistics), Advanced (tools: no-go
   zones and walls, watch boot, reboot; Wi-Fi, events, boot log, features), Log
   (Valetudo's log file, live), SSH console (commands on the robot), Schedule

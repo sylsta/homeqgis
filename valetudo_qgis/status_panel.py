@@ -47,7 +47,8 @@ UI_WIDGETS = (
     "grp_clean", "clean_grid", "rooms", "btn_rooms", "grp_robot", "robot_grid",
     "grp_dock", "dock_grid", "map_row", "lbl_feedback", "tabs", "tab_camera",
     "camera_layout", "camera_light", "status_form", "lbl_state", "lbl_dock", "dock_form",
-    "settings_form", "combo_fan_speed", "combo_water_usage", "lbl_attachments",
+    "settings_form", "combo_fan_speed", "combo_water_usage", "combo_operation_mode",
+    "lbl_attachments",
     "lbl_position", "consumables_form", "lbl_cur_time", "lbl_cur_area", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area", "tools_grid", "lbl_wifi", "list_events", "txt_boot",
     "lbl_features", "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear",
@@ -80,6 +81,7 @@ MAX_EVENTS = 10
 PRESET_ROWS = {  # capability -> attribute type in PresetSelectionStateAttribute
     "FanSpeedControlCapability": "fan_speed",
     "WaterUsageControlCapability": "water_grade",
+    "OperationModeControlCapability": "operation_mode",
 }
 
 
@@ -352,7 +354,8 @@ class ValetudoPanel(QgsDockWidget):
         self.chk_goto_quiet.setVisible(False)
 
         self.preset_combos = {"FanSpeedControlCapability": self.combo_fan_speed,
-                              "WaterUsageControlCapability": self.combo_water_usage}
+                              "WaterUsageControlCapability": self.combo_water_usage,
+                              "OperationModeControlCapability": self.combo_operation_mode}
         for capability, combo in self.preset_combos.items():
             combo.activated.connect(lambda index, c=capability: self._on_preset_chosen(c, index))
 

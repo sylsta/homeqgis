@@ -119,6 +119,7 @@ def command_labels():
         "goto": tr("Go to"),
         "fan_speed": tr("Fan speed"),
         "water_usage": tr("Water usage"),
+        "operation_mode": tr("Mode"),
         "camera_light": tr("Camera light"),
         "locate": tr("Locate robot (beep)"),
         "empty_dock": tr("Empty dust bin"),
