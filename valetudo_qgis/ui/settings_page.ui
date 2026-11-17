@@ -654,6 +654,90 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="lbl_ha_ssh_title">
+         <property name="text">
+          <string>SSH (Terminal tab)</string>
+         </property>
+         <property name="font">
+          <font>
+           <bold>true</bold>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="lbl_ha_ssh_host">
+         <property name="text">
+          <string>SSH address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QLineEdit" name="ha_ssh_host">
+         <property name="placeholderText">
+          <string notr="true">192.168.50.1</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="lbl_ha_ssh_user">
+         <property name="text">
+          <string>SSH user</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLineEdit" name="ha_ssh_user">
+         <property name="placeholderText">
+          <string notr="true">root</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="lbl_ha_ssh_port">
+         <property name="text">
+          <string>SSH port</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QSpinBox" name="ha_ssh_port">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="lbl_ha_log_command">
+         <property name="text">
+          <string>Log command</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QLineEdit" name="ha_log_command">
+         <property name="placeholderText">
+          <string notr="true">ha core logs -n 200 -f</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0" colspan="2">
+        <widget class="QLabel" name="lbl_ha_ssh_hint">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Optional: with an address, the Terminal tab gets a Home Assistant console and log. It logs in with your SSH key (no password is stored): on Home Assistant OS, install the Terminal &amp; SSH add-on, paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option and set its SSH port in the add-on's Network settings. The log command runs there: Home Assistant OS keeps its log in the system journal, read with ha core logs.</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>

@@ -45,7 +45,7 @@ The panel (titled *Connection*), from top to bottom:
 │📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
 │📷│ Camera                                            │
 │🧰│ Care      consumables, dock station, statistics   │
-│⌨ │ Terminal  [Robot | Pi]  [Console | Log]           │
+│⌨ │ Terminal  [Robot | Pi | HA]  [Console | Log]      │
 │⚙ │ System    robot and Pi cards, boot log, events    │
 ├──┴───────────────────────────────────────────────────┤
 │ [ Start cleaning all rooms ] [Dock]                  │  big button, at the bottom
@@ -310,6 +310,16 @@ Assistant answers), created in Home Assistant on your profile page
 (*Security > Long-lived access tokens*). The token is stored encrypted in the QGIS
 authentication database (QGIS may ask for its master password). **Test
 connection** reads the server's name and version.
+
+**Terminal** tab, *Home Assistant*: a console and a log on your Home Assistant
+server. Set its SSH address, user (`root` by default) and port in *Settings >
+Options > Valetudo*, tab *Home Assistant*; the switch is greyed out without an
+address. Login is by SSH key only: on Home Assistant OS, install the *Terminal &
+SSH* add-on, paste your public key (`~/.ssh/id_ed25519.pub`) in its
+`authorized_keys` option and set its SSH port in the add-on's *Network* settings.
+The *Log* runs a command rather than following a file, `ha core logs -n 200 -f` by
+default (Home Assistant OS keeps its log in the system journal); change it in the
+settings for another installation (e.g. `docker logs -f -n 200 homeassistant`).
 
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and

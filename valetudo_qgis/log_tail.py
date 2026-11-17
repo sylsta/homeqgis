@@ -8,6 +8,7 @@ This module contains no user-facing text: it emits state keys (see STATES)
 that the UI layer turns into translated messages.
 """
 
+import shlex
 import shutil
 
 from qgis.PyQt.QtCore import QObject, QProcess, QTimer, pyqtSignal
@@ -21,7 +22,15 @@ STATES = ("connecting", "following", "ssh_missing", "failed", "stopped")
 MARKER = "__valetudo_qgis_log__"   # printed first: the login worked, even if the log is empty
 
 
+COMMAND_PREFIX = "|"   # a "path" starting with it is a command to follow, e.g. "|ha core logs -f"
+
+
 def remote_command(path=LOG_PATH, lines=INITIAL_LINES):
+    if path.startswith(COMMAND_PREFIX):
+        # Through a login shell: e.g. Home Assistant's `ha` needs the environment
+        # set up by the profile (an SSH command alone does not read it).
+        command = shlex.quote(path[len(COMMAND_PREFIX):] + " 2>&1")
+        return f"echo {MARKER}; sh -lc {command}"
     # -F follows the file again when Valetudo truncates it; plain -f if the
     # robot's tail does not know -F.
     return (f"echo {MARKER}; tail -n {lines} -F {path} 2>/dev/null"

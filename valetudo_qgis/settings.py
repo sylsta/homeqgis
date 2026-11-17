@@ -23,6 +23,12 @@ KEY_PI_PORT = "valetudo/pi_port"
 KEY_PI_WIFI_DIR = "valetudo/pi_wifi_dir"   # output folder of pi/valetudo_wifi_collect.py
 KEY_HA_URL = "valetudo/ha_url"   # Home Assistant server
 DEFAULT_HA_URL = "http://localhost:8123/"
+KEY_HA_SSH_HOST = "valetudo/ha_ssh_host"   # empty = no Home Assistant terminal
+KEY_HA_SSH_USER = "valetudo/ha_ssh_user"
+KEY_HA_SSH_PORT = "valetudo/ha_ssh_port"
+KEY_HA_LOG_COMMAND = "valetudo/ha_log_command"
+# Home Assistant OS keeps its log in the system journal, not in a file.
+DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
 # The Home Assistant token is not a QgsSettings value: it is stored encrypted
 # in the QGIS authentication database under this key (see ha_token()).
 HA_TOKEN_SETTING = "valetudo/ha_token"
@@ -70,6 +76,11 @@ def load_settings():
         "pi_wifi_dir": s.value(KEY_PI_WIFI_DIR, "valetudo_wifi", type=str).strip()
                        or "valetudo_wifi",
         "ha_url": s.value(KEY_HA_URL, DEFAULT_HA_URL, type=str).strip() or DEFAULT_HA_URL,
+        "ha_ssh_host": s.value(KEY_HA_SSH_HOST, "", type=str).strip(),
+        "ha_ssh_user": s.value(KEY_HA_SSH_USER, "root", type=str).strip() or "root",
+        "ha_ssh_port": s.value(KEY_HA_SSH_PORT, 22, type=int),
+        "ha_log_command": s.value(KEY_HA_LOG_COMMAND, DEFAULT_HA_LOG_COMMAND,
+                                  type=str).strip() or DEFAULT_HA_LOG_COMMAND,
         **{key: s.value(f"valetudo/{key}", default, type=kind)
            for key, (default, kind) in WIFI_DEFAULTS.items()},
     }

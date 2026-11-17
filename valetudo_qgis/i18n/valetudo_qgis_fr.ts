@@ -2051,5 +2051,33 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Hide the details</source>
         <translation>Masquer les détails</translation>
     </message>
+    <message>
+        <source>No Home Assistant SSH address set in the settings.</source>
+        <translation>Aucune adresse SSH Home Assistant dans les paramètres.</translation>
+    </message>
+    <message>
+        <source>SSH (Terminal tab)</source>
+        <translation>SSH (onglet Terminal)</translation>
+    </message>
+    <message>
+        <source>SSH address</source>
+        <translation>Adresse SSH</translation>
+    </message>
+    <message>
+        <source>Log command</source>
+        <translation>Commande du journal</translation>
+    </message>
+    <message>
+        <source>Optional: with an address, the Terminal tab gets a Home Assistant console and log. It logs in with your SSH key (no password is stored): on Home Assistant OS, install the Terminal &amp; SSH add-on, paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option and set its SSH port in the add-on's Network settings. The log command runs there: Home Assistant OS keeps its log in the system journal, read with ha core logs.</source>
+        <translation>Facultatif : avec une adresse, l’onglet Terminal propose une console et un journal Home Assistant. La connexion se fait avec votre clé SSH (aucun mot de passe n’est enregistré) : sur Home Assistant OS, installez le module complémentaire Terminal &amp; SSH, collez votre clé publique (~/.ssh/id_ed25519.pub) dans son option authorized_keys et choisissez son port SSH dans les réglages Réseau du module. La commande du journal s’exécute là-bas : Home Assistant OS garde son journal dans le journal système, lu avec ha core logs.</translation>
+    </message>
+    <message>
+        <source>Commands and log of the Home Assistant server</source>
+        <translation>Commandes et journal du serveur Home Assistant</translation>
+    </message>
+    <message>
+        <source>Runs on the Home Assistant server, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
+        <translation>S’exécute sur le serveur Home Assistant, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
+    </message>
 </context>
 </TS>

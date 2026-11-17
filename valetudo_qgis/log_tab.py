@@ -12,7 +12,7 @@ from qgis.PyQt.QtCore import QObject
 from qgis.PyQt.QtGui import QFontDatabase
 
 from .i18n import tr
-from .log_tail import LogTail
+from .log_tail import COMMAND_PREFIX, LogTail
 
 LOG_LEVEL_COLORS = {"error": "#c62828", "warn": "#ef6c00", "debug": "#757575",
                     "trace": "#9e9e9e"}
@@ -31,7 +31,8 @@ def log_line_html(line):
 class LogTab(QObject):
     def __init__(self, page, widgets, target, path, no_target_text, parent=None):
         """widgets: dict of status, follow, clear, output; target(): (host, user, port)
-        or None; path: the file, absolute or relative to the user's home."""
+        or None; path: the file, absolute or relative to the user's home, or a
+        command to follow ("|" + command, see log_tail); or a function returning it."""
         super().__init__(parent)
         self.page, self.w, self._target, self.path = page, widgets, target, path
         self._no_target_text = no_target_text
@@ -51,9 +52,12 @@ class LogTab(QObject):
                 self.tail.stop(quiet=True)
                 self.w["status"].setText(self._no_target_text)
                 return
-            self.tail.start(*target, self.path)
+            self.tail.start(*target, self._path())
         else:
             self.tail.stop()
+
+    def _path(self):
+        return self.path() if callable(self.path) else self.path
 
     def shutdown(self):
         self.tail.stop(quiet=True)
@@ -62,7 +66,8 @@ class LogTab(QObject):
         colors = {"following": "#2e7d32", "failed": "#c62828", "ssh_missing": "#c62828"}
         texts = {
             "connecting": tr("Connecting to {host} over SSH…").format(host=detail),
-            "following": tr("Following {path} on {host}.").format(path=self.path, host=detail),
+            "following": tr("Following {path} on {host}.").format(
+                path=self._path().removeprefix(COMMAND_PREFIX), host=detail),
             "failed": tr("SSH connection lost or refused: {error}. Retrying in 10 s…")
                 .format(error=detail),
             "ssh_missing": tr("ssh was not found: install an SSH client."),

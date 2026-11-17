@@ -42,7 +42,7 @@ from . import host_info
 from .icons import HA_LOGO, LOGO, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
 from .log_tab import LogTab
-from .log_tail import LOG_PATH
+from .log_tail import COMMAND_PREFIX, LOG_PATH
 from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
@@ -93,7 +93,8 @@ UI_WIDGETS = (
     "box_current", "lbl_cur_time", "lbl_cur_area", "box_total", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area",
     # Terminal
-    "tab_terminal", "btn_term_robot", "btn_term_pi", "btn_term_console", "btn_term_log",
+    "tab_terminal", "btn_term_robot", "btn_term_pi", "btn_term_ha", "btn_term_console",
+    "btn_term_log",
     "terminal_stack",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
     "txt_console", "lbl_console_prompt", "edit_console", "btn_console_run", "btn_console_stop",
@@ -102,6 +103,10 @@ UI_WIDGETS = (
     "btn_pi_console_run", "btn_pi_console_stop",
     "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear", "txt_log",
     "tab_pi_log", "lbl_pi_log_status", "chk_pi_log_follow", "btn_pi_log_clear", "txt_pi_log",
+    "tab_ha_console", "lbl_ha_console_status", "btn_ha_console_connect",
+    "btn_ha_console_clear", "txt_ha_console", "lbl_ha_console_prompt", "edit_ha_console",
+    "btn_ha_console_run", "btn_ha_console_stop",
+    "tab_ha_log", "lbl_ha_log_status", "chk_ha_log_follow", "btn_ha_log_clear", "txt_ha_log",
     # System
     "tab_system", "box_status", "status_form", "lbl_state", "lbl_dock", "lbl_attachments",
     "lbl_position", "system_grid", "box_pi_card", "lbl_pi_card", "txt_boot", "list_events",
@@ -514,19 +519,26 @@ class ValetudoPanel(QgsDockWidget):
                        tr("No robot configured."), self),
             ConsoleTab(self.tab_pi_console, console_widgets("pi_"), self._pi_target,
                        tr("No Raspberry Pi set in the settings."), self),
+            ConsoleTab(self.tab_ha_console, console_widgets("ha_"), self._ha_ssh_target,
+                       tr("No Home Assistant SSH address set in the settings."), self),
         ]
         self.logs = [
             LogTab(self.tab_log, log_widgets(""), self._ssh_target, LOG_PATH,
                    tr("No robot configured."), self),
             LogTab(self.tab_pi_log, log_widgets("pi_"), self._pi_target, PI_LOG_PATH,
                    tr("No Raspberry Pi set in the settings."), self),
+            LogTab(self.tab_ha_log, log_widgets("ha_"), self._ha_ssh_target,
+                   lambda: COMMAND_PREFIX + load_settings()["ha_log_command"],
+                   tr("No Home Assistant SSH address set in the settings."), self),
         ]
         choice = QgsSettings().value(KEY_TERMINAL, "robot/console", type=str) or "robot/console"
         device, _, mode = str(choice).partition("/")
-        (self.btn_term_pi if device == "pi" else self.btn_term_robot).setChecked(True)
+        self._term_devices = {"robot": self.btn_term_robot, "pi": self.btn_term_pi,
+                              "ha": self.btn_term_ha}
+        self._term_devices.get(device, self.btn_term_robot).setChecked(True)
         (self.btn_term_log if mode == "log" else self.btn_term_console).setChecked(True)
-        for button in (self.btn_term_robot, self.btn_term_pi, self.btn_term_console,
-                       self.btn_term_log):
+        for button in (self.btn_term_robot, self.btn_term_pi, self.btn_term_ha,
+                       self.btn_term_console, self.btn_term_log):
             button.toggled.connect(self._on_terminal_switch)
         self._show_terminal_page()
 
@@ -818,18 +830,23 @@ class ValetudoPanel(QgsDockWidget):
     def _on_terminal_switch(self, checked):
         if not checked:   # the other button of the pair is being checked
             return
-        device = "pi" if self.btn_term_pi.isChecked() else "robot"
-        mode = "log" if self.btn_term_log.isChecked() else "console"
+        device, mode = self._terminal_choice()
         QgsSettings().setValue(KEY_TERMINAL, f"{device}/{mode}")
         self._show_terminal_page()
         self._update_console()
 
     def _show_terminal_page(self):
         pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
-                 ("robot", "log"): self.tab_log, ("pi", "log"): self.tab_pi_log}
-        device = "pi" if self.btn_term_pi.isChecked() else "robot"
-        mode = "log" if self.btn_term_log.isChecked() else "console"
-        self.terminal_stack.setCurrentWidget(pages[(device, mode)])
+                 ("ha", "console"): self.tab_ha_console,
+                 ("robot", "log"): self.tab_log, ("pi", "log"): self.tab_pi_log,
+                 ("ha", "log"): self.tab_ha_log}
+        self.terminal_stack.setCurrentWidget(pages[self._terminal_choice()])
+
+    def _terminal_choice(self):
+        """(device, mode) chosen by the Terminal tab's switches."""
+        device = next((key for key, button in self._term_devices.items()
+                       if button.isChecked()), "robot")
+        return device, ("log" if self.btn_term_log.isChecked() else "console")
 
     # -- Wi-Fi tab ------------------------------------------------------------------------
 
@@ -1299,6 +1316,13 @@ class ValetudoPanel(QgsDockWidget):
         cfg = load_settings()
         return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
 
+    @staticmethod
+    def _ha_ssh_target():
+        """(host, user, port) of the Home Assistant server over SSH, or None."""
+        cfg = load_settings()
+        return ((cfg["ha_ssh_host"], cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
+                if cfg["ha_ssh_host"] else None)
+
     def _update_pi_tab(self):
         """The Pi's details, card and terminal exist only when a Pi address is set;
         its details are read while the panel is visible."""
@@ -1309,6 +1333,10 @@ class ValetudoPanel(QgsDockWidget):
         self.box_pi_card.setVisible(has_pi)
         self.btn_term_pi.setEnabled(has_pi)
         if not has_pi and self.btn_term_pi.isChecked():
+            self.btn_term_robot.setChecked(True)
+        has_ha_ssh = self._ha_ssh_target() is not None
+        self.btn_term_ha.setEnabled(has_ha_ssh)
+        if not has_ha_ssh and self.btn_term_ha.isChecked():
             self.btn_term_robot.setChecked(True)
         if has_pi and self.isVisible():
             if not self._pi_timer.isActive():

@@ -17,6 +17,7 @@ from .i18n import tr
 from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
+    KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
     KEY_HA_URL, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
     WIFI_DEFAULTS, default_camera_url, ha_token, load_settings, set_ha_token,
@@ -30,6 +31,7 @@ UI_WIDGETS = (
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
+    "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_log_command",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
 )
 
@@ -63,6 +65,12 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.pi_port.setValue(cfg["pi_port"])
         self.pi_wifi_dir.setText(cfg["pi_wifi_dir"])
         self.ha_url.setText(cfg["ha_url"])
+        self.ha_ssh_host.setText(cfg["ha_ssh_host"])
+        self.ha_ssh_host.setPlaceholderText(
+            QUrl(cfg["ha_url"]).host() or "192.168.50.1")
+        self.ha_ssh_user.setText(cfg["ha_ssh_user"])
+        self.ha_ssh_port.setValue(cfg["ha_ssh_port"])
+        self.ha_log_command.setText(cfg["ha_log_command"])
         self._ha_token_saved = ha_token()
         self.ha_token.setText(self._ha_token_saved)
         for key, (_, kind) in WIFI_DEFAULTS.items():
@@ -154,6 +162,10 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_PI_PORT, self.pi_port.value())
         s.setValue(KEY_PI_WIFI_DIR, self.pi_wifi_dir.text().strip() or "valetudo_wifi")
         s.setValue(KEY_HA_URL, self.ha_url.text().strip())
+        s.setValue(KEY_HA_SSH_HOST, self.ha_ssh_host.text().strip())
+        s.setValue(KEY_HA_SSH_USER, self.ha_ssh_user.text().strip() or "root")
+        s.setValue(KEY_HA_SSH_PORT, self.ha_ssh_port.value())
+        s.setValue(KEY_HA_LOG_COMMAND, self.ha_log_command.text().strip())
         token = self.ha_token.text().strip()
         token_changed = False
         if token != self._ha_token_saved:
