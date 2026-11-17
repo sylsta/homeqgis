@@ -5,12 +5,15 @@ Valetudo menu and the status panel all show these same objects, so their
 enabled/checked state can never disagree.
 """
 
-from qgis.PyQt.QtCore import Qt, QTimer, QUrl
+import os
+
+from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
 from qgis.PyQt.QtWidgets import QAction, QCheckBox, QMessageBox, QPushButton
 from qgis.core import (
     Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsProject, QgsSettings,
 )
 
+from . import room_groups
 from .boot_monitor import BootMonitor
 from .client import ValetudoClient
 from .coords import v2q
@@ -211,6 +214,17 @@ class ValetudoPlugin:
         # Frequent commands as icon buttons; the others in the panel's "More" menu.
         self.panel.bind_actions(self.act)
 
+        # Room groups file: loaded now, reloaded whenever it is saved.
+        self._groups_watcher = QFileSystemWatcher()
+        self._groups_watcher.addPath(os.path.dirname(room_groups.file_path()))
+        self._groups_watcher.directoryChanged.connect(self._schedule_groups_reload)
+        self._groups_watcher.fileChanged.connect(self._schedule_groups_reload)
+        self._groups_timer = QTimer()
+        self._groups_timer.setSingleShot(True)
+        self._groups_timer.setInterval(300)   # editors save in several steps
+        self._groups_timer.timeout.connect(self._reload_room_groups)
+        self._reload_room_groups()
+
         canvas = self.iface.mapCanvas()
         self.zone_tool = ZoneMapTool(canvas)
         self.zone_tool.setAction(self.act["zone"])  # QGIS unchecks it when another tool is picked
@@ -233,12 +247,28 @@ class ValetudoPlugin:
         self._watch.start()
         QTimer.singleShot(0, self._watch_tick)
 
+    def _schedule_groups_reload(self, *_):
+        if not self._unloaded:
+            self._groups_timer.start()
+
+    def _reload_room_groups(self):
+        path = room_groups.file_path()
+        # Editors often replace the file when saving: watch it again each time.
+        if os.path.exists(path) and path not in self._groups_watcher.files():
+            self._groups_watcher.addPath(path)
+        if self.panel is not None:
+            self.panel.set_room_groups(room_groups.load())
+
     def _on_panel_needs_client(self):
         if not self._unloaded:
             self._get_client(prompt=False)
 
     def unload(self):
         self._unloaded = True   # before anything else: removing the panel emits signals
+        if getattr(self, "_groups_timer", None) is not None:
+            self._groups_timer.stop()
+            self._groups_watcher.deleteLater()
+            self._groups_watcher = self._groups_timer = None
         if self.panel is not None:
             try:
                 self.panel.clientRequested.disconnect(self._on_panel_needs_client)

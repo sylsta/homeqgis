@@ -1118,10 +1118,6 @@ Continuer ?</translation>
         <translation>Diviser la pièce</translation>
     </message>
     <message>
-        <source>Tick rooms to clean them. Right-click a room to rename, join or split it.</source>
-        <translation>Cochez des pièces pour les nettoyer. Clic droit sur une pièce pour la renommer, la fusionner ou la diviser.</translation>
-    </message>
-    <message>
         <source>Rename…</source>
         <translation>Renommer…</translation>
     </message>
@@ -1268,6 +1264,26 @@ Le robot n'accepte qu'une ligne qui traverse la pièce d'un mur à l'autre.</tra
     <message>
         <source>All rooms</source>
         <translation>Toutes les pièces</translation>
+    </message>
+    <message>
+        <source>Edit room groups…</source>
+        <translation>Modifier les groupes de pièces…</translation>
+    </message>
+    <message>
+        <source>Room groups</source>
+        <translation>Groupes de pièces</translation>
+    </message>
+    <message>
+        <source>Not found on the robot.</source>
+        <translation>Introuvable sur le robot.</translation>
+    </message>
+    <message>
+        <source>not found on the robot</source>
+        <translation>introuvable sur le robot</translation>
+    </message>
+    <message>
+        <source>Tick rooms or whole groups to clean them. Right-click a room to rename, join or split it, or to edit the groups.</source>
+        <translation>Cochez des pièces ou des groupes entiers pour les nettoyer. Clic droit sur une pièce pour la renommer, la fusionner ou la diviser, ou pour modifier les groupes.</translation>
     </message>
 </context>
 </TS>

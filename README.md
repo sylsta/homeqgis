@@ -58,8 +58,27 @@ Robot · Camera · Maintenance · Advanced   (tabs)
 
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
   stay pressed until you have drawn the zone or clicked the point on the map.
-- Rooms are a checkable tree: *All rooms* ticks or unticks them all (partial when
-  only some are ticked); *Clean room(s)* cleans the ticked ones.
+- Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking
+  a group ticks its rooms (partial when only some are); a room in several groups
+  is the same room, ticked everywhere and cleaned once. *Clean room(s)* cleans the
+  ticked rooms.
+- **Room groups** are defined in `valetudo_room_groups.ini`, in the QGIS profile
+  folder (right-click in the tree, or *Settings…* → *Edit room groups…*, opens it):
+
+  ```ini
+  # one [Group] per section, one room per line (as named on the robot,
+  # case does not matter), or #<id>
+  [Water]
+  Kitchen
+  SdB1
+
+  [Main]
+  Chill
+  Eat
+  ```
+
+  The panel reloads it as soon as it is saved; names the robot does not know are
+  shown greyed out ("not found on the robot").
 - **Edit rooms**: right-click a room → *Rename…*, *Join with ▸* another
   room, or *Split with a line on the map…* (click the two ends of the cut line,
   from wall to wall; right-click or Esc cancels). Each edit asks for confirmation;
@@ -150,6 +169,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
 | `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
+| `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |
 | `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings_dialog.py`         | Settings (URL, authentication, refresh interval)        |

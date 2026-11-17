@@ -5,6 +5,7 @@ authentication manager (QgsAuthConfigSelect), which encrypts them.
 """
 
 from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QCheckBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget,
@@ -12,6 +13,7 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import QgsSettings
 from qgis.gui import QgsAuthConfigSelect
 
+from . import room_groups
 from .client import ValetudoClient
 from .i18n import tr
 
@@ -154,6 +156,11 @@ class SettingsDialog(QDialog):
         test_row.addWidget(self.btn_test)
         test_row.addWidget(self.lbl_test, 1)
         form.addRow(test_row)
+        btn_groups = QPushButton(tr("Edit room groups…"))
+        btn_groups.setToolTip(room_groups.file_path())
+        btn_groups.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file())))
+        form.addRow(tr("Room groups"), btn_groups)
 
         form = self._tab(tabs, tr("Camera"))
         form.addRow(tr("Camera stream URL"), self.camera_url)

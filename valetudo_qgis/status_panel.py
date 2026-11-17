@@ -9,7 +9,8 @@ import math
 import re
 import time
 
-from qgis.PyQt.QtCore import QDateTime, QSize, Qt, QTimer, pyqtSignal
+from qgis.PyQt.QtCore import QDateTime, QSize, Qt, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -38,6 +39,7 @@ from qgis.core import QgsApplication, QgsSettings
 from qgis.gui import QgsCollapsibleGroupBox, QgsDockWidget
 
 from .camera_widget import CameraWidget
+from . import room_groups
 from .i18n import tr
 from .icons import icon
 
@@ -377,12 +379,14 @@ class ValetudoPanel(QgsDockWidget):
         self.rooms = QTreeWidget()
         self.rooms.setHeaderHidden(True)
         self.rooms.setColumnCount(1)
-        self.rooms.setMaximumHeight(170)
-        self.rooms.setToolTip(tr("Tick rooms to clean them. Right-click a room to rename, "
-                                 "join or split it."))
+        self.rooms.setMaximumHeight(240)
+        self.rooms.setToolTip(tr("Tick rooms or whole groups to clean them. Right-click a "
+                                 "room to rename, join or split it, or to edit the groups."))
         self.rooms.itemChanged.connect(self._on_room_item_changed)
         self.rooms.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.rooms.customContextMenuRequested.connect(self._on_rooms_context_menu)
+        self.rooms.itemExpanded.connect(lambda item: self._on_group_expanded(item, True))
+        self.rooms.itemCollapsed.connect(lambda item: self._on_group_expanded(item, False))
         self.rooms.setVisible(False)
         clean.addWidget(self.rooms, 0, 0, 1, 2)
         self.btn_rooms = QPushButton()
@@ -585,24 +589,57 @@ class ValetudoPanel(QgsDockWidget):
             return
         self._segments = rows
         self._checked_rooms &= {r[0] for r in rows}
+        self._rebuild_rooms_tree()
+
+    def set_room_groups(self, groups):
+        """Groups from the room groups file: [(title, [entry, …]), …]."""
+        self._room_groups = groups
+        self._rebuild_rooms_tree()
+
+    def _room_item(self, seg_id, name):
+        item = QTreeWidgetItem([name])
+        item.setData(0, Qt.ItemDataRole.UserRole, seg_id)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
+                      | Qt.ItemFlag.ItemNeverHasChildren)
+        # The check state must be set for Qt to draw the checkbox at all.
+        item.setCheckState(0, Qt.CheckState.Checked if seg_id in self._checked_rooms
+                           else Qt.CheckState.Unchecked)
+        return item
+
+    def _group_item(self, title):
+        # Ticks / unticks its rooms; partial when only some are ticked.
+        item = QTreeWidgetItem([title])
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
+                      | Qt.ItemFlag.ItemIsAutoTristate)
+        return item
+
+    def _rebuild_rooms_tree(self):
+        """"All rooms" first, then the groups of the room groups file, in file order."""
+        rows = self._segments
+        names = dict(rows)
         self.rooms.blockSignals(True)
         self.rooms.clear()
         if rows:
-            # Parent: checks / unchecks every room, partial when only some are ticked.
-            parent = QTreeWidgetItem([tr("All rooms")])
-            parent.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                            | Qt.ItemFlag.ItemIsAutoTristate)
-            self.rooms.addTopLevelItem(parent)
-            for seg_id, name in rows:
-                child = QTreeWidgetItem([name])
-                child.setData(0, Qt.ItemDataRole.UserRole, seg_id)
-                child.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                               | Qt.ItemFlag.ItemNeverHasChildren)
-                # The check state must be set for Qt to draw the checkbox at all.
-                child.setCheckState(0, Qt.CheckState.Checked if seg_id in self._checked_rooms
-                                    else Qt.CheckState.Unchecked)
-                parent.addChild(child)
-            parent.setExpanded(True)
+            groups = [(tr("All rooms"), [f"#{seg_id}" for seg_id, _ in rows])]
+            groups += list(getattr(self, "_room_groups", []))
+            for index, (title, entries) in enumerate(groups):
+                parent = self._group_item(title)
+                self.rooms.addTopLevelItem(parent)
+                seen = set()
+                for entry in entries:
+                    seg_id = room_groups.resolve(entry, rows)
+                    if seg_id is None:
+                        # Typo or room renamed on the robot: show it, greyed.
+                        missing = QTreeWidgetItem([entry])
+                        missing.setFlags(Qt.ItemFlag.ItemNeverHasChildren)
+                        missing.setToolTip(0, tr("Not found on the robot."))
+                        missing.setText(0, f"{entry}  ({tr('not found on the robot')})")
+                        parent.addChild(missing)
+                    elif seg_id not in seen:
+                        seen.add(seg_id)
+                        parent.addChild(self._room_item(seg_id, names[seg_id]))
+                parent.setExpanded(QgsSettings().value(
+                    f"valetudo/room_group_open/{title}", index == 0, type=bool))
         self.rooms.blockSignals(False)
         self.rooms.setVisible(bool(rows))
         self._update_rooms_button()
@@ -612,23 +649,52 @@ class ValetudoPanel(QgsDockWidget):
         self.rooms.clear()
         self.rooms.blockSignals(False)
 
-    def _on_room_item_changed(self, *_):
-        """Read the ticked rooms back from the tree (children only)."""
-        checked = set()
+    def _room_items(self):
+        """Every room line of the tree (a room can be in several groups)."""
         for i in range(self.rooms.topLevelItemCount()):
             parent = self.rooms.topLevelItem(i)
             for j in range(parent.childCount()):
                 child = parent.child(j)
-                if child.checkState(0) == Qt.CheckState.Checked:
-                    checked.add(child.data(0, Qt.ItemDataRole.UserRole))
-        self._checked_rooms = checked
+                if child.data(0, Qt.ItemDataRole.UserRole) is not None:
+                    yield child
+
+    def _on_room_item_changed(self, item, *_):
+        """A room line changed: same state for that room in every group, then read back."""
+        seg_id = item.data(0, Qt.ItemDataRole.UserRole) if item is not None else None
+        if getattr(self, "_syncing", False) or seg_id is None:
+            return
+        state = item.checkState(0)
+        self._syncing = True
+        try:
+            for other in self._room_items():
+                if other is not item and other.data(0, Qt.ItemDataRole.UserRole) == seg_id \
+                        and other.checkState(0) != state:
+                    other.setCheckState(0, state)
+        finally:
+            self._syncing = False
+        self._checked_rooms = {child.data(0, Qt.ItemDataRole.UserRole)
+                               for child in self._room_items()
+                               if child.checkState(0) == Qt.CheckState.Checked}
         self._update_rooms_button()
 
     def _on_rooms_context_menu(self, pos):
         item = self.rooms.itemAt(pos)
         seg_id = item.data(0, Qt.ItemDataRole.UserRole) if item is not None else None
-        if seg_id is not None:   # a room, not the "All rooms" line
-            self._room_menu(seg_id, item.text(0), self.rooms.viewport().mapToGlobal(pos))
+        global_pos = self.rooms.viewport().mapToGlobal(pos)
+        if seg_id is not None:   # a room
+            self._room_menu(seg_id, item.text(0), global_pos)
+        else:                    # a group line or empty space
+            menu = QMenu(self)
+            menu.addAction(tr("Edit room groups…"), self.edit_room_groups)
+            menu.exec(global_pos)
+
+    def edit_room_groups(self, *_):
+        """Open the room groups file in the system's text editor (created if needed)."""
+        QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file()))
+
+    def _on_group_expanded(self, item, expanded):
+        if item.parent() is None:
+            QgsSettings().setValue(f"valetudo/room_group_open/{item.text(0)}", expanded)
 
     def _room_menu(self, seg_id, name, global_pos):
         if self.client is None:
@@ -655,6 +721,8 @@ class ValetudoPanel(QgsDockWidget):
             menu.addSeparator()
             note = menu.addAction(tr("Greyed out: not supported by this robot."))
             note.setEnabled(False)
+        menu.addSeparator()
+        menu.addAction(tr("Edit room groups…"), self.edit_room_groups)
         menu.exec(global_pos)
 
     def _rename_room(self, seg_id, name):
