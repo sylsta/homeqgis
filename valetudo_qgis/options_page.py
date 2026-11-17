@@ -12,13 +12,14 @@ from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 
 from . import room_groups
 from .client import ValetudoClient
+from .ha_client import HomeAssistantClient
 from .i18n import tr
 from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
-    KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST, KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT,
-    KEY_SSH_USER, KEY_URL, WIFI_DEFAULTS,
-    default_camera_url, load_settings,
+    KEY_HA_URL, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
+    KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
+    WIFI_DEFAULTS, default_camera_url, ha_token, load_settings, set_ha_token,
 )
 from .ui_loader import load_ui
 
@@ -28,6 +29,7 @@ UI_WIDGETS = (
     "url", "auth", "interval", "live_at_start", "btn_test", "lbl_test", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir",
+    "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
 )
 
@@ -39,6 +41,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.setObjectName(PAGE_NAME)
         self._on_applied = on_applied
         self._test_client = None
+        self._ha_client = None
 
         s = QgsSettings()
         cfg = load_settings()
@@ -59,6 +62,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.pi_user.setText(cfg["pi_user"])
         self.pi_port.setValue(cfg["pi_port"])
         self.pi_wifi_dir.setText(cfg["pi_wifi_dir"])
+        self.ha_url.setText(cfg["ha_url"])
+        self._ha_token_saved = ha_token()
+        self.ha_token.setText(self._ha_token_saved)
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             if kind is bool:
@@ -67,6 +73,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
                 widget.setValue(cfg[key])
 
         self.btn_test.clicked.connect(self._test_connection)
+        self.btn_ha_test.clicked.connect(self._test_home_assistant)
         self.btn_room_groups.setToolTip(room_groups.file_path())
         self.btn_room_groups.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file())))
@@ -93,6 +100,32 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
 
         self._test_client.probe("/robot", ok, failed, timeout_ms=5000)
 
+    def _test_home_assistant(self, *_):
+        """Read the Home Assistant configuration with the values being edited."""
+        url, token = self.ha_url.text().strip(), self.ha_token.text().strip()
+        if not url or not token:
+            self.lbl_ha_test.setText(tr("Enter the address and the access token first."))
+            return
+        if self._ha_client is not None:
+            self._ha_client.close()
+        self.btn_ha_test.setEnabled(False)
+        self.lbl_ha_test.setText(tr("Testing…"))
+        self._ha_client = HomeAssistantClient(url, token, self)
+
+        def ok(config):
+            config = config if isinstance(config, dict) else {}
+            name = config.get("location_name") or "Home Assistant"
+            version = config.get("version", "")
+            self.lbl_ha_test.setText("✓ " + tr("Connected: {name}").format(
+                name=f"{name} ({version})" if version else name))
+            self.btn_ha_test.setEnabled(True)
+
+        def failed(error):
+            self.lbl_ha_test.setText("✗ " + tr("Connection failed: {error}").format(error=error))
+            self.btn_ha_test.setEnabled(True)
+
+        self._ha_client.get("/config", ok, failed, timeout_ms=5000)
+
     def apply(self):
         before = load_settings()
         s = QgsSettings()
@@ -110,11 +143,23 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_PI_USER, self.pi_user.text().strip() or "pi")
         s.setValue(KEY_PI_PORT, self.pi_port.value())
         s.setValue(KEY_PI_WIFI_DIR, self.pi_wifi_dir.text().strip() or "valetudo_wifi")
+        s.setValue(KEY_HA_URL, self.ha_url.text().strip())
+        token = self.ha_token.text().strip()
+        token_changed = False
+        if token != self._ha_token_saved:
+            token_changed = set_ha_token(token)
+            if token_changed:
+                self._ha_token_saved = token
+            else:
+                from qgis.utils import iface
+                iface.messageBar().pushWarning("Valetudo", tr(
+                    "The Home Assistant token was not saved: the QGIS master "
+                    "password is needed to store it encrypted."))
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             s.setValue(f"valetudo/{key}", widget.isChecked() if kind is bool else widget.value())
         # OK is pressed for any Options page: only react when ours changed something.
-        if self._on_applied is not None and load_settings() != before:
+        if self._on_applied is not None and (token_changed or load_settings() != before):
             self._on_applied()
 
 

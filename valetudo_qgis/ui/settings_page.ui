@@ -559,6 +559,75 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_ha">
+      <attribute name="title">
+       <string>Home Assistant</string>
+      </attribute>
+      <layout class="QFormLayout" name="ha_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_ha_url">
+         <property name="text">
+          <string>Server address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="ha_url">
+         <property name="placeholderText">
+          <string notr="true">http://localhost:8123/</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_ha_token">
+         <property name="text">
+          <string>Access token</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="ha_token">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string>Long-lived access token</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="ha_test_layout" stretch="0,1">
+         <item>
+          <widget class="QPushButton" name="btn_ha_test">
+           <property name="text">
+            <string>Test connection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_ha_test">
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QLabel" name="lbl_ha_hint">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Optional: your Home Assistant server. Create the token in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>

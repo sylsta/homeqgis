@@ -21,6 +21,11 @@ KEY_PI_HOST = "valetudo/pi_host"   # Raspberry Pi (or other Linux machine): empt
 KEY_PI_USER = "valetudo/pi_user"
 KEY_PI_PORT = "valetudo/pi_port"
 KEY_PI_WIFI_DIR = "valetudo/pi_wifi_dir"   # output folder of pi/valetudo_wifi_collect.py
+KEY_HA_URL = "valetudo/ha_url"   # Home Assistant server
+DEFAULT_HA_URL = "http://localhost:8123/"
+# The Home Assistant token is not a QgsSettings value: it is stored encrypted
+# in the QGIS authentication database under this key (see ha_token()).
+HA_TOKEN_SETTING = "valetudo/ha_token"
 
 # Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
 WIFI_DEFAULTS = {
@@ -64,6 +69,37 @@ def load_settings():
         "pi_port": s.value(KEY_PI_PORT, 22, type=int),
         "pi_wifi_dir": s.value(KEY_PI_WIFI_DIR, "valetudo_wifi", type=str).strip()
                        or "valetudo_wifi",
+        "ha_url": s.value(KEY_HA_URL, DEFAULT_HA_URL, type=str).strip() or DEFAULT_HA_URL,
         **{key: s.value(f"valetudo/{key}", default, type=kind)
            for key, (default, kind) in WIFI_DEFAULTS.items()},
     }
+
+
+def ha_token():
+    """The Home Assistant access token ("" if none, or if it cannot be decrypted)."""
+    try:
+        from qgis.core import QgsApplication
+        value = QgsApplication.authManager().authSetting(HA_TOKEN_SETTING, "", True)
+    except Exception:   # authentication database unavailable
+        return ""
+    return str(value or "").strip()
+
+
+def set_ha_token(token):
+    """Store the token encrypted (QGIS asks for the master password if needed).
+
+    Returns False if it could not be stored. An empty token removes it.
+    """
+    from qgis.core import QgsApplication
+    manager = QgsApplication.authManager()
+    token = (token or "").strip()
+    try:
+        if not token:
+            if manager.existsAuthSetting(HA_TOKEN_SETTING):
+                return bool(manager.removeAuthSetting(HA_TOKEN_SETTING))
+            return True
+        if not manager.setMasterPassword(True):   # asks once, if not yet set or verified
+            return False
+        return bool(manager.storeAuthSetting(HA_TOKEN_SETTING, token, True))
+    except Exception:
+        return False

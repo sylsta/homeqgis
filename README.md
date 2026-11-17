@@ -295,6 +295,13 @@ strip and its card in the System tab appear once an address is set. Its *Log*
 follows `~/valetudo/collect.log`, the log of the Pi's Wi-Fi collector (see its cron
 line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`.
 
+**Home Assistant** (*Settings > Options > Valetudo*, tab *Home Assistant*): the
+address of your Home Assistant server (`http://localhost:8123/` by default) and a
+long-lived access token, created in Home Assistant on your profile page
+(*Security > Long-lived access tokens*). The token is stored encrypted in the QGIS
+authentication database (QGIS may ask for its master password). **Test
+connection** reads the server's name and version.
+
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and
 times each stage: offline, network up (SSH port answers), Valetudo answers
@@ -317,6 +324,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `metadata.txt`               | Name, version, QGIS compatibility                       |
 | `plugin.py`                  | Toolbar, menu, wiring between client and layers         |
 | `client.py`                  | Asynchronous HTTP calls to the Valetudo API             |
+| `ha_client.py`               | Calls to the Home Assistant REST API                    |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |
 | `camera.py`                  | H.264 stream decoding through an ffmpeg subprocess      |

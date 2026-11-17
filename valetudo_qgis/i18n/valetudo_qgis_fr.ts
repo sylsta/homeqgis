@@ -1983,5 +1983,45 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Click to unfold or fold the panel</source>
         <translation>Cliquez pour déplier ou replier le panneau</translation>
     </message>
+    <message>
+        <source>the access token was refused</source>
+        <translation>le jeton d’accès a été refusé</translation>
+    </message>
+    <message>
+        <source>no Home Assistant API at this address</source>
+        <translation>pas d’API Home Assistant à cette adresse</translation>
+    </message>
+    <message>
+        <source>Enter the address and the access token first.</source>
+        <translation>Saisissez d’abord l’adresse et le jeton d’accès.</translation>
+    </message>
+    <message>
+        <source>The Home Assistant token was not saved: the QGIS master password is needed to store it encrypted.</source>
+        <translation>Le jeton Home Assistant n’a pas été enregistré : le mot de passe principal de QGIS est nécessaire pour le stocker chiffré.</translation>
+    </message>
+    <message>
+        <source>Connected: {name}</source>
+        <translation>Connecté : {name}</translation>
+    </message>
+    <message>
+        <source>Home Assistant</source>
+        <translation>Home Assistant</translation>
+    </message>
+    <message>
+        <source>Server address</source>
+        <translation>Adresse du serveur</translation>
+    </message>
+    <message>
+        <source>Access token</source>
+        <translation>Jeton d’accès</translation>
+    </message>
+    <message>
+        <source>Long-lived access token</source>
+        <translation>Jeton d’accès longue durée</translation>
+    </message>
+    <message>
+        <source>Optional: your Home Assistant server. Create the token in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</source>
+        <translation>Facultatif : votre serveur Home Assistant. Créez le jeton dans Home Assistant, sur votre page de profil (Sécurité › Jetons d’accès longue durée). Il est conservé chiffré dans la base d’authentification de QGIS, qui peut demander votre mot de passe principal.</translation>
+    </message>
 </context>
 </TS>
