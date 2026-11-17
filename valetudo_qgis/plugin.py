@@ -249,6 +249,7 @@ class ValetudoPlugin:
                 self.iface.addPluginToMenu(self.menu, self.act[key])
         # Frequent commands as icon buttons; the others in the panel's "More" menu.
         self.panel.bind_actions(self.act)
+        self.panel.chk_goto_quiet.toggled.connect(lambda *_: self._apply_capabilities())
 
         # Room groups file: loaded now, reloaded whenever it is saved.
         self._groups_watcher = QFileSystemWatcher()
@@ -425,8 +426,21 @@ class ValetudoPlugin:
             if not ok and action.isChecked():
                 self.iface.actionPan().trigger()   # leave a map tool that became unsupported
             action.setEnabled(ok)
-            action.setToolTip(command_hints().get(key, action.text()) if ok else
+            hint = self._goto_hint() if key == "goto" else command_hints().get(key, action.text())
+            action.setToolTip(hint if ok else
                               f"{action.text()} — {tr('Not supported by this robot.')}")
+
+    def _goto_quiet(self):
+        """True when "Go to" is emulated by a zone clean and the trip is to be quiet."""
+        emulated = self.capabilities is not None and "GoToLocationCapability" not in self.capabilities
+        return emulated and QgsSettings().value(KEY_GOTO_QUIET, True, type=bool)
+
+    def _goto_hint(self):
+        hint = command_hints()["goto"]
+        if self._goto_quiet():
+            hint += " " + tr("No cleaning on the way: mops lifted, water off, fan at its lowest, "
+                             "then your settings restored.")
+        return hint
 
     def _on_reachable(self, ok):
         """Report only changes, so an offline robot does not flood the message bar."""
@@ -758,12 +772,22 @@ class ValetudoPlugin:
             return
         # No native go-to: tiny zone clean towards the point, then pause on arrival.
         if not QgsSettings().value(KEY_GOTO_ZONE_OK, False, type=bool):
-            box = QMessageBox(QMessageBox.Icon.Question, tr("Go here"),
-                              tr("This robot cannot simply drive to a point. The plugin will "
-                                 "send it to clean a small zone ({size} cm) at that point, "
-                                 "then pause it as soon as it arrives.\n\n"
-                                 "It vacuums on its way, and mops if mopping is on.\n\n"
-                                 "Continue?").format(size=GOTO_ZONE_SIZE_CM),
+            if QgsSettings().value(KEY_GOTO_QUIET, True, type=bool):
+                text = tr("This robot cannot simply drive to a point. The plugin will "
+                          "send it to clean a small zone ({size} cm) at that point, "
+                          "then pause it as soon as it arrives.\n\n"
+                          "“Travel without cleaning” is ticked: for the trip, the mops are "
+                          "lifted (vacuum-only mode), the water is turned off and the fan set "
+                          "to its lowest; your settings are restored on arrival. If the robot "
+                          "has no “off” fan speed, it still vacuums gently.\n\n"
+                          "Continue?").format(size=GOTO_ZONE_SIZE_CM)
+            else:
+                text = tr("This robot cannot simply drive to a point. The plugin will "
+                          "send it to clean a small zone ({size} cm) at that point, "
+                          "then pause it as soon as it arrives.\n\n"
+                          "It vacuums on its way, and mops if mopping is on.\n\n"
+                          "Continue?").format(size=GOTO_ZONE_SIZE_CM)
+            box = QMessageBox(QMessageBox.Icon.Question, tr("Go here"), text,
                               QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                               self.iface.mainWindow())
             box.setDefaultButton(QMessageBox.StandardButton.No)

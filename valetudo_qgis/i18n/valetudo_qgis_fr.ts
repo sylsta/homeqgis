@@ -1661,5 +1661,21 @@ Il utilise SSH avec votre clé, comme le redémarrage. Après un redémarrage du
         <source>Vacuum only, mop only, or both.</source>
         <translation>Aspiration seule, lavage seul, ou les deux.</translation>
     </message>
+    <message>
+        <source>No cleaning on the way: mops lifted, water off, fan at its lowest, then your settings restored.</source>
+        <translation>Sans nettoyage en chemin : serpillières relevées, eau coupée, aspiration au minimum, puis vos réglages rétablis.</translation>
+    </message>
+    <message>
+        <source>This robot cannot simply drive to a point. The plugin will send it to clean a small zone ({size} cm) at that point, then pause it as soon as it arrives.
+
+“Travel without cleaning” is ticked: for the trip, the mops are lifted (vacuum-only mode), the water is turned off and the fan set to its lowest; your settings are restored on arrival. If the robot has no “off” fan speed, it still vacuums gently.
+
+Continue?</source>
+        <translation>Ce robot ne sait pas simplement rouler jusqu’à un point. L’extension va l’envoyer nettoyer une petite zone ({size} cm) à cet endroit, puis le mettre en pause dès son arrivée.
+
+« Trajet sans nettoyer » est coché : pendant le trajet, les serpillières sont relevées (mode aspiration seule), l’eau est coupée et l’aspiration mise au minimum ; vos réglages sont rétablis à l’arrivée. Si le robot n’a pas de vitesse d’aspiration « arrêt », il aspire quand même doucement.
+
+Continuer ?</translation>
+    </message>
 </context>
 </TS>
