@@ -7,7 +7,9 @@ This module contains no user-facing text: commandDone emits a command key
 (see COMMAND_KEYS) that the UI layer turns into a translated label.
 """
 
+import email.utils
 import json
+import time
 
 from qgis.PyQt.QtCore import QObject, QUrl, QTimer, QByteArray, pyqtSignal
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
@@ -57,6 +59,7 @@ class ValetudoClient(QObject):
     mapPeeked = pyqtSignal(dict)               # map read for the panel only (no layers)
     restrictionsReceived = pyqtSignal(dict)    # no-go zones and virtual walls
     segmentsReceived = pyqtSignal(list)        # rooms: [{"id": "16", "name": "Kitchen"}, …]
+    hostInfoReceived = pyqtSignal(dict)        # system host info + "robot_time" (Unix s)
     timersReceived = pyqtSignal(list)          # Valetudo timers (dicts with their "id")
     timerPropertiesReceived = pyqtSignal(dict)  # supportedActions, supportedPreActions
     commandDone = pyqtSignal(str)
@@ -205,6 +208,24 @@ class ValetudoClient(QObject):
 
     def fetch_events(self, quiet=False):
         self._get("/events", lambda d: self.eventsReceived.emit(self._as_list(d)), quiet=quiet)
+
+    def fetch_host_info(self, quiet=True):
+        """Host info (uptime, hostname…) plus the robot's own clock, read from the
+        HTTP Date header of the answer: no SSH needed to know the robot's time."""
+        reply = self.nam.get(self._request("/system/host/info"))
+
+        def done(data):
+            info = dict(data) if isinstance(data, dict) else {}
+            stamp = bytes(reply.rawHeader(QByteArray(b"Date"))).decode("latin-1").strip()
+            try:
+                info["robot_time"] = email.utils.parsedate_to_datetime(stamp).timestamp()
+                info["received_at"] = time.time()
+            except (TypeError, ValueError, IndexError):
+                pass
+            self.hostInfoReceived.emit(info)
+
+        # Without that endpoint (older Valetudo), the answer still has the robot's Date.
+        self._track(reply, done, quiet=quiet, on_error=lambda _detail: done(None))
 
     def fetch_presets(self, capability, quiet=False):
         self._get(f"/robot/capabilities/{capability}/presets",

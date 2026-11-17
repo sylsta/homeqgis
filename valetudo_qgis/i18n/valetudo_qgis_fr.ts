@@ -1801,5 +1801,37 @@ Continuer ?</translation>
         <source>Wi-Fi: {details}</source>
         <translation>Wi-Fi : {details}</translation>
     </message>
+    <message>
+        <source>{days} d {hours} h</source>
+        <translation>{days} j {hours} h</translation>
+    </message>
+    <message>
+        <source>{days} d</source>
+        <translation>{days} j</translation>
+    </message>
+    <message>
+        <source>{hours} h</source>
+        <translation>{hours} h</translation>
+    </message>
+    <message>
+        <source>up {duration}</source>
+        <translation>allumé depuis {duration}</translation>
+    </message>
+    <message>
+        <source>clock {amount} ahead</source>
+        <translation>horloge en avance de {amount}</translation>
+    </message>
+    <message>
+        <source>clock {amount} behind</source>
+        <translation>horloge en retard de {amount}</translation>
+    </message>
+    <message>
+        <source>Unreachable over SSH</source>
+        <translation>Injoignable en SSH</translation>
+    </message>
+    <message>
+        <source>The robot's clock is wrong: check Valetudo's NTP settings.</source>
+        <translation>L’horloge du robot est fausse : vérifiez les réglages NTP de Valetudo.</translation>
+    </message>
 </context>
 </TS>

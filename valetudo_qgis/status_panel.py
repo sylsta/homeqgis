@@ -28,7 +28,9 @@ from qgis.gui import QgsDockWidget
 from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
-from .icons import LOGO, icon
+from . import host_info
+from .icons import LOGO, RPI_LOGO, icon
+from .robot_survey import RobotSurvey
 from .log_tail import LOG_PATH, LogTail
 from . import schedule
 from .rooms_tree import RoomsTree
@@ -46,7 +48,8 @@ KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all r
 UI_WIDGETS = (
     "lbl_connection", "btn_refresh", "lbl_robot", "lbl_badge", "bar_battery", "lbl_error",
     "grp_clean", "clean_grid", "rooms", "btn_rooms", "grp_robot", "robot_grid",
-    "grp_dock", "dock_grid", "header_layout", "lbl_logo", "lbl_feedback", "tabs", "tab_camera",
+    "grp_dock", "dock_grid", "header_layout", "lbl_logo", "lbl_robot_info", "pi_header",
+    "lbl_pi_logo", "lbl_pi_connection", "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "lbl_feedback", "tabs", "tab_camera",
     "camera_layout", "camera_light", "status_form", "lbl_state", "lbl_dock", "dock_form",
     "settings_form", "combo_fan_speed", "combo_water_usage", "combo_operation_mode",
     "lbl_attachments",
@@ -77,6 +80,7 @@ STATE_COLORS = {
 }
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
+PI_INTERVAL_MS = 30_000    # Pi block refresh (one short SSH command) while visible
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
 ACTIVE_STATES = {"cleaning", "returning", "moving", "manual_control"}
 LOW_PERCENT = 10
@@ -320,6 +324,10 @@ class ValetudoPanel(QgsDockWidget):
         self._reachable = None
         self._robot_text = self._version_text = ""
         self._wifi_html, self._wifi_tip = "", ""   # Wi-Fi signal in the header
+        self._robot_ip, self._host = "", {}        # third header line
+        self._pi = None            # last Pi info (host_info.parse_pi), None = never read
+        self._pi_ok = None         # True / False after a Pi read, None before
+        self._pi_last_ok = None    # time.monotonic() of the last successful Pi read
         self._last_map = 0.0   # time.monotonic() of the last map received
 
         self._timer = QTimer(self)
@@ -339,6 +347,15 @@ class ValetudoPanel(QgsDockWidget):
         load_ui("status_panel.ui", self, UI_WIDGETS)
         self.setObjectName("ValetudoStatusPanel")   # QGIS restores the dock by this name
         self.lbl_logo.setPixmap(icon(LOGO).pixmap(20, 20))
+        # Raspberry Pi block: one SSH command every PI_INTERVAL_MS while visible.
+        self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
+        self.btn_pi_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_pi_refresh.clicked.connect(self._refresh_pi)
+        self.pi_runner = RobotSurvey(self)   # one-shot SSH runner
+        self.pi_runner.finished.connect(self._on_pi_info)
+        self._pi_timer = QTimer(self)
+        self._pi_timer.setInterval(PI_INTERVAL_MS)
+        self._pi_timer.timeout.connect(self._refresh_pi)
         self.btn_refresh.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
         self.btn_refresh.clicked.connect(self.refresh)
         self._set_badge(None)
@@ -685,6 +702,7 @@ class ValetudoPanel(QgsDockWidget):
         client.segmentsReceived.connect(self._on_segments)
         client.toggleReceived.connect(self._on_toggle)
         client.mapPeeked.connect(self.update_map)
+        client.hostInfoReceived.connect(self._on_host_info)
         client.timersReceived.connect(self._on_timers)
         client.timerPropertiesReceived.connect(self._on_timer_properties)
         client.commandDone.connect(lambda *_: QTimer.singleShot(1500, self.refresh))
@@ -859,10 +877,66 @@ class ValetudoPanel(QgsDockWidget):
         return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
 
     def _update_pi_tab(self):
-        """The Pi console tab exists only when a Pi address is set."""
+        """The Pi console tab and header block exist only when a Pi address is set;
+        the block is read while the panel is visible."""
+        has_pi = self._pi_target() is not None
         index = self.tabs.indexOf(self.tab_pi_console)
         if hasattr(self.tabs, "setTabVisible"):   # Qt >= 5.15
-            self.tabs.setTabVisible(index, self._pi_target() is not None)
+            self.tabs.setTabVisible(index, has_pi)
+        self.pi_header.setVisible(has_pi)
+        if has_pi and self.isVisible():
+            if not self._pi_timer.isActive():
+                self._pi_timer.start()
+                self._refresh_pi()
+        else:
+            self._pi_timer.stop()
+            self.pi_runner.stop()
+        if not has_pi:
+            self._pi, self._pi_ok, self._pi_last_ok = None, None, None
+
+    # -- Raspberry Pi block ---------------------------------------------------------
+
+    def _refresh_pi(self, *_):
+        target = self._pi_target()
+        if target is None or self.pi_runner.is_busy():
+            return
+        self.pi_runner.run("pi_info", *target, host_info.PI_COMMAND)
+        if self._pi_ok is None:
+            self.lbl_pi_connection.setText(
+                f"<span style='color:#9e9e9e'>●</span> {tr('Connecting…')}")
+
+    def _on_pi_info(self, _operation, ok, output, detail):
+        if ok:
+            self._pi = host_info.parse_pi(output, time.time())
+            self._pi_ok, self._pi_last_ok = True, time.monotonic()
+        else:
+            self._pi_ok = False
+            self.lbl_pi_connection.setToolTip(detail)
+        self._update_pi_header()
+
+    def _update_pi_header(self):
+        if self._pi_ok is None:
+            return
+        if self._pi_ok:
+            seconds = int(time.monotonic() - self._pi_last_ok)
+            text = tr("Connected · updated {seconds} s ago").format(seconds=seconds)
+            self.lbl_pi_connection.setText(f"<span style='color:#2e7d32'>●</span> {text}")
+            self.lbl_pi_connection.setToolTip("")
+        else:
+            text = tr("Unreachable over SSH")
+            self.lbl_pi_connection.setText(f"<span style='color:#c62828'>●</span> {text}")
+        pi = self._pi or {}
+        self.lbl_pi_name.setTextFormat(Qt.TextFormat.PlainText)
+        self.lbl_pi_name.setText(" · ".join(p for p in (pi.get("hostname"), pi.get("uname")) if p))
+        line, wrong = host_info.info_line(pi.get("ip") or (self._pi_target() or [""])[0],
+                                          pi.get("time"), pi.get("received_at"),
+                                          pi.get("uptime"), self._local_time)
+        self.lbl_pi_info.setText(line)
+        self.lbl_pi_info.setStyleSheet("color: #ef6c00;" if wrong else "")
+
+    @staticmethod
+    def _local_time(epoch):
+        return QDateTime.fromSecsSinceEpoch(int(epoch)).toString("dd/MM/yyyy HH:mm")
 
     def settings_changed(self):
         """Called by the plugin after the Options page saved changes."""
@@ -943,6 +1017,8 @@ class ValetudoPanel(QgsDockWidget):
         """Called by the plugin on unload."""
         self._camera_grace.stop()
         self.camera.shutdown()
+        self._pi_timer.stop()
+        self.pi_runner.stop()
         self.log_tail.stop(quiet=True)
         for console in self.consoles:
             console.shutdown()
@@ -969,6 +1045,7 @@ class ValetudoPanel(QgsDockWidget):
             return
         client.fetch_attributes(quiet=True)
         client.fetch_events(quiet=True)
+        client.fetch_host_info(quiet=True)
         # Position comes from the map: read it unless live tracking just delivered one.
         if time.monotonic() - self._last_map >= self._timer.interval() / 1000 * 0.9:
             client.peek_map()
@@ -997,6 +1074,8 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_robot.setText("")
         self.lbl_robot.setToolTip("")
         self._wifi_html, self._wifi_tip = "", ""
+        self._robot_ip, self._host = "", {}
+        self.lbl_robot_info.setText("")
 
     def _on_reachable(self, ok):
         self._reachable = ok
@@ -1009,6 +1088,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_header()
 
     def _update_header(self):
+        self._update_pi_header()
         if self.client is None or self._reachable is None:
             return
         if self._reachable:
@@ -1029,6 +1109,21 @@ class ValetudoPanel(QgsDockWidget):
         release = version.get("release")
         self._version_text = f"Valetudo {release}" if release else ""
         self._update_robot_label()
+
+    def _on_host_info(self, info):
+        self._host = info or {}
+        self._update_robot_info()
+
+    def _update_robot_info(self):
+        """Third header line: robot IP · robot's own date and time · uptime."""
+        host = self._host
+        ip = self._robot_ip or ((self._ssh_target() or [""])[0])
+        line, wrong = host_info.info_line(ip, host.get("robot_time"), host.get("received_at"),
+                                          host.get("uptime"), self._local_time)
+        self.lbl_robot_info.setText(line)
+        self.lbl_robot_info.setStyleSheet("color: #ef6c00;" if wrong else "")
+        self.lbl_robot_info.setToolTip(
+            tr("The robot's clock is wrong: check Valetudo's NTP settings.") if wrong else "")
 
     def _update_robot_label(self):
         """Second header line: robot model · Valetudo version · Wi-Fi signal."""
@@ -1223,6 +1318,8 @@ class ValetudoPanel(QgsDockWidget):
             self._wifi_html = f"<span style='color:{color}'>{html.escape(text)}</span>"
             parts = [details.get("ssid"), details.get("frequency"),
                      (details.get("ips") or [None])[0]]
+            self._robot_ip = (details.get("ips") or [""])[0] or ""
+            self._update_robot_info()
             self._wifi_tip = tr("Wi-Fi: {details}").format(
                 details=" · ".join(str(p) for p in parts if p) or "—")
         self._update_robot_label()

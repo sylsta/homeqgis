@@ -38,7 +38,11 @@ The panel, from top to bottom:
 ```
 (logo) ● Connected · 12:04:31      [Show on map] [⟳]
 Eureka J15 Pro Ultra · Valetudo 2025.12.0 · Wi-Fi -55 dBm
+192.168.50.20 · 17/11/2026 19:26 · up 3 d 4 h
 [Docked]  ████████████████████ 99 %
+(Pi logo) ● Connected · updated 5 s ago                  [⟳]   (if a Pi is set)
+raspberrypi · Linux raspberrypi 6.6.51 … aarch64 GNU/Linux
+192.168.50.1 · 17/11/2026 19:26 · up 1 h 2 min
 ⚠ error, only when there is one
 ┌ Clean ─────────────────────────────────────┐
 │ ▾ ☐ All rooms                              │
@@ -61,6 +65,12 @@ Robot · Camera · Maintenance · Advanced · Log · Robot console · RPI SSH co
 - The header's second line ends with the robot's Wi-Fi signal, coloured with the
   *Wi-Fi survey* thresholds (green, yellow, orange, red); hover it for the network
   name, band and address.
+- The third line gives the robot's address, its own date and time (from Valetudo's
+  answers; shown in orange, with how far off it is, when the robot's clock differs
+  from the computer's by more than 2 minutes) and how long it has been on.
+- With a Raspberry Pi set in the settings, a second block shows the Pi the same way:
+  name and `uname -a`, then address, date and uptime, read over SSH every 30 s while
+  the panel is visible (or with its own refresh button).
 - Every button does one thing; its tooltip says what. *Clean a zone…* and *Go to…*
   stay pressed until you have drawn the zone or clicked the point on the map.
 - Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking
@@ -298,6 +308,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `ssh_console.py`             | SSH command session (one command at a time)             |
 | `console_tab.py`             | A console tab of the panel (robot, Raspberry Pi)        |
 | `pi_maps.py`                 | Loads the newest Wi-Fi map built on the Pi              |
+| `host_info.py`               | Header lines: address, clock, uptime (robot and Pi)     |
 | `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
 | `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |
 | `rooms_tree.py`              | Checkable rooms tree with room groups (panel, editor)   |

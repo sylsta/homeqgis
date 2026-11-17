@@ -6,7 +6,7 @@
    <string>Valetudo status</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,0,0,0,1">
+   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,0,0,0,0,0,0,1">
     <item>
      <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
       <item>
@@ -41,6 +41,13 @@
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="lbl_robot_info">
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="summary_layout" stretch="0,1">
       <item>
        <widget class="QLabel" name="lbl_badge">
@@ -66,6 +73,64 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QWidget" name="pi_header">
+      <layout class="QVBoxLayout" name="pi_header_layout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>6</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0">
+         <item>
+          <widget class="QLabel" name="lbl_pi_logo">
+           <property name="toolTip">
+            <string>Raspberry Pi</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_pi_connection"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btn_pi_refresh">
+           <property name="toolTip">
+            <string>Refresh now</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_pi_name">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="font">
+          <font>
+           <italic>true</italic>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_pi_info">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="lbl_error">
