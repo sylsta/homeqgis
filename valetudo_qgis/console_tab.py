@@ -61,6 +61,7 @@ class ConsoleTab(QObject):
             self.session.stop(quiet=True)
             self.w["status"].setText(self._no_target_text)
             return
+        self.w["output"].clear()   # a new session starts with an empty console
         self.session.start(*target)
 
     def toggle(self, *_):
