@@ -56,8 +56,7 @@ The panel (titled *Connection*), from top to bottom:
 - **Status strip**, always visible: the state, battery, Wi-Fi signal (coloured with
   the thresholds of the Wi-Fi tab), the job in progress (time and area), a ⚠ when
   something needs you (dock tank empty or full, worn consumable, robot error,
-  wrong clock, unreachable robot: hover it for the list, click it to open the
-  right tab), the
+  wrong clock: hover it for the list, click it to open the right tab), the
   Raspberry Pi's status (when one is set: checked over SSH every 30 s), Home
   Assistant's status (checked every minute: *Online*, *No token* when it answers
   but no access token is set, *Offline*; hidden when there is neither a token nor
