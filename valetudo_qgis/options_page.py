@@ -41,6 +41,7 @@ UI_WIDGETS = (
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
+    "btn_backup_reset",
     "lbl_backup_status",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
@@ -130,6 +131,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.btn_backup_save.clicked.connect(self._save_backup)
         self.btn_backup_load.clicked.connect(self._load_selected_backup)
         self.btn_backup_load_file.clicked.connect(self._load_backup_file)
+        self.btn_backup_reset.clicked.connect(self._reset_config)
         self.list_backups.itemDoubleClicked.connect(lambda _item: self._load_selected_backup())
         self.list_backups.currentRowChanged.connect(
             lambda row: self.btn_backup_load.setEnabled(row >= 0))
@@ -210,6 +212,34 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             "Loaded: {count} settings, {secrets} tokens or passwords, from {date}.").format(
                 count=count, secrets=secrets, date=when))
         if self._on_applied is not None and (secrets or load_settings() != before):
+            self._on_applied()
+
+    def _reset_config(self, *_):
+        """Save a backup of the stored configuration, then go back to the defaults."""
+        secrets = self.chk_backup_secrets.isChecked()
+        answer = QMessageBox.question(
+            self, tr("Reset config"),
+            tr("Go back to the default settings? The current configuration is saved "
+               "first, so that you can load it back.")
+            + "\n\n" + (tr("Tokens and passwords are included in that backup.") if secrets
+                         else tr("Tokens and passwords are not included in that backup: "
+                                 "tick the box above to keep them.")))
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            path = config_backup.save(self.backup_folder.text(), secrets)
+        except OSError as exc:
+            self.lbl_backup_status.setText("✗ " + tr("Not reset: the backup failed ({error}).")
+                                           .format(error=exc))
+            return
+        before = load_settings()
+        config_backup.reset()
+        self._fill()
+        self._list_backups(select=path)
+        self.lbl_backup_status.setText("✓ " + tr(
+            "Reset to the defaults. The previous configuration is in {file}.").format(
+                file=os.path.basename(path)))
+        if self._on_applied is not None and load_settings() != before:
             self._on_applied()
 
     def _test_connection(self, *_):

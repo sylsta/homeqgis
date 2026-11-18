@@ -1022,6 +1022,16 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="btn_backup_reset">
+           <property name="text">
+            <string>Reset config</string>
+           </property>
+           <property name="toolTip">
+            <string>Back to the default settings, after saving a backup</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="backup_spacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>

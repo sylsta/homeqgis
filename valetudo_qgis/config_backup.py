@@ -132,6 +132,23 @@ def read(path):
     return data
 
 
+def reset():
+    """Back to the defaults: every plugin setting (except the backup folder), the
+    tokens and passwords, and the room groups file, are removed."""
+    s = QgsSettings()
+    s.beginGroup(GROUP)
+    for key in s.allKeys():
+        if f"{GROUP}/{key}" != KEY_BACKUP_DIR:
+            s.remove(key)
+    s.endGroup()
+    for key in SECRET_KEYS:
+        set_secret(key, "")
+    try:
+        os.remove(room_groups.file_path())
+    except OSError:
+        pass
+
+
 def apply(data):
     """Replace the configuration by the backup's. Returns (settings, secrets) counts;
     secrets that could not be stored (no master password) are not counted."""

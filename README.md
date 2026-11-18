@@ -354,7 +354,9 @@ screen, as OK does. The list shows the saved files, newest first: **Load
 selected…** (or a double-click) or **Load a file…** replaces the configuration at
 once, after a confirmation. Tokens and passwords stay out of the files unless you
 tick *Include tokens and passwords*: they are then written in clear (the file is
-made readable by you only).
+made readable by you only). **Reset config** goes back to the default settings
+(and removes the tokens, passwords and room groups) after saving a backup, so it
+can be undone with *Load selected…*.
 
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and

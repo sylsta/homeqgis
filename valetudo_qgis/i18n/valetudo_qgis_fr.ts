@@ -2295,5 +2295,33 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Each save writes a new file named with its date and time (valetudo_qgis_config_YYYYMMDD_HHMMSS.json): all the settings of these tabs, the room groups and the panel's choices. Saving first applies the values on screen, as OK does. Loading a file replaces the current configuration at once, without waiting for OK.</source>
         <translation>Chaque enregistrement écrit un nouveau fichier nommé avec sa date et son heure (valetudo_qgis_config_AAAAMMJJ_HHMMSS.json) : tous les paramètres de ces onglets, les groupes de pièces et les choix du panneau. L’enregistrement applique d’abord les valeurs affichées, comme OK. Charger un fichier remplace aussitôt la configuration actuelle, sans attendre OK.</translation>
     </message>
+    <message>
+        <source>Reset config</source>
+        <translation>Réinitialiser</translation>
+    </message>
+    <message>
+        <source>Go back to the default settings? The current configuration is saved first, so that you can load it back.</source>
+        <translation>Revenir aux paramètres par défaut ? La configuration actuelle est d’abord enregistrée, pour pouvoir la recharger.</translation>
+    </message>
+    <message>
+        <source>Tokens and passwords are included in that backup.</source>
+        <translation>Les jetons et mots de passe sont inclus dans cette sauvegarde.</translation>
+    </message>
+    <message>
+        <source>Tokens and passwords are not included in that backup: tick the box above to keep them.</source>
+        <translation>Les jetons et mots de passe ne sont pas inclus dans cette sauvegarde : cochez la case ci-dessus pour les conserver.</translation>
+    </message>
+    <message>
+        <source>Reset to the defaults. The previous configuration is in {file}.</source>
+        <translation>Paramètres par défaut rétablis. La configuration précédente est dans {file}.</translation>
+    </message>
+    <message>
+        <source>Not reset: the backup failed ({error}).</source>
+        <translation>Rien n’a été réinitialisé : la sauvegarde a échoué ({error}).</translation>
+    </message>
+    <message>
+        <source>Back to the default settings, after saving a backup</source>
+        <translation>Revenir aux paramètres par défaut, après une sauvegarde</translation>
+    </message>
 </context>
 </TS>
