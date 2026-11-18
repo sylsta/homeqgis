@@ -27,7 +27,7 @@ from .restrictions import RestrictionLayers, layer_names as restriction_layer_na
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import load_settings
+from .settings import PLUGIN_NAME, load_settings
 from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
 from .status_panel import (
@@ -78,7 +78,7 @@ REQUIRED_CAPABILITY = {
 # Simple menu and toolbar: everything else is in the panel's command list.
 TOOLBAR = ["status_panel"]
 MENU = ["status_panel", "settings"]
-LOG_TAG = "Valetudo"   # tab of the QGIS "Log Messages" panel
+LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
 
 def command_hints():
@@ -146,7 +146,7 @@ class ValetudoPlugin:
     def __init__(self, iface):
         self.iface = iface
         self.translator = install_translator()  # before any tr() call
-        self.menu = tr("&Valetudo")
+        self.menu = "&" + PLUGIN_NAME
         self.act = {}            # key -> QAction
         self._unloaded = False   # set by unload(): late signals and timers do nothing
         self._live_at_start = False   # "Show on map" pending at start-up
@@ -250,11 +250,11 @@ class ValetudoPlugin:
         self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
         self.panel.hide()
         self.act["status_panel"] = self.panel.toggleViewAction()
-        self.act["status_panel"].setText(tr("Valetudo panel"))
+        self.act["status_panel"].setText(tr("{name} panel").format(name=PLUGIN_NAME))
         self.act["status_panel"].setIcon(icon(LOGO))
         self.panel.setWindowIcon(icon(LOGO))   # shown when the panel floats
 
-        self.toolbar = self.iface.addToolBar("Valetudo")
+        self.toolbar = self.iface.addToolBar(PLUGIN_NAME)
         self.toolbar.setObjectName("ValetudoToolbar")
         for key in TOOLBAR:
             if key is None:
@@ -264,7 +264,7 @@ class ValetudoPlugin:
         for key in MENU:
             if key is not None:
                 self.iface.addPluginToMenu(self.menu, self.act[key])
-        # QGIS creates the "Valetudo" submenu of Plugins without an icon: give it the logo.
+        # QGIS creates the plugin's submenu of Plugins without an icon: give it the logo.
         for entry in self.iface.pluginMenu().actions():
             if entry.text() == self.menu and entry.menu() is not None:
                 entry.setIcon(icon(LOGO))
@@ -556,7 +556,7 @@ class ValetudoPlugin:
                 text = tr("{component}: {state}. {advice}").format(
                     component=name, state=values.get(value, value), advice=advice[value])
                 self.iface.messageBar().pushMessage(
-                    "Valetudo", text, level=Qgis.MessageLevel.Warning, duration=0)
+                    PLUGIN_NAME, text, level=Qgis.MessageLevel.Warning, duration=0)
             elif value == "ok" and previous in DOCK_COMPONENT_PROBLEMS:
                 self._message(tr("{component}: OK again.").format(component=name),
                               Qgis.MessageLevel.Success)
@@ -697,7 +697,7 @@ class ValetudoPlugin:
         """No robot set yet (first start): offer to open the settings, once."""
         bar = self.iface.messageBar()
         item = bar.createMessage(
-            tr("Valetudo"), tr("No robot is set yet: enter its address in the settings."))
+            PLUGIN_NAME, tr("No robot is set yet: enter its address in the settings."))
         button = QPushButton(tr("Open settings…"), item)
 
         def open_settings():
@@ -951,7 +951,7 @@ class ValetudoPlugin:
     def _on_quiet_failed(self, error):
         self._goto_point = None
         self.iface.messageBar().pushMessage(
-            "Valetudo", tr("“Go to” cancelled: the robot's settings could not be changed for "
+            PLUGIN_NAME, tr("“Go to” cancelled: the robot's settings could not be changed for "
                            "a trip without cleaning ({error}). Untick “Without cleaning” "
                            "to go anyway.").format(error=error),
             level=Qgis.MessageLevel.Warning, duration=0)
@@ -1004,7 +1004,7 @@ class ValetudoPlugin:
             self._message(tr("ssh not found: install an SSH client."), Qgis.MessageLevel.Critical)
         else:
             self.iface.messageBar().pushMessage(
-                "Valetudo", tr("SSH reboot failed: {detail}").format(detail=detail),
+                PLUGIN_NAME, tr("SSH reboot failed: {detail}").format(detail=detail),
                 level=Qgis.MessageLevel.Critical, duration=0)
 
     # -- Wi-Fi survey recorded on the robot ------------------------------------------
@@ -1118,7 +1118,7 @@ class ValetudoPlugin:
             return   # quiet: runs at each connection
         if not ok and operation != "import":
             self.iface.messageBar().pushMessage(
-                "Valetudo", tr("Wi-Fi recorder: SSH failed: {detail}").format(
+                PLUGIN_NAME, tr("Wi-Fi recorder: SSH failed: {detail}").format(
                     detail=values.get("error") or detail),
                 level=Qgis.MessageLevel.Critical, duration=0)
             return
@@ -1135,7 +1135,7 @@ class ValetudoPlugin:
                 problems.append(tr("the Wi-Fi signal could not be read"))
             if problems:
                 self.iface.messageBar().pushMessage(
-                    "Valetudo", tr("Wi-Fi recorder installed in {dir}, but: {problems}. "
+                    PLUGIN_NAME, tr("Wi-Fi recorder installed in {dir}, but: {problems}. "
                                    "It will not record until this is solved.").format(
                         dir=values.get("dir", "?"), problems="; ".join(problems)),
                     level=Qgis.MessageLevel.Warning, duration=0)
@@ -1176,7 +1176,7 @@ class ValetudoPlugin:
             busy = getattr(self, "pi_ssh", None) is not None and self.pi_ssh.is_busy()
             action.setEnabled(has_pi and not busy)
             action.setToolTip(command_hints()["pi_wifi_map"] if has_pi else
-                              tr("Set the Raspberry Pi in Settings › Options › Valetudo first."))
+                              tr("Set the Raspberry Pi in Settings › Options › {name} first.").format(name=PLUGIN_NAME))
 
     def load_pi_wifi_map(self, full=None):
         """full: the map of all runs (None: as last chosen)."""
@@ -1211,7 +1211,7 @@ class ValetudoPlugin:
             text = problems.get(detail, tr("SSH failed: {detail}")).format(
                 folder=cfg["pi_wifi_dir"], detail=detail)
             self.iface.messageBar().pushMessage(
-                "Valetudo", tr("No Wi-Fi map loaded: {problem}.").format(problem=text),
+                PLUGIN_NAME, tr("No Wi-Fi map loaded: {problem}.").format(problem=text),
                 level=Qgis.MessageLevel.Warning, duration=0)
             return
         try:
@@ -1223,7 +1223,7 @@ class ValetudoPlugin:
                                                     cfg)
         except Exception as exc:   # damaged archive, unreadable GeoTIFF…
             self.iface.messageBar().pushMessage(
-                "Valetudo", tr("No Wi-Fi map loaded: {problem}.").format(problem=str(exc)),
+                PLUGIN_NAME, tr("No Wi-Fi map loaded: {problem}.").format(problem=str(exc)),
                 level=Qgis.MessageLevel.Warning, duration=0)
             return
         if not self.layers.exists():   # nothing else on the map yet: show the Wi-Fi map
@@ -1343,7 +1343,7 @@ class ValetudoPlugin:
                       Qgis.MessageLevel.Success)
 
     def _message(self, text, level):
-        self.iface.messageBar().pushMessage("Valetudo", text, level=level, duration=4)
+        self.iface.messageBar().pushMessage(PLUGIN_NAME, text, level=level, duration=4)
         if self.panel is not None:   # echo it under the command list
             kind = {Qgis.MessageLevel.Success: "success", Qgis.MessageLevel.Warning: "warning",
                     Qgis.MessageLevel.Critical: "critical"}.get(level, "info")

@@ -1,7 +1,9 @@
-# Valetudo for QGIS
+# DomotiQGIS
 
-A learning project: display and control a [Valetudo](https://valetudo.cloud) robot
-vacuum from QGIS. The plugin talks to Valetudo's local REST API (no cloud).
+*Domotique* + QGIS: a home control centre in QGIS. It started as a learning
+project to display and control a [Valetudo](https://valetudo.cloud) robot vacuum
+from QGIS (through Valetudo's local REST API, no cloud), and now also watches and
+drives the home servers around it: a Raspberry Pi, Home Assistant, a NUC and Kodi.
 
 Available in English and French (the UI follows the QGIS interface language).
 
@@ -28,10 +30,10 @@ without restarting QGIS.
 ## Usage
 
 1. When no robot is set, QGIS offers it at start-up: **Open settings…** in the
-   message bar. Otherwise: *Settings > Options > Valetudo* (or *Plugins > Valetudo > Settings…*, which opens
+   message bar. Otherwise: *Settings > Options > DomotiQGIS* (or *Plugins > DomotiQGIS > Settings…*, which opens
    that page): enter the robot address (e.g. `http://192.168.1.23`), click
    **Test connection**, then **OK**. As for every Options page, *Cancel* saves nothing.
-2. Open the **Valetudo panel** (the only toolbar button, or *Plugins > Valetudo*).
+2. Open the **DomotiQGIS panel** (the only toolbar button, or *Plugins > DomotiQGIS*).
    The menu and the toolbar stay minimal: everything happens in the panel.
 
 The panel (titled *Connection*), from top to bottom:
@@ -71,7 +73,7 @@ The panel (titled *Connection*), from top to bottom:
   SSH every 30 s while the panel is visible); then Home Assistant: version, home
   name and time zone, its address, its own clock and its uptime (from the *Uptime*
   integration's `sensor.uptime`, if you have it); then the NUC, when its address
-  is set (*Settings > Options > Valetudo*, tab *NUC*, with a *Test connection*
+  is set (*Settings > Options > DomotiQGIS*, tab *NUC*, with a *Test connection*
   button): its name and system, address, clock and uptime, and a line with its
   load, memory, disk and temperature, read over SSH (key only) every 30 s while
   the panel is visible; then Kodi, when its address is set (tab *Kodi* of the
@@ -135,7 +137,7 @@ The panel (titled *Connection*), from top to bottom:
 - **Show on map** (in the strip) loads the map, refreshes the robot live and keeps it
   in view (recentring only when it nears the edge). Click again to stop. It is
   turned on by itself when QGIS starts with an empty project and the robot answers
-  within a minute (*Settings > Options > Valetudo*, tab *Robot*: "Show the robot on
+  within a minute (*Settings > Options > DomotiQGIS*, tab *Robot*: "Show the robot on
   the map when QGIS starts with an empty project"); a project with layers is left
   untouched.
 - While it is on, a **Valetudo map** toolbar appears: *Pick rooms on the map* (click a
@@ -288,7 +290,7 @@ crontab -e    # then add:
 ```
 
 In QGIS, *Load Wi-Fi map from the Pi* (Advanced tab) fetches over SSH the newest
-run, or the full map when **Full map (all runs)** (just under the button) is ticked, (the Pi as set in *Settings > Options > Valetudo*, tab *Raspberry Pi*) and
+run, or the full map when **Full map (all runs)** (just under the button) is ticked, (the Pi as set in *Settings > Options > DomotiQGIS*, tab *Raspberry Pi*) and
 adds it to a "Wi-Fi maps (Pi)" group: the map, styled with the plugin's thresholds,
 and its readings as points (one per map cell for the full map). The files are kept in the QGIS profile folder
 (`valetudo_wifi_maps/`), so a saved project finds them again; loading the same run
@@ -314,7 +316,7 @@ finish (e.g. `tail -f`) by opening a new session.
 
 **Terminal** tab, *Raspberry Pi*: the same console and log on a Raspberry Pi (or any Linux machine
 of your network, e.g. the one that builds the Wi-Fi maps). Set its address, SSH
-user (`pi` by default) and port in *Settings > Options > Valetudo*, tab *Raspberry
+user (`pi` by default) and port in *Settings > Options > DomotiQGIS*, tab *Raspberry
 Pi*; the *Raspberry Pi* switch of the Terminal tab, the Pi's details under the
 strip and its card in the System tab appear once an address is set. Its *Log*
 follows `~/valetudo/collect.log`, the log of the Pi's Wi-Fi collector (see its cron
@@ -323,7 +325,7 @@ line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`
 **Raspberry Pi** tab: **Test connection** logs in over SSH with the values being
 edited and shows the Pi's name and system, and how many Wi-Fi maps its folder holds.
 
-**Home Assistant** (*Settings > Options > Valetudo*, tab *Home Assistant*): the
+**Home Assistant** (*Settings > Options > DomotiQGIS*, tab *Home Assistant*): the
 address of your Home Assistant server (`http://localhost:8123/` by default) and a
 long-lived access token (optional: without it the plugin can only check that Home
 Assistant answers), created in Home Assistant on your profile page
@@ -333,7 +335,7 @@ connection** reads the server's name and version.
 
 **Terminal** tab, *Home Assistant*: a console and a log on your Home Assistant
 server. Set its SSH address, user (`root` by default) and port in *Settings >
-Options > Valetudo*, tab *Home Assistant*; the switch is greyed out without an
+Options > DomotiQGIS*, tab *Home Assistant*; the switch is greyed out without an
 address. On Home Assistant OS, install the *Terminal & SSH* add-on and set its SSH
 port in the add-on's *Network* settings, then either paste your public key
 (`~/.ssh/id_ed25519.pub`) in its `authorized_keys` option, or set a password in
@@ -345,7 +347,7 @@ The *Log* runs a command rather than following a file, `ha core logs -n 200 -f` 
 default (Home Assistant OS keeps its log in the system journal); change it in the
 settings for another installation (e.g. `docker logs -f -n 200 homeassistant`).
 
-**Backup** tab (*Settings > Options > Valetudo*): **Save now** writes the whole
+**Backup** tab (*Settings > Options > DomotiQGIS*): **Save now** writes the whole
 configuration to a new file named with its date and time,
 `valetudo_qgis_config_YYYYMMDD_HHMMSS.json` (all the plugin's settings, the room
 groups and the panel's choices), in a folder of your choice (by default
@@ -376,7 +378,7 @@ after using the power button), the plugin follows the robot's startup and
 times each stage: offline, network up (SSH port answers), Valetudo answers
 (version), robot firmware ready (state, battery), camera stream available, then
 the total boot time and the end of Valetudo's own log. Lines go to the
-*Valetudo* tab of the QGIS *Log Messages* panel and to the *Boot log* section of
+*DomotiQGIS* tab of the QGIS *Log Messages* panel and to the *Boot log* section of
 the status panel (Info tab).
 
 Actions the robot does not support are greyed out. Zone and go-to tools need the

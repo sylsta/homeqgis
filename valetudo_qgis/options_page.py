@@ -27,7 +27,7 @@ from .settings import (
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
     KEY_HA_URL, KEY_INTERVAL, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
     KEY_NUC_LOG_COMMAND, KEY_NUC_PORT, KEY_NUC_USER, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK,
-    KEY_PI_HOST,
+    KEY_PI_HOST, PLUGIN_NAME,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
     HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_SETTING, WIFI_DEFAULTS, default_camera_url,
     load_settings, secret, set_secret,
@@ -437,7 +437,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
                 secrets_changed = True
             else:
                 from qgis.utils import iface
-                iface.messageBar().pushWarning("Valetudo", tr(
+                iface.messageBar().pushWarning(PLUGIN_NAME, tr(
                     "A token or password was not saved: the QGIS master password "
                     "is needed to store it encrypted."))
         for key, (_, kind) in WIFI_DEFAULTS.items():
@@ -452,7 +452,7 @@ class ValetudoOptionsFactory(QgsOptionsWidgetFactory):
     """Registered with iface.registerOptionsWidgetFactory() while the plugin is loaded."""
 
     def __init__(self, on_applied=None):
-        super().__init__(tr("Valetudo"), icon(LOGO))
+        super().__init__(PLUGIN_NAME, icon(LOGO))
         self._on_applied = on_applied
         self._page = None
 

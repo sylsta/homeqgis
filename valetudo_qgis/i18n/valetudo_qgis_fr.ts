@@ -48,10 +48,6 @@
         <translation>Aller à</translation>
     </message>
     <message>
-        <source>&amp;Valetudo</source>
-        <translation>&amp;Valetudo</translation>
-    </message>
-    <message>
         <source>Settings…</source>
         <translation>Paramètres…</translation>
     </message>
@@ -126,10 +122,6 @@
     <message>
         <source>Water usage</source>
         <translation>Débit d'eau</translation>
-    </message>
-    <message>
-        <source>Valetudo panel</source>
-        <translation>Panneau Valetudo</translation>
     </message>
     <message>
         <source>Idle</source>
@@ -1698,10 +1690,6 @@ Continuer ?</translation>
         <translation>Lecture de la dernière carte Wi-Fi sur le Pi…</translation>
     </message>
     <message>
-        <source>Set the Raspberry Pi in Settings › Options › Valetudo first.</source>
-        <translation>Définissez d’abord le Raspberry Pi dans Préférences › Options › Valetudo.</translation>
-    </message>
-    <message>
         <source>Wi-Fi map of {run} loaded ({n} reading(s)).</source>
         <translation>Carte Wi-Fi du {run} chargée ({n} mesure(s)).</translation>
     </message>
@@ -2026,10 +2014,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>No token</source>
         <translation>Sans jeton</translation>
-    </message>
-    <message>
-        <source>Home Assistant answers at {url}. Add an access token in Settings › Options › Valetudo to use it.</source>
-        <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › Valetudo pour l’utiliser.</translation>
     </message>
     <message>
         <source>Found, no access token</source>
@@ -2392,10 +2376,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Copié</translation>
     </message>
     <message>
-        <source>About Valetudo for QGIS</source>
-        <translation>À propos de Valetudo pour QGIS</translation>
-    </message>
-    <message>
         <source>Floor, walls, rooms, robot, dock, path and planned path as QGIS layers</source>
         <translation>Sol, murs, pièces, robot, station, trajet et trajet prévu en couches QGIS</translation>
     </message>
@@ -2546,6 +2526,22 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>About</source>
         <translation>À propos</translation>
+    </message>
+    <message>
+        <source>About {name}</source>
+        <translation>À propos de {name}</translation>
+    </message>
+    <message>
+        <source>{name} panel</source>
+        <translation>Panneau {name}</translation>
+    </message>
+    <message>
+        <source>Set the Raspberry Pi in Settings › Options › {name} first.</source>
+        <translation>Définissez d’abord le Raspberry Pi dans Préférences › Options › {name}.</translation>
+    </message>
+    <message>
+        <source>Home Assistant answers at {url}. Add an access token in Settings › Options › {name} to use it.</source>
+        <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › {name} pour l’utiliser.</translation>
     </message>
 </context>
 </TS>

@@ -49,7 +49,7 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
+from .settings import (PLUGIN_NAME, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
                        load_settings, secret)
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
@@ -1557,7 +1557,7 @@ class ValetudoPanel(QgsDockWidget):
         # Second line: Home Assistant <version> · <home name> · <time zone>
         if state == "no_token":
             name = tr("Home Assistant answers at {url}. Add an access token in "
-                      "Settings › Options › Valetudo to use it.").format(url=url)
+                      "Settings › Options › {name} to use it.").format(url=url, name=PLUGIN_NAME)
         else:
             version = ha.get("version", "")
             name = " · ".join(p for p in (

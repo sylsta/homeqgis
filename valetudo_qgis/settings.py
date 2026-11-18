@@ -1,4 +1,4 @@
-"""Plugin settings, stored in QgsSettings (edited in Settings › Options › Valetudo).
+"""Plugin settings, stored in QgsSettings (edited in Settings › Options › DomotiQGIS).
 
 Passwords are never stored in clear text: credentials go through the QGIS
 authentication manager (QgsAuthConfigSelect), which encrypts them.
@@ -7,6 +7,7 @@ authentication manager (QgsAuthConfigSelect), which encrypts them.
 from qgis.PyQt.QtCore import QUrl
 from qgis.core import QgsSettings
 
+PLUGIN_NAME = "DomotiQGIS"   # shown in menus, titles and messages (not translated)
 KEY_URL = "valetudo/url"
 KEY_AUTH = "valetudo/authcfg"
 KEY_INTERVAL = "valetudo/interval_s"

@@ -21,7 +21,7 @@ from qgis.core import Qgis
 from .camera import find_ffmpeg
 from .i18n import tr
 from .icons import LOGO, icon
-from .settings import load_settings
+from .settings import PLUGIN_NAME, load_settings
 
 VALETUDO_URL = "https://valetudo.cloud"
 
@@ -143,7 +143,7 @@ class AboutWidget(QWidget):
         logo = QLabel()
         logo.setPixmap(icon(LOGO).pixmap(48, 48))
         header.addWidget(logo)
-        title = QLabel(f"<b style='font-size:16pt'>Valetudo for QGIS</b>"
+        title = QLabel(f"<b style='font-size:16pt'>{PLUGIN_NAME}</b>"
                        f"&nbsp;&nbsp;{html.escape(meta.get('version', ''))}")
         header.addWidget(title, 1)
         layout.addLayout(header)
@@ -230,7 +230,7 @@ class AboutWidget(QWidget):
 
     def system_text(self):
         meta = metadata()
-        lines = [f"Valetudo for QGIS {meta.get('version', '')}"]
+        lines = [f"{PLUGIN_NAME} {meta.get('version', '')}"]
         lines += [f"{name}: {value}" for name, value, _ in self._system]
         return "\n".join(lines)
 
@@ -242,7 +242,7 @@ class AboutWidget(QWidget):
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(tr("About Valetudo for QGIS"))
+        self.setWindowTitle(tr("About {name}").format(name=PLUGIN_NAME))
         self.setWindowIcon(icon(LOGO))
         layout = QVBoxLayout(self)
         layout.addWidget(AboutWidget(self))
