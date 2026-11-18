@@ -231,92 +231,122 @@
                 <number>0</number>
                </property>
                <item>
-                <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
-                 <item>
-                  <widget class="QLabel" name="lbl_details_logo">
-                   <property name="toolTip">
-                    <string>Valetudo</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="lbl_connection"/>
-                 </item>
-                 <item>
-                  <widget class="QToolButton" name="btn_refresh">
-                   <property name="toolTip">
-                    <string>Refresh now</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QLabel" name="lbl_robot">
-                 <property name="wordWrap">
-                  <bool>true</bool>
+                <widget class="QFrame" name="robot_header">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
                  </property>
-                 <property name="font">
-                  <font>
-                   <italic>true</italic>
-                  </font>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="lbl_robot_info">
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="details_state_layout" stretch="0,1">
-                 <item>
-                  <widget class="QLabel" name="lbl_badge_details">
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>24</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QProgressBar" name="bar_battery_details">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16</height>
-                    </size>
-                   </property>
-                   <property name="value">
-                    <number>0</number>
-                   </property>
-                   <property name="toolTip">
-                    <string>Battery</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QWidget" name="pi_header">
-                 <layout class="QVBoxLayout" name="pi_header_layout">
+                 <layout class="QVBoxLayout" name="robot_header_layout">
                   <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="topMargin">
                    <number>6</number>
                   </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
                   <property name="rightMargin">
-                   <number>0</number>
+                   <number>4</number>
                   </property>
                   <property name="bottomMargin">
-                   <number>0</number>
+                   <number>6</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
+                    <item>
+                     <widget class="QLabel" name="lbl_details_logo">
+                      <property name="toolTip">
+                       <string>Valetudo</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lbl_connection"/>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="btn_refresh">
+                      <property name="toolTip">
+                       <string>Refresh now</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_robot">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_robot_info">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="details_state_layout" stretch="0,1">
+                    <item>
+                     <widget class="QLabel" name="lbl_badge_details">
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>24</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QProgressBar" name="bar_battery_details">
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16</height>
+                       </size>
+                      </property>
+                      <property name="value">
+                       <number>0</number>
+                      </property>
+                      <property name="toolTip">
+                       <string>Battery</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="pi_header">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="pi_header_layout">
+                  <property name="leftMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>6</number>
                   </property>
                   <item>
                    <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0">
@@ -362,19 +392,25 @@
                 </widget>
                </item>
                <item>
-                <widget class="QWidget" name="ha_header">
+                <widget class="QFrame" name="ha_header">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
                  <layout class="QVBoxLayout" name="ha_header_layout">
                   <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="topMargin">
                    <number>6</number>
                   </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
                   <property name="rightMargin">
-                   <number>0</number>
+                   <number>4</number>
                   </property>
                   <property name="bottomMargin">
-                   <number>0</number>
+                   <number>6</number>
                   </property>
                   <item>
                    <layout class="QHBoxLayout" name="ha_header_row" stretch="0,1,0">
