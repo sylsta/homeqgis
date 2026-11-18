@@ -83,6 +83,23 @@ The panel (titled *Connection*), from top to bottom:
   over Kodi's JSON-RPC every 5 s while the panel is visible; in Kodi, turn on
   *Settings > Services > Control > Allow remote control via HTTP*, with a
   username and password.
+- Each server's frame in the Status tab has a **🌐** button, which opens its web
+  interface in your browser, and a **>_** button, which opens an SSH session in your
+  system's terminal (hover them for the address or command). A button appears only
+  where there is something to open:
+  - Web: the robot opens Valetudo, Home Assistant its address, and Kodi its web
+    interface (same address as its remote control; enable *Settings > Services >
+    Control > Allow remote control via HTTP* and a web interface in Kodi). The Pi and
+    the NUC have no standard web interface: set a *Web address* in their settings
+    tabs if they run one, for example Cockpit on the NUC (`https://<NUC>:9090`), or,
+    on the Pi, Uptime Kuma (port 3001, a dashboard watching all these servers),
+    Glances (`glances -w`, port 61208) or Cockpit.
+  - SSH: with each server's SSH settings; Kodi's uses the NUC's user and port. The
+    terminal is the one named by the `TERMINAL` environment variable, else
+    `x-terminal-emulator` (Debian, MX Linux…), else the first known terminal found;
+    Terminal on macOS, Windows Terminal (or a console) on Windows. The window stays
+    open when the session ends, to read any error. Password logins type the password
+    there.
 - **Big button**, at the bottom of the panel, after the robot's state: *Start
   cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
   paused; *Dock* next to it while away from the dock.
@@ -402,6 +419,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `kodi_block.py`              | Kodi in the Status tab: state, playback, remote         |
 | `config_backup.py`           | Save and load the configuration (timestamped JSON)      |
 | `about.py`                   | About page (settings tab and ⋮ menu window)             |
+| `system_terminal.py`         | SSH session in the system's terminal window             |
 | `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |

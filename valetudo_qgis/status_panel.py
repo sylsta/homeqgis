@@ -43,6 +43,8 @@ from .icons import APP_ICON, HA_LOGO, KODI_ICON, LOGO, NUC_ICON, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
 from .ssh_host_block import SshHostBlock
 from .kodi_block import KodiBlock
+from .kodi_client import rpc_url as kodi_rpc_url
+from . import system_terminal
 from .log_tab import LogTab
 from .log_tail import COMMAND_PREFIX, LOG_PATH
 from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
@@ -80,6 +82,8 @@ UI_WIDGETS = (
     "kodi_header", "lbl_kodi_logo", "lbl_kodi_connection", "btn_kodi_refresh",
     "lbl_kodi_name", "lbl_kodi_info", "kodi_play_row", "lbl_kodi_playing",
     "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "btn_robot_web", "btn_robot_ssh", "btn_pi_web", "btn_pi_ssh", "btn_ha_web", "btn_ha_ssh",
+    "btn_nuc_web", "btn_nuc_ssh", "btn_kodi_web", "btn_kodi_ssh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
     "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
@@ -140,6 +144,7 @@ STATE_COLORS = {
 }
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
+SERVERS = ("robot", "pi", "ha", "nuc", "kodi")   # frames of the Status tab
 PI_INTERVAL_MS = 30_000    # Pi block refresh (one short SSH command) while visible
 HA_INTERVAL_MS = 60_000    # Home Assistant check (one GET) while visible
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
@@ -435,6 +440,13 @@ class ValetudoPanel(QgsDockWidget):
              "playing": self.lbl_kodi_playing, "progress": self.bar_kodi_progress,
              "play": self.btn_kodi_play, "stop": self.btn_kodi_stop},
             self._kodi_settings, self)
+        # Each server's frame: 🌐 its web interface (system browser), >_ SSH (system terminal)
+        for prefix in SERVERS:
+            web, ssh = getattr(self, f"btn_{prefix}_web"), getattr(self, f"btn_{prefix}_ssh")
+            web.setIcon(icon("web"))
+            ssh.setIcon(icon("tab_terminal"))
+            web.clicked.connect(lambda _=False, p=prefix: self.open_web(p))
+            ssh.clicked.connect(lambda _=False, p=prefix: self.open_ssh(p))
         self.pi_runner.finished.connect(self._on_pi_info)
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
@@ -1379,10 +1391,62 @@ class ValetudoPanel(QgsDockWidget):
         cfg = load_settings()
         return (cfg["nuc_host"], cfg["nuc_user"], int(cfg["nuc_port"])) if cfg["nuc_host"] else None
 
+    # -- web interfaces and SSH sessions (Status tab) -------------------------------
+
+    def _server_web(self, prefix):
+        """Address of a server's web interface, or ""."""
+        cfg = load_settings()
+        url = {"robot": cfg["url"], "pi": cfg["pi_web_url"], "ha": cfg["ha_url"],
+               "nuc": cfg["nuc_web_url"],
+               "kodi": kodi_rpc_url(cfg["kodi_url"])[:-len("jsonrpc")] if cfg["kodi_url"]
+               else ""}[prefix].strip()
+        if url and "://" not in url:
+            url = "http://" + url
+        return url
+
+    def _server_ssh(self, prefix):
+        """(host, user, port) for an SSH session on a server, or None. Kodi runs on
+        the NUC: its host, with the NUC's SSH user and port."""
+        if prefix == "kodi":
+            cfg = load_settings()
+            host = QUrl(kodi_rpc_url(cfg["kodi_url"])).host() if cfg["kodi_url"] else ""
+            return (host, cfg["nuc_user"], int(cfg["nuc_port"])) if host else None
+        return {"robot": self._ssh_target, "pi": self._pi_target, "ha": self._ha_ssh_target,
+                "nuc": self._nuc_target}[prefix]()
+
+    def _update_server_buttons(self):
+        """Each button only where there is something to open; the tooltip says what."""
+        for prefix in SERVERS:
+            web, ssh = getattr(self, f"btn_{prefix}_web"), getattr(self, f"btn_{prefix}_ssh")
+            url, target = self._server_web(prefix), self._server_ssh(prefix)
+            web.setVisible(bool(url))
+            web.setToolTip(tr("Open the web interface in the browser: {url}").format(url=url))
+            ssh.setVisible(target is not None)
+            if target is not None:
+                ssh.setToolTip(tr("Open an SSH session in a terminal: {command}").format(
+                    command=system_terminal.describe(*target)))
+
+    def open_web(self, prefix):
+        url = self._server_web(prefix)
+        if url:
+            QDesktopServices.openUrl(QUrl(url))
+
+    def open_ssh(self, prefix):
+        target = self._server_ssh(prefix)
+        if target is None:
+            return
+        problem = system_terminal.open_ssh(*target, tr("Press Enter to close."))
+        if problem == "no_terminal":
+            self.show_feedback(tr("No terminal program found: set the TERMINAL environment "
+                                  "variable to the one you use."), "warning")
+        elif problem:
+            self.show_feedback(tr("The terminal could not be started."), "warning")
+
     def _update_pi_tab(self):
         """The Pi's details, card and terminal exist only when a Pi address is set;
         its details are read while the panel is visible. Same for the NUC's block."""
         self.nuc.update(self.isVisible())
+        self._update_server_buttons()
         self.kodi.update(self.isVisible())
         has_pi = self._pi_target() is not None
         self.pi_header.setVisible(has_pi)

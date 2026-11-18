@@ -26,6 +26,8 @@ KEY_HA_URL = "valetudo/ha_url"   # Home Assistant server
 KEY_NUC_HOST = "valetudo/nuc_host"   # empty = no NUC block in the Status tab
 KEY_NUC_USER = "valetudo/nuc_user"
 KEY_NUC_PORT = "valetudo/nuc_port"
+KEY_NUC_WEB_URL = "valetudo/nuc_web_url"   # optional web interface (e.g. Cockpit)
+KEY_PI_WEB_URL = "valetudo/pi_web_url"     # optional web interface (e.g. Uptime Kuma)
 KEY_NUC_LOG_COMMAND = "valetudo/nuc_log_command"   # empty = NUC_AUTO_LOG_COMMAND
 # The system log, wherever it is: the journal under systemd, else syslog
 # (sysvinit, e.g. MX Linux by default).
@@ -95,6 +97,8 @@ def load_settings():
         "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip() or "root",
         "nuc_port": s.value(KEY_NUC_PORT, 22, type=int),
         "nuc_log_command": s.value(KEY_NUC_LOG_COMMAND, "", type=str).strip(),
+        "nuc_web_url": s.value(KEY_NUC_WEB_URL, "", type=str).strip(),
+        "pi_web_url": s.value(KEY_PI_WEB_URL, "", type=str).strip(),
         "ha_ssh_host": s.value(KEY_HA_SSH_HOST, "", type=str).strip(),
         "ha_ssh_user": s.value(KEY_HA_SSH_USER, "root", type=str).strip() or "root",
         "ha_ssh_port": s.value(KEY_HA_SSH_PORT, 22, type=int),

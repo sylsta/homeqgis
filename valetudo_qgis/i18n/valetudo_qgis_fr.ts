@@ -2543,5 +2543,37 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Home Assistant answers at {url}. Add an access token in Settings › Options › {name} to use it.</source>
         <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › {name} pour l’utiliser.</translation>
     </message>
+    <message>
+        <source>Optional: a web interface of the NUC, opened by the web button of the Status tab, e.g. Cockpit (https://&lt;NUC&gt;:9090).</source>
+        <translation>Facultatif : une interface web du NUC, ouverte par le bouton web de l’onglet État, par exemple Cockpit (https://&lt;NUC&gt;:9090).</translation>
+    </message>
+    <message>
+        <source>Optional: a web interface running on the Raspberry Pi, opened by the web button of the Status tab, e.g. Uptime Kuma (port 3001), Glances (glances -w, port 61208) or Cockpit (port 9090).</source>
+        <translation>Facultatif : une interface web qui tourne sur le Raspberry Pi, ouverte par le bouton web de l’onglet État, par exemple Uptime Kuma (port 3001), Glances (glances -w, port 61208) ou Cockpit (port 9090).</translation>
+    </message>
+    <message>
+        <source>Press Enter to close.</source>
+        <translation>Appuyez sur Entrée pour fermer.</translation>
+    </message>
+    <message>
+        <source>No terminal program found: set the TERMINAL environment variable to the one you use.</source>
+        <translation>Aucun terminal trouvé : définissez la variable d’environnement TERMINAL avec celui que vous utilisez.</translation>
+    </message>
+    <message>
+        <source>The terminal could not be started.</source>
+        <translation>Le terminal n’a pas pu être lancé.</translation>
+    </message>
+    <message>
+        <source>Open the web interface in the browser: {url}</source>
+        <translation>Ouvrir l’interface web dans le navigateur : {url}</translation>
+    </message>
+    <message>
+        <source>Open an SSH session in a terminal: {command}</source>
+        <translation>Ouvrir une session SSH dans un terminal : {command}</translation>
+    </message>
+    <message>
+        <source>Web address</source>
+        <translation>Adresse web</translation>
+    </message>
 </context>
 </TS>

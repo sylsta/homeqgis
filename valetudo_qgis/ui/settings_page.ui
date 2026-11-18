@@ -575,7 +575,21 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="4" column="0">
+        <widget class="QLabel" name="lbl_pi_web_url">
+         <property name="text">
+          <string>Web address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="pi_web_url">
+         <property name="placeholderText">
+          <string notr="true">http://192.168.50.1:3001</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
         <layout class="QHBoxLayout" name="pi_test_layout" stretch="0,1">
          <item>
           <widget class="QPushButton" name="btn_pi_test">
@@ -593,7 +607,7 @@
          </item>
         </layout>
        </item>
-       <item row="5" column="0" colspan="2">
+       <item row="6" column="0" colspan="2">
         <widget class="QLabel" name="lbl_pi_hint">
          <property name="wordWrap">
           <bool>true</bool>
@@ -841,7 +855,21 @@
        <item row="3" column="1">
         <widget class="QLineEdit" name="nuc_log_command"/>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="4" column="0">
+        <widget class="QLabel" name="lbl_nuc_web_url">
+         <property name="text">
+          <string>Web address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="nuc_web_url">
+         <property name="placeholderText">
+          <string notr="true">https://192.168.50.2:9090</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
         <layout class="QHBoxLayout" name="nuc_test_layout" stretch="0,1">
          <item>
           <widget class="QPushButton" name="btn_nuc_test">
@@ -859,7 +887,7 @@
          </item>
         </layout>
        </item>
-       <item row="5" column="0" colspan="2">
+       <item row="6" column="0" colspan="2">
         <widget class="QLabel" name="lbl_nuc_hint">
          <property name="wordWrap">
           <bool>true</bool>
