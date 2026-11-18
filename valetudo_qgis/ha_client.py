@@ -80,7 +80,7 @@ class HomeAssistantClient(QObject):
                     self.received_at = time.time()
                 except (TypeError, ValueError, IndexError):
                     pass
-                raw = bytes(reply.readAll()).decode("utf-8", "replace")
+                raw = (bytes(reply.readAll()) if reply.isOpen() else b"").decode("utf-8", "replace")
                 try:
                     data = json.loads(raw) if raw.strip() else None
                 except ValueError:

@@ -133,7 +133,7 @@ class ValetudoClient(QObject):
                         self.error.emit(f"{text} — {detail}" if detail else text)
                     return
                 self.reachable.emit(True)
-                body = bytes(reply.readAll())
+                body = bytes(reply.readAll()) if reply.isOpen() else b""
                 if raw:
                     data = body.decode("utf-8", "replace")
                 elif not body.strip():
@@ -157,7 +157,12 @@ class ValetudoClient(QObject):
 
     @staticmethod
     def _error_detail(reply):
-        """Short text body of an error reply (Valetudo explains refusals there)."""
+        """Short text body of an error reply (Valetudo explains refusals there).
+
+        A request that got no answer (timeout, cancelled, connection refused) is
+        already closed: reading it would only make Qt warn "device not open"."""
+        if not reply.isOpen():
+            return ""
         try:
             body = bytes(reply.readAll()).decode("utf-8", "replace").strip()
         except Exception:
