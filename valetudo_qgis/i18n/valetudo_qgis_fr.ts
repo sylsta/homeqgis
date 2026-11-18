@@ -1864,10 +1864,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>À remplacer bientôt : {parts}</translation>
     </message>
     <message>
-        <source>Click for details</source>
-        <translation>Cliquez pour les détails</translation>
-    </message>
-    <message>
         <source>More</source>
         <translation>Plus</translation>
     </message>
@@ -2040,14 +2036,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Trouvé, sans jeton d’accès</translation>
     </message>
     <message>
-        <source>Show the details</source>
-        <translation>Afficher les détails</translation>
-    </message>
-    <message>
-        <source>Hide the details</source>
-        <translation>Masquer les détails</translation>
-    </message>
-    <message>
         <source>No Home Assistant SSH address set in the settings.</source>
         <translation>Aucune adresse SSH Home Assistant dans les paramètres.</translation>
     </message>
@@ -2150,6 +2138,14 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>no answer</source>
         <translation>pas de réponse</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>État</translation>
+    </message>
+    <message>
+        <source>Click for the detailed status</source>
+        <translation>Cliquez pour l’état détaillé</translation>
     </message>
 </context>
 </TS>

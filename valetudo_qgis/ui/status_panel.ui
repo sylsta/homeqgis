@@ -6,7 +6,7 @@
    <string>Connection</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,0,1,0,0">
+   <layout class="QVBoxLayout" name="root_layout" stretch="0,0,0,1,0,0">
     <item>
      <widget class="QFrame" name="strip">
       <property name="frameShape">
@@ -19,7 +19,7 @@
        </sizepolicy>
       </property>
       <property name="toolTip">
-       <string>Click for details</string>
+       <string>Click for the detailed status</string>
       </property>
       <layout class="QHBoxLayout" name="strip_layout">
        <property name="leftMargin">
@@ -34,19 +34,6 @@
        <property name="bottomMargin">
         <number>2</number>
        </property>
-       <item>
-        <widget class="QToolButton" name="btn_details">
-         <property name="autoRaise">
-          <bool>true</bool>
-         </property>
-         <property name="arrowType">
-          <enum>Qt::RightArrow</enum>
-         </property>
-         <property name="toolTip">
-          <string>Show the details</string>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QLabel" name="lbl_logo"/>
        </item>
@@ -168,213 +155,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QWidget" name="details">
-      <layout class="QVBoxLayout" name="details_layout">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
-         <item>
-          <widget class="QLabel" name="lbl_details_logo">
-           <property name="toolTip">
-            <string>Valetudo</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="lbl_connection"/>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btn_refresh">
-           <property name="toolTip">
-            <string>Refresh now</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QLabel" name="lbl_robot">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="font">
-          <font>
-           <italic>true</italic>
-          </font>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="lbl_robot_info">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="details_state_layout" stretch="0,1">
-         <item>
-          <widget class="QLabel" name="lbl_badge_details">
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>24</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QProgressBar" name="bar_battery_details">
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="value">
-            <number>0</number>
-           </property>
-           <property name="toolTip">
-            <string>Battery</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QWidget" name="pi_header">
-         <layout class="QVBoxLayout" name="pi_header_layout">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>6</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0">
-            <item>
-             <widget class="QLabel" name="lbl_pi_logo">
-              <property name="toolTip">
-               <string>Raspberry Pi</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="lbl_pi_connection"/>
-            </item>
-            <item>
-             <widget class="QToolButton" name="btn_pi_refresh">
-              <property name="toolTip">
-               <string>Refresh now</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="lbl_pi_name">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-            <property name="font">
-             <font>
-              <italic>true</italic>
-             </font>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="lbl_pi_info">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QWidget" name="ha_header">
-         <layout class="QVBoxLayout" name="ha_header_layout">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>6</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <layout class="QHBoxLayout" name="ha_header_row" stretch="0,1,0">
-            <item>
-             <widget class="QLabel" name="lbl_ha_logo">
-              <property name="toolTip">
-               <string>Home Assistant</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="lbl_ha_connection"/>
-            </item>
-            <item>
-             <widget class="QToolButton" name="btn_ha_refresh">
-              <property name="toolTip">
-               <string>Refresh now</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="lbl_ha_name">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-            <property name="font">
-             <font>
-              <italic>true</italic>
-             </font>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="lbl_ha_info">
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="QLabel" name="lbl_error">
       <property name="wordWrap">
        <bool>true</bool>
@@ -408,6 +188,259 @@
         <height>22</height>
        </size>
       </property>
+      <widget class="QWidget" name="tab_status">
+       <attribute name="title">
+        <string>Status</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="tab_status_layout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scroll_status">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <widget class="QWidget" name="scroll_status_contents">
+           <layout class="QVBoxLayout" name="status_layout">
+            <item>
+             <widget class="QWidget" name="details">
+              <layout class="QVBoxLayout" name="details_layout">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0">
+                 <item>
+                  <widget class="QLabel" name="lbl_details_logo">
+                   <property name="toolTip">
+                    <string>Valetudo</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lbl_connection"/>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="btn_refresh">
+                   <property name="toolTip">
+                    <string>Refresh now</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QLabel" name="lbl_robot">
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <italic>true</italic>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lbl_robot_info">
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="details_state_layout" stretch="0,1">
+                 <item>
+                  <widget class="QLabel" name="lbl_badge_details">
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QProgressBar" name="bar_battery_details">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16</height>
+                    </size>
+                   </property>
+                   <property name="value">
+                    <number>0</number>
+                   </property>
+                   <property name="toolTip">
+                    <string>Battery</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QWidget" name="pi_header">
+                 <layout class="QVBoxLayout" name="pi_header_layout">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0">
+                    <item>
+                     <widget class="QLabel" name="lbl_pi_logo">
+                      <property name="toolTip">
+                       <string>Raspberry Pi</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lbl_pi_connection"/>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="btn_pi_refresh">
+                      <property name="toolTip">
+                       <string>Refresh now</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_pi_name">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_pi_info">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="ha_header">
+                 <layout class="QVBoxLayout" name="ha_header_layout">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="ha_header_row" stretch="0,1,0">
+                    <item>
+                     <widget class="QLabel" name="lbl_ha_logo">
+                      <property name="toolTip">
+                       <string>Home Assistant</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lbl_ha_connection"/>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="btn_ha_refresh">
+                      <property name="toolTip">
+                       <string>Refresh now</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_ha_name">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_ha_info">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="status_spacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tab_clean">
        <attribute name="title">
         <string>Clean</string>

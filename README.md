@@ -38,9 +38,9 @@ The panel (titled *Connection*), from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ ▸ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
-│   (click it: robot, Raspberry Pi and Home Assistant details)       │
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
 ├──┬───────────────────────────────────────────────────┤
+│📈│ Status    robot, Raspberry Pi, Home Assistant     │
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
 │📅│ Schedule  week view + list                        │
 │📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
@@ -56,14 +56,15 @@ The panel (titled *Connection*), from top to bottom:
 - **Status strip**, always visible: the state, battery, Wi-Fi signal (coloured with
   the thresholds of the Wi-Fi tab), the job in progress (time and area), a ⚠ when
   something needs you (dock tank empty or full, worn consumable, robot error,
-  wrong clock: hover it for the list, click it to open the right tab), the
+  wrong clock, unreachable robot: hover it for the list, click it to open the
+  right tab), the
   Raspberry Pi's status (when one is set: checked over SSH every 30 s), Home
   Assistant's status (checked every minute: *Online*, *No token* when it answers
   but no access token is set, *Offline*; hidden when there is neither a token nor
   an answer; hover it for the server's name and version), *Show on map*
   and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact
-  mode). **Click the ▸ arrow** (or the strip) to show or hide the details, folded
-  each time QGIS starts: connection, robot model,
+  mode). **Click the strip** for the *Status* tab.
+- **Status** tab, the detailed status of the servers: connection, robot model,
   Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with
   how far off, when it differs from the computer's by more than 2 minutes) and
   uptime, the state and battery, with *Show on map* and *Refresh now* on the first

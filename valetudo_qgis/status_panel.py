@@ -68,7 +68,7 @@ KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all r
 # relies on these object names.
 UI_WIDGETS = (
     # strip, details, action bar
-    "strip", "strip_layout", "btn_details", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
+    "strip", "strip_layout", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
     "btn_warning", "sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
     "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu",
     "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
@@ -386,7 +386,7 @@ class ValetudoPanel(QgsDockWidget):
         self.setObjectName("ValetudoStatusPanel")   # QGIS restores the dock by this name
         theme = QgsApplication.getThemeIcon
 
-        # -- status strip: click it to show or hide the details ------------------------
+        # -- status strip: click it for the Status tab ---------------------------------
         self.lbl_logo.setPixmap(icon(LOGO).pixmap(18, 18))
         self.btn_menu.setIcon(icon("menu"))
         self.menu = QMenu(self)
@@ -398,13 +398,8 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_job.setVisible(False)
         self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.strip.installEventFilter(self)
-        # Details: always folded when QGIS starts; the arrow (or a click on the strip)
-        # unfolds them.
-        self._details_open = False
-        self.details.setVisible(False)
-        self.btn_details.clicked.connect(self.toggle_details)
 
-        # -- details: connection, robot, Raspberry Pi ------------------------------------
+        # -- Status tab: robot, Raspberry Pi, Home Assistant -----------------------------
         self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
         self.btn_pi_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.btn_pi_refresh.clicked.connect(self._refresh_pi)
@@ -717,17 +712,16 @@ class ValetudoPanel(QgsDockWidget):
             if self.is_compact():   # compact mode: the strip folds / unfolds the panel
                 self._show_body(not self.tabs.isVisible())
             else:
-                self.toggle_details()
+                self.show_tab("status")
             return True
         return super().eventFilter(obj, event)
 
-    def toggle_details(self, *_):
-        self._details_open = not self._details_open
-        self.details.setVisible(self._details_open)
-        self.btn_details.setArrowType(Qt.ArrowType.DownArrow if self._details_open
-                                      else Qt.ArrowType.RightArrow)
-        self.btn_details.setToolTip(tr("Hide the details") if self._details_open
-                                    else tr("Show the details"))
+    def show_tab(self, key):
+        """Bring a side tab to the front (unfolding a compact panel)."""
+        if key in self._tab_keys:
+            if self.is_compact() and not self.tabs.isVisible():
+                self._show_body(True)
+            self.tabs.setCurrentIndex(self._tab_keys.index(key))
 
     def _update_primary(self, *_):
         """Start when docked or idle, Pause while working, Resume when paused."""
@@ -755,7 +749,7 @@ class ValetudoPanel(QgsDockWidget):
         if action is not None and action.isEnabled():
             action.trigger()
 
-    def _set_problem(self, key, text, tab=None):
+    def _set_problem(self, key, text, tab="status"):
         """A problem shown by the ⚠ of the strip (text None: solved) and on its tab."""
         if text:
             self._problems[key] = (text, tab)
@@ -771,11 +765,8 @@ class ValetudoPanel(QgsDockWidget):
 
     def _on_warning_clicked(self, *_):
         """Open the tab of the first problem that has one."""
-        tab = next((t for _, t in self._problems.values() if t), None)
-        if tab in self._tab_keys:
-            self.tabs.setCurrentIndex(self._tab_keys.index(tab))
-        if not self._details_open and any(t is None for _, t in self._problems.values()):
-            self.toggle_details()
+        tab = next((t for _, t in self._problems.values() if t), "status")
+        self.show_tab(tab)
 
     def _update_job(self):
         """Time and area of the job in progress, in the strip."""
@@ -816,16 +807,12 @@ class ValetudoPanel(QgsDockWidget):
         self._compact = compact
         QgsSettings().setValue(KEY_COMPACT, compact)
         self.strip.setToolTip(tr("Click to unfold or fold the panel") if compact
-                              else tr("Click for details"))
+                              else tr("Click for the detailed status"))
         self._show_body(not compact)
 
     def _show_body(self, visible):
         for widget in (self.tabs, self.lbl_feedback):
             widget.setVisible(visible)
-        if self.is_compact() and not visible:
-            self.details.setVisible(False)
-        elif visible:
-            self.details.setVisible(self._details_open)
 
     # -- terminal -------------------------------------------------------------------------
 
@@ -1832,7 +1819,7 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_dock.setText(_label(states, dock_value))
         self.lbl_error.setVisible(bool(error_text))
         self.lbl_error.setText(f"⚠ {error_text}" if error_text else "")
-        self._set_problem("error", error_text or None, None)
+        self._set_problem("error", error_text or None)
         self._update_primary()
         self._update_job()
         self._emit_summary()
