@@ -5,8 +5,12 @@ sensible-terminal, else the first known terminal found. Each family takes its
 command its own way (-e, -x, --). macOS: Terminal.app. Windows: Windows
 Terminal, else a console window.
 
-On Linux and macOS the window stays open after ssh ends ("Press Enter to
-close"), so that an error (refused key, wrong address) can be read.
+On Linux and macOS the terminal runs a small temporary script (ssh, then "Press
+Enter to close", then it deletes itself): only the script's path is passed, so
+no terminal or wrapper can mangle the command (Debian's xfce4-terminal wrapper
+joins its arguments into one shell line, which loses any quoting). The window
+stays open after ssh ends, so that an error (refused key, wrong address) can be
+read.
 
 No user-facing text here except the closing prompt, passed in by the caller.
 """
@@ -14,7 +18,9 @@ No user-facing text here except the closing prompt, passed in by the caller.
 import os
 import shlex
 import shutil
+import stat
 import sys
+import tempfile
 
 from qgis.PyQt.QtCore import QProcess
 
@@ -71,11 +77,23 @@ def linux_arguments(family, program_args):
     return ["-e", *program_args]
 
 
-def held(command, close_prompt):
-    """sh -c "<command>; echo; printf prompt; read": the window stays open."""
-    script = (f"{shlex.join(command)}; echo; printf '%s' {shlex.quote(close_prompt)}; "
-              "read answer")
-    return ["sh", "-c", script]
+def held_script(command, close_prompt):
+    """The temporary script's text: the command, then wait for Enter, then delete."""
+    return ("#!/bin/sh\n"
+            f"{shlex.join(command)}\n"
+            "echo\n"
+            f"printf '%s' {shlex.quote(close_prompt)}\n"
+            "read answer\n"
+            'rm -f "$0"\n')
+
+
+def write_script(command, close_prompt):
+    """Write the script (readable and runnable by this user only); return its path."""
+    handle, path = tempfile.mkstemp(prefix="domotiqgis_ssh_", suffix=".sh")
+    with os.fdopen(handle, "w", encoding="utf-8") as script:
+        script.write(held_script(command, close_prompt))
+    os.chmod(path, stat.S_IRWXU)
+    return path
 
 
 def open_ssh(host, user, port, close_prompt="Press Enter to close."):
@@ -88,7 +106,7 @@ def open_ssh(host, user, port, close_prompt="Press Enter to close."):
             ok = QProcess.startDetached("cmd.exe", ["/c", "start", "", "cmd", "/k", *command])
         return "" if ok else "failed"
     if sys.platform == "darwin":
-        script = shlex.join(held(command, close_prompt))
+        script = shlex.quote(write_script(command, close_prompt))
         apple = f'tell application "Terminal" to do script {_apple_string(script)}'
         ok = QProcess.startDetached("osascript", ["-e", apple,
                                                   "-e", 'tell application "Terminal" to activate'])
@@ -96,7 +114,8 @@ def open_ssh(host, user, port, close_prompt="Press Enter to close."):
     program, family = linux_terminal()
     if program is None:
         return "no_terminal"
-    ok = QProcess.startDetached(program, linux_arguments(family, held(command, close_prompt)))
+    ok = QProcess.startDetached(program,
+                                linux_arguments(family, [write_script(command, close_prompt)]))
     return "" if ok else "failed"
 
 
