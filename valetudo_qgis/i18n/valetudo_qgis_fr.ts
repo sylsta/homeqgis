@@ -2147,5 +2147,33 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Click for the detailed status</source>
         <translation>Cliquez pour l’état détaillé</translation>
     </message>
+    <message>
+        <source>RAM {used} / {total} GB</source>
+        <translation>RAM {used} / {total} Go</translation>
+    </message>
+    <message>
+        <source>disk {used} / {total} GB</source>
+        <translation>disque {used} / {total} Go</translation>
+    </message>
+    <message>
+        <source>load {load}</source>
+        <translation>charge {load}</translation>
+    </message>
+    <message>
+        <source>{count} CPUs</source>
+        <translation>{count} processeurs</translation>
+    </message>
+    <message>
+        <source>The NUC's clock is wrong.</source>
+        <translation>L’horloge du NUC est fausse.</translation>
+    </message>
+    <message>
+        <source>NUC</source>
+        <translation>NUC</translation>
+    </message>
+    <message>
+        <source>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible. Login is by SSH key, as for the Raspberry Pi.</source>
+        <translation>Facultatif : avec une adresse, l’onglet État affiche le NUC : son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus en SSH toutes les 30 s tant que le panneau est visible. La connexion se fait par clé SSH, comme pour le Raspberry Pi.</translation>
+    </message>
 </context>
 </TS>

@@ -40,7 +40,7 @@ The panel (titled *Connection*), from top to bottom:
 ┌──────────────────────────────────────────────────────┐
 │ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
 ├──┬───────────────────────────────────────────────────┤
-│📈│ Status    robot, Raspberry Pi, Home Assistant     │
+│📈│ Status    robot, Raspberry Pi, Home Assistant, NUC│
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
 │📅│ Schedule  week view + list                        │
 │📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
@@ -70,7 +70,11 @@ The panel (titled *Connection*), from top to bottom:
   line; with a Raspberry Pi set in the settings, the same for the Pi (read over
   SSH every 30 s while the panel is visible); then Home Assistant: version, home
   name and time zone, its address, its own clock and its uptime (from the *Uptime*
-  integration's `sensor.uptime`, if you have it).
+  integration's `sensor.uptime`, if you have it); then the NUC, when its address
+  is set (*Settings > Options > Valetudo*, tab *NUC*, with a *Test connection*
+  button): its name and system, address, clock and uptime, and a line with its
+  load, memory, disk and temperature, read over SSH (key only) every 30 s while
+  the panel is visible.
 - **Big button**, at the bottom of the panel, after the robot's state: *Start
   cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
   paused; *Dock* next to it while away from the dock.
@@ -359,6 +363,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `client.py`                  | Asynchronous HTTP calls to the Valetudo API             |
 | `ha_client.py`               | Calls to the Home Assistant REST API                    |
 | `ssh_auth.py`                | Optional SSH password (SSH_ASKPASS helper)              |
+| `ssh_host_block.py`          | A server read over SSH, in the Status tab (the NUC)     |
 | `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |

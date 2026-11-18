@@ -21,7 +21,7 @@ from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
-    KEY_HA_URL, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
+    KEY_HA_URL, KEY_INTERVAL, KEY_NUC_HOST, KEY_NUC_PORT, KEY_NUC_USER, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
     HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, WIFI_DEFAULTS, default_camera_url,
     load_settings, secret, set_secret,
@@ -34,6 +34,7 @@ UI_WIDGETS = (
     "url", "auth", "interval", "live_at_start", "btn_test", "lbl_test", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir", "btn_pi_test", "lbl_pi_test",
+    "nuc_host", "nuc_user", "nuc_port", "btn_nuc_test", "lbl_nuc_test",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
@@ -69,6 +70,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.pi_port.setValue(cfg["pi_port"])
         self.pi_wifi_dir.setText(cfg["pi_wifi_dir"])
         self.ha_url.setText(cfg["ha_url"])
+        self.nuc_host.setText(cfg["nuc_host"])
+        self.nuc_user.setText(cfg["nuc_user"])
+        self.nuc_port.setValue(cfg["nuc_port"])
         self.ha_ssh_host.setText(cfg["ha_ssh_host"])
         self.ha_ssh_host.setPlaceholderText(
             QUrl(cfg["ha_url"]).host() or "192.168.50.1")
@@ -91,6 +95,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.btn_test.clicked.connect(self._test_connection)
         self.btn_ha_test.clicked.connect(self._test_home_assistant)
         self.btn_pi_test.clicked.connect(self._test_pi)
+        self.btn_nuc_test.clicked.connect(self._test_nuc)
+        self._nuc_runner = None
         self._pi_runner = None
         self.btn_room_groups.setToolTip(room_groups.file_path())
         self.btn_room_groups.clicked.connect(
@@ -152,6 +158,35 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.lbl_pi_test.setText("✓ " + tr("Connected: {name}").format(name=name or host)
                                  + "\n" + maps_text)
 
+    def _test_nuc(self, *_):
+        """Log in over SSH with the values being edited: name, system, resources."""
+        host = self.nuc_host.text().strip()
+        if not host:
+            self.lbl_nuc_test.setText(tr("Enter the server address first."))
+            return
+        if self._nuc_runner is None:
+            self._nuc_runner = RobotSurvey(self)
+            self._nuc_runner.finished.connect(self._on_nuc_test)
+        if self._nuc_runner.is_busy():
+            return
+        self.btn_nuc_test.setEnabled(False)
+        self.lbl_nuc_test.setText(tr("Testing…"))
+        self._nuc_runner.run("nuc_test", host, self.nuc_user.text().strip() or "root",
+                             self.nuc_port.value(), host_info.SERVER_COMMAND)
+
+    def _on_nuc_test(self, _operation, ok, output, detail):
+        self.btn_nuc_test.setEnabled(True)
+        if not ok:
+            self.lbl_nuc_test.setText("✗ " + tr("Connection failed: {error}").format(
+                error=detail or tr("no answer")))
+            return
+        info = host_info.parse_pi(output, time.time())
+        name = " · ".join(p for p in (info.get("hostname"), info.get("uname")) if p)
+        resources = host_info.resources_line(host_info.parse_resources(output))
+        self.lbl_nuc_test.setText(
+            "✓ " + tr("Connected: {name}").format(name=name or self.nuc_host.text().strip())
+            + ("\n" + resources if resources else ""))
+
     def _test_home_assistant(self, *_):
         """Ask Home Assistant who it is, with the values being edited.
 
@@ -206,6 +241,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_PI_PORT, self.pi_port.value())
         s.setValue(KEY_PI_WIFI_DIR, self.pi_wifi_dir.text().strip() or "valetudo_wifi")
         s.setValue(KEY_HA_URL, self.ha_url.text().strip())
+        s.setValue(KEY_NUC_HOST, self.nuc_host.text().strip())
+        s.setValue(KEY_NUC_USER, self.nuc_user.text().strip() or "root")
+        s.setValue(KEY_NUC_PORT, self.nuc_port.value())
         s.setValue(KEY_HA_SSH_HOST, self.ha_ssh_host.text().strip())
         s.setValue(KEY_HA_SSH_USER, self.ha_ssh_user.text().strip() or "root")
         s.setValue(KEY_HA_SSH_PORT, self.ha_ssh_port.value())

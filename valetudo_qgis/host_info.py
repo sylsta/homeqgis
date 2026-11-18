@@ -15,6 +15,66 @@ PI_COMMAND = ("hostname; uname -a; hostname -I 2>/dev/null || echo; date +%s; "
               "cut -d' ' -f1 /proc/uptime")
 
 
+# A server's resources, after PI_COMMAND: one "key value…" line each. Every
+# part may be missing (BusyBox, containers): the line then just leaves it out.
+RESOURCES_COMMAND = (
+    "echo load $(cut -d' ' -f1 /proc/loadavg) $(nproc 2>/dev/null || echo 0); "
+    "echo mem $(awk '/^MemTotal:/{t=$2} /^MemAvailable:/{a=$2} END{print t, a}' /proc/meminfo); "
+    "echo disk $(df -Pk / 2>/dev/null | awk 'NR==2{print $2, $3}'); "
+    "echo temp $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -n | tail -1)")
+SERVER_COMMAND = f"{PI_COMMAND}; {RESOURCES_COMMAND}"
+
+
+def parse_resources(text):
+    """Lines of RESOURCES_COMMAND -> dict(load, cpus, mem_total, mem_available,
+    disk_total, disk_used (kB), temp (°C)); absent values are left out."""
+    out = {}
+    for line in text.splitlines():
+        parts = line.split()
+        if not parts:
+            continue
+        key, values = parts[0], parts[1:]
+        try:
+            if key == "load" and values:
+                out["load"] = float(values[0])
+                if len(values) > 1 and int(values[1]) > 0:
+                    out["cpus"] = int(values[1])
+            elif key == "mem" and len(values) == 2:
+                out["mem_total"], out["mem_available"] = int(values[0]), int(values[1])
+            elif key == "disk" and len(values) == 2:
+                out["disk_total"], out["disk_used"] = int(values[0]), int(values[1])
+            elif key == "temp" and values:
+                milli = int(values[0])
+                out["temp"] = milli / 1000 if milli > 1000 else float(milli)
+        except ValueError:
+            continue
+    return out
+
+
+def _gb(kib):
+    gb = kib / 1024 / 1024
+    return f"{gb:.1f}" if gb < 10 else f"{gb:.0f}"
+
+
+def resources_line(res):
+    """"load 0.42 / 4 CPUs · RAM 2.1 / 7.7 GB · disk 23 / 110 GB · 42 °C" (known parts)."""
+    parts = []
+    if "load" in res:
+        cpus = res.get("cpus")
+        parts.append(tr("load {load}").format(load=f"{res['load']:.2f}")
+                     + (" / " + tr("{count} CPUs").format(count=cpus) if cpus else ""))
+    if res.get("mem_total"):
+        used = res["mem_total"] - res.get("mem_available", 0)
+        parts.append(tr("RAM {used} / {total} GB").format(
+            used=_gb(used), total=_gb(res["mem_total"])))
+    if res.get("disk_total"):
+        parts.append(tr("disk {used} / {total} GB").format(
+            used=_gb(res["disk_used"]), total=_gb(res["disk_total"])))
+    if "temp" in res:
+        parts.append(f"{res['temp']:.0f} °C")
+    return " · ".join(parts)
+
+
 def pi_test_command(maps_dir):
     """PI_COMMAND, then one line about the Wi-Fi maps folder (relative to home):
     "maps <number of GeoTIFFs>" or "nodir"."""

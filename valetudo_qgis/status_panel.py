@@ -39,8 +39,9 @@ from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from . import host_info
-from .icons import HA_LOGO, LOGO, RPI_LOGO, icon
+from .icons import HA_LOGO, LOGO, NUC_ICON, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
+from .ssh_host_block import SshHostBlock
 from .log_tab import LogTab
 from .log_tail import COMMAND_PREFIX, LOG_PATH
 from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
@@ -73,7 +74,8 @@ UI_WIDGETS = (
     "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu",
     "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
     "ha_header", "lbl_ha_logo", "lbl_ha_connection", "btn_ha_refresh", "lbl_ha_name",
-    "lbl_ha_info", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "lbl_ha_info", "nuc_header", "lbl_nuc_logo", "lbl_nuc_connection", "btn_nuc_refresh",
+    "lbl_nuc_name", "lbl_nuc_info", "lbl_nuc_resources", "details", "header_layout", "lbl_connection", "btn_refresh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
     "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
@@ -404,6 +406,16 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_pi_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.btn_pi_refresh.clicked.connect(self._refresh_pi)
         self.pi_runner = RobotSurvey(self)   # one-shot SSH runner
+        # NUC: a server read over SSH (ssh_host_block), shown only when set
+        self.lbl_nuc_logo.setPixmap(icon(NUC_ICON).pixmap(20, 20))
+        self.btn_nuc_refresh.setIcon(theme("/mActionRefresh.svg"))
+        self.nuc = SshHostBlock(
+            {"header": self.nuc_header, "connection": self.lbl_nuc_connection,
+             "refresh": self.btn_nuc_refresh, "name": self.lbl_nuc_name,
+             "info": self.lbl_nuc_info, "resources": self.lbl_nuc_resources},
+            self._nuc_target, lambda epoch: self._local_time(epoch),
+            lambda wrong: self._set_problem(
+                "nuc_clock", tr("The NUC's clock is wrong.") if wrong else None), self)
         self.pi_runner.finished.connect(self._on_pi_info)
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
@@ -1320,9 +1332,16 @@ class ValetudoPanel(QgsDockWidget):
             self._ha_ssh_password_for = target
         return target
 
+    @staticmethod
+    def _nuc_target():
+        """(host, user, port) of the NUC, or None when none is set."""
+        cfg = load_settings()
+        return (cfg["nuc_host"], cfg["nuc_user"], int(cfg["nuc_port"])) if cfg["nuc_host"] else None
+
     def _update_pi_tab(self):
         """The Pi's details, card and terminal exist only when a Pi address is set;
-        its details are read while the panel is visible."""
+        its details are read while the panel is visible. Same for the NUC's block."""
+        self.nuc.update(self.isVisible())
         has_pi = self._pi_target() is not None
         self.pi_header.setVisible(has_pi)
         for widget in (self.sep_pi, self.lbl_pi_strip_logo, self.lbl_pi_strip):
@@ -1566,6 +1585,7 @@ class ValetudoPanel(QgsDockWidget):
         self.camera.shutdown()
         self._pi_timer.stop()
         self.pi_runner.stop()
+        self.nuc.stop()
         self._ha_timer.stop()
         if self._ha_client is not None:
             self._ha_client.close()
@@ -1674,6 +1694,7 @@ class ValetudoPanel(QgsDockWidget):
 
     def _update_header(self):
         self._update_pi_header()
+        self.nuc.render()
         if self._ha_state == "online":
             self._update_ha_header()
         if self.client is None or self._reachable is None:

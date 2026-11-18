@@ -11,6 +11,7 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), "icons")
 LOGO = "valetudo_logo_small"   # the plugin's own icon: Plugin Manager, menu, panel, Options
 RPI_LOGO = "rpi_logo"   # the Pi block of the panel (COLOUR-Raspberry-Pi-Symbol…png, cropped to the berry)
 HA_LOGO = "HA-lockup-stacked-color-on-dark"   # Home Assistant, in the panel's strip
+NUC_ICON = "nuc"   # the NUC block of the Status tab (themed: recoloured in dark mode)
 # Single-colour icons are drawn in this grey: it is replaced by the theme's text
 # colour when they are loaded, so they stay visible in a dark theme.
 THEMED_COLOR = "#4a4a4a"
