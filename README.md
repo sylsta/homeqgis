@@ -46,7 +46,7 @@ The panel (titled *Connection*), from top to bottom:
 │📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
 │📷│ Camera                                            │
 │🧰│ Care      consumables, dock station, statistics   │
-│⌨ │ Terminal  [Robot | Pi | HA]  [Console | Log]      │
+│⌨ │ Terminal  [Robot | Pi | HA | NUC] [Console | Log] │
 │⚙ │ System    robot and Pi cards, boot log, events    │
 ├──┴───────────────────────────────────────────────────┤
 │ [ Start cleaning all rooms ] [Dock]                  │  big button, at the bottom
@@ -357,6 +357,12 @@ tick *Include tokens and passwords*: they are then written in clear (the file is
 made readable by you only). **Reset config** goes back to the default settings
 (and removes the tokens, passwords and room groups) after saving a backup, so it
 can be undone with *Load selected…*.
+
+**Terminal** tab, *NUC*: a console and a log on the NUC, with its SSH settings
+(tab *NUC*). The log follows the system log: the journal (`journalctl`) where
+systemd runs, else `/var/log/syslog` (sysvinit, as MX Linux by default); set
+another *Log command* in the settings if needed. Reading the system log may need
+`root` or a user in the `adm` group.
 
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and

@@ -24,7 +24,9 @@ from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
-    KEY_HA_URL, KEY_INTERVAL, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST, KEY_NUC_PORT, KEY_NUC_USER, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
+    KEY_HA_URL, KEY_INTERVAL, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
+    KEY_NUC_LOG_COMMAND, KEY_NUC_PORT, KEY_NUC_USER, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK,
+    KEY_PI_HOST,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
     HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_SETTING, WIFI_DEFAULTS, default_camera_url,
     load_settings, secret, set_secret,
@@ -37,7 +39,7 @@ UI_WIDGETS = (
     "url", "auth", "interval", "live_at_start", "btn_test", "lbl_test", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir", "btn_pi_test", "lbl_pi_test",
-    "nuc_host", "nuc_user", "nuc_port", "btn_nuc_test", "lbl_nuc_test",
+    "nuc_host", "nuc_user", "nuc_port", "nuc_log_command", "btn_nuc_test", "lbl_nuc_test",
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
@@ -88,6 +90,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.kodi_user.setText(cfg["kodi_user"])
         self.nuc_user.setText(cfg["nuc_user"])
         self.nuc_port.setValue(cfg["nuc_port"])
+        self.nuc_log_command.setText(cfg["nuc_log_command"])
+        self.nuc_log_command.setPlaceholderText(tr("automatic: journalctl, else /var/log/syslog"))
         self.ha_ssh_host.setText(cfg["ha_ssh_host"])
         self.ha_ssh_host.setPlaceholderText(
             QUrl(cfg["ha_url"]).host() or "192.168.50.1")
@@ -415,6 +419,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_KODI_USER, self.kodi_user.text().strip())
         s.setValue(KEY_NUC_USER, self.nuc_user.text().strip() or "root")
         s.setValue(KEY_NUC_PORT, self.nuc_port.value())
+        s.setValue(KEY_NUC_LOG_COMMAND, self.nuc_log_command.text().strip())
         s.setValue(KEY_HA_SSH_HOST, self.ha_ssh_host.text().strip())
         s.setValue(KEY_HA_SSH_USER, self.ha_ssh_user.text().strip() or "root")
         s.setValue(KEY_HA_SSH_PORT, self.ha_ssh_port.value())

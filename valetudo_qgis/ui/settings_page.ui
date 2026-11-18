@@ -831,7 +831,17 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbl_nuc_log_command">
+         <property name="text">
+          <string>Log command</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="nuc_log_command"/>
+       </item>
+       <item row="4" column="0" colspan="2">
         <layout class="QHBoxLayout" name="nuc_test_layout" stretch="0,1">
          <item>
           <widget class="QPushButton" name="btn_nuc_test">
@@ -849,13 +859,13 @@
          </item>
         </layout>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="5" column="0" colspan="2">
         <widget class="QLabel" name="lbl_nuc_hint">
          <property name="wordWrap">
           <bool>true</bool>
          </property>
          <property name="text">
-          <string>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible. Login is by SSH key, as for the Raspberry Pi.</string>
+          <string>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key, as for the Raspberry Pi. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog (sysvinit, as MX Linux by default); reading them may need root or the adm group.</string>
          </property>
         </widget>
        </item>

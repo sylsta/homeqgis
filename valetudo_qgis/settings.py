@@ -25,6 +25,11 @@ KEY_HA_URL = "valetudo/ha_url"   # Home Assistant server
 KEY_NUC_HOST = "valetudo/nuc_host"   # empty = no NUC block in the Status tab
 KEY_NUC_USER = "valetudo/nuc_user"
 KEY_NUC_PORT = "valetudo/nuc_port"
+KEY_NUC_LOG_COMMAND = "valetudo/nuc_log_command"   # empty = NUC_AUTO_LOG_COMMAND
+# The system log, wherever it is: the journal under systemd, else syslog
+# (sysvinit, e.g. MX Linux by default).
+NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl >/dev/null; "
+                        "then journalctl -n 200 -f; else tail -n 200 -F /var/log/syslog; fi")
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
 KEY_KODI_USER = "valetudo/kodi_user"
 DEFAULT_HA_URL = "http://localhost:8123/"
@@ -88,6 +93,7 @@ def load_settings():
         "kodi_user": s.value(KEY_KODI_USER, "kodi", type=str).strip(),
         "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip() or "root",
         "nuc_port": s.value(KEY_NUC_PORT, 22, type=int),
+        "nuc_log_command": s.value(KEY_NUC_LOG_COMMAND, "", type=str).strip(),
         "ha_ssh_host": s.value(KEY_HA_SSH_HOST, "", type=str).strip(),
         "ha_ssh_user": s.value(KEY_HA_SSH_USER, "root", type=str).strip() or "root",
         "ha_ssh_port": s.value(KEY_HA_SSH_PORT, 22, type=int),

@@ -49,7 +49,7 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, has_ha_token, has_secret, ha_token,
+from .settings import (HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
                        load_settings, secret)
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
@@ -101,7 +101,8 @@ UI_WIDGETS = (
     "box_current", "lbl_cur_time", "lbl_cur_area", "box_total", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area",
     # Terminal
-    "tab_terminal", "btn_term_robot", "btn_term_pi", "btn_term_ha", "btn_term_console",
+    "tab_terminal", "btn_term_robot", "btn_term_pi", "btn_term_ha", "btn_term_nuc",
+    "btn_term_console",
     "btn_term_log",
     "terminal_stack",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
@@ -115,6 +116,10 @@ UI_WIDGETS = (
     "btn_ha_console_clear", "txt_ha_console", "lbl_ha_console_prompt", "edit_ha_console",
     "btn_ha_console_run", "btn_ha_console_stop",
     "tab_ha_log", "lbl_ha_log_status", "chk_ha_log_follow", "btn_ha_log_clear", "txt_ha_log",
+    "tab_nuc_console", "lbl_nuc_console_status", "btn_nuc_console_connect",
+    "btn_nuc_console_clear", "txt_nuc_console", "lbl_nuc_console_prompt", "edit_nuc_console",
+    "btn_nuc_console_run", "btn_nuc_console_stop",
+    "tab_nuc_log", "lbl_nuc_log_status", "chk_nuc_log_follow", "btn_nuc_log_clear", "txt_nuc_log",
     # System
     "tab_system", "box_status", "status_form", "lbl_state", "lbl_dock", "lbl_attachments",
     "lbl_position", "system_grid", "box_pi_card", "lbl_pi_card", "txt_boot", "list_events",
@@ -544,6 +549,8 @@ class ValetudoPanel(QgsDockWidget):
                        tr("No Raspberry Pi set in the settings."), self),
             ConsoleTab(self.tab_ha_console, console_widgets("ha_"), self._ha_ssh_target,
                        tr("No Home Assistant SSH address set in the settings."), self),
+            ConsoleTab(self.tab_nuc_console, console_widgets("nuc_"), self._nuc_target,
+                       tr("No NUC set in the settings."), self),
         ]
         self.logs = [
             LogTab(self.tab_log, log_widgets(""), self._ssh_target, LOG_PATH,
@@ -553,15 +560,19 @@ class ValetudoPanel(QgsDockWidget):
             LogTab(self.tab_ha_log, log_widgets("ha_"), self._ha_ssh_target,
                    lambda: COMMAND_PREFIX + load_settings()["ha_log_command"],
                    tr("No Home Assistant SSH address set in the settings."), self),
+            LogTab(self.tab_nuc_log, log_widgets("nuc_"), self._nuc_target,
+                   lambda: COMMAND_PREFIX + (load_settings()["nuc_log_command"]
+                                             or NUC_AUTO_LOG_COMMAND),
+                   tr("No NUC set in the settings."), self),
         ]
         choice = QgsSettings().value(KEY_TERMINAL, "robot/console", type=str) or "robot/console"
         device, _, mode = str(choice).partition("/")
         self._term_devices = {"robot": self.btn_term_robot, "pi": self.btn_term_pi,
-                              "ha": self.btn_term_ha}
+                              "ha": self.btn_term_ha, "nuc": self.btn_term_nuc}
         self._term_devices.get(device, self.btn_term_robot).setChecked(True)
         (self.btn_term_log if mode == "log" else self.btn_term_console).setChecked(True)
         for button in (self.btn_term_robot, self.btn_term_pi, self.btn_term_ha,
-                       self.btn_term_console, self.btn_term_log):
+                       self.btn_term_nuc, self.btn_term_console, self.btn_term_log):
             button.toggled.connect(self._on_terminal_switch)
         self._show_terminal_page()
 
@@ -853,6 +864,7 @@ class ValetudoPanel(QgsDockWidget):
     def _show_terminal_page(self):
         pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
                  ("ha", "console"): self.tab_ha_console,
+                 ("nuc", "console"): self.tab_nuc_console, ("nuc", "log"): self.tab_nuc_log,
                  ("robot", "log"): self.tab_log, ("pi", "log"): self.tab_pi_log,
                  ("ha", "log"): self.tab_ha_log}
         self.terminal_stack.setCurrentWidget(pages[self._terminal_choice()])
@@ -1373,6 +1385,10 @@ class ValetudoPanel(QgsDockWidget):
         self.box_pi_card.setVisible(has_pi)
         self.btn_term_pi.setEnabled(has_pi)
         if not has_pi and self.btn_term_pi.isChecked():
+            self.btn_term_robot.setChecked(True)
+        has_nuc = self._nuc_target() is not None
+        self.btn_term_nuc.setEnabled(has_nuc)
+        if not has_nuc and self.btn_term_nuc.isChecked():
             self.btn_term_robot.setChecked(True)
         has_ha_ssh = self._ha_ssh_target() is not None
         self.btn_term_ha.setEnabled(has_ha_ssh)

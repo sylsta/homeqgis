@@ -2168,10 +2168,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>NUC</translation>
     </message>
     <message>
-        <source>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible. Login is by SSH key, as for the Raspberry Pi.</source>
-        <translation>Facultatif : avec une adresse, l’onglet État affiche le NUC : son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus en SSH toutes les 30 s tant que le panneau est visible. La connexion se fait par clé SSH, comme pour le Raspberry Pi.</translation>
-    </message>
-    <message>
         <source>CPU {temperature}</source>
         <translation>processeur {temperature}</translation>
     </message>
@@ -2322,6 +2318,26 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Back to the default settings, after saving a backup</source>
         <translation>Revenir aux paramètres par défaut, après une sauvegarde</translation>
+    </message>
+    <message>
+        <source>automatic: journalctl, else /var/log/syslog</source>
+        <translation>automatique : journalctl, sinon /var/log/syslog</translation>
+    </message>
+    <message>
+        <source>No NUC set in the settings.</source>
+        <translation>Aucun NUC défini dans les paramètres.</translation>
+    </message>
+    <message>
+        <source>Commands and log of the NUC</source>
+        <translation>Commandes et journal du NUC</translation>
+    </message>
+    <message>
+        <source>Runs on the NUC, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
+        <translation>S’exécute sur le NUC, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
+    </message>
+    <message>
+        <source>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key, as for the Raspberry Pi. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog (sysvinit, as MX Linux by default); reading them may need root or the adm group.</source>
+        <translation>Facultatif : avec une adresse, l’onglet État affiche le NUC : son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus en SSH toutes les 30 s tant que le panneau est visible, et l’onglet Terminal propose une console et un journal sur lui. La connexion se fait par clé SSH, comme pour le Raspberry Pi. Commande du journal : vide, elle suit le journal système (journalctl) là où systemd tourne, sinon /var/log/syslog (sysvinit, comme MX Linux par défaut) ; les lire peut demander root ou le groupe adm.</translation>
     </message>
 </context>
 </TS>
