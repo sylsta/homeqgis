@@ -404,6 +404,27 @@ map to be shown first, and switch back to the Pan tool after each use.
 The map is displayed in the robot's own frame, in centimetres. The API reference
 is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 
+**Uptime Kuma on the Raspberry Pi** (optional): a dashboard on the Pi that watches
+the robot, its SSH, Mosquitto, Home Assistant, the NUC, Cockpit and Kodi, with a
+history and notifications (e.g. through Home Assistant). Install it without
+Docker (Docker rewrites the firewall and would block the Pi's routing between its
+Ethernet port and its Wi-Fi access point): Node.js 20.4 or newer (Debian trixie's
+is enough), then
+
+```sh
+cd ~ && git clone https://github.com/louislam/uptime-kuma.git
+cd uptime-kuma && npm run setup
+sudo npm install -g pm2 && pm2 install pm2-logrotate
+pm2 start server/server.js --name uptime-kuma
+pm2 save && pm2 startup     # then run the "sudo env PATH=…" line it prints
+```
+
+`pi/uptime_kuma_monitors.js` then adds the monitors: it chooses the SQLite
+database on a first run, creates the admin account if there is none (or logs in),
+asks for the addresses and adds the monitors not there yet (it can be run again).
+Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi's
+*Web address* to `http://<Pi>:3001`: the Pi's 🌐 button in the Status tab opens it.
+
 ## Code layout
 
 | File                         | Role                                                    |
@@ -420,6 +441,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `config_backup.py`           | Save and load the configuration (timestamped JSON)      |
 | `about.py`                   | About page (settings tab and ⋮ menu window)             |
 | `system_terminal.py`         | SSH session in the system's terminal window             |
+| `pi/uptime_kuma_monitors.js` | Adds the monitors to Uptime Kuma on the Pi (not part of the plugin) |
 | `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |
