@@ -345,6 +345,17 @@ The *Log* runs a command rather than following a file, `ha core logs -n 200 -f` 
 default (Home Assistant OS keeps its log in the system journal); change it in the
 settings for another installation (e.g. `docker logs -f -n 200 homeassistant`).
 
+**Backup** tab (*Settings > Options > Valetudo*): **Save now** writes the whole
+configuration to a new file named with its date and time,
+`valetudo_qgis_config_YYYYMMDD_HHMMSS.json` (all the plugin's settings, the room
+groups and the panel's choices), in a folder of your choice (by default
+`valetudo_backups` in the QGIS profile folder). It first applies the values on
+screen, as OK does. The list shows the saved files, newest first: **Load
+selected…** (or a double-click) or **Load a file…** replaces the configuration at
+once, after a confirmation. Tokens and passwords stay out of the files unless you
+tick *Include tokens and passwords*: they are then written in clear (the file is
+made readable by you only).
+
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and
 times each stage: offline, network up (SSH port answers), Valetudo answers
@@ -372,6 +383,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `ssh_host_block.py`          | A server read over SSH, in the Status tab (the NUC)     |
 | `kodi_client.py`             | Calls to Kodi's JSON-RPC (HTTP)                         |
 | `kodi_block.py`              | Kodi in the Status tab: state, playback, remote         |
+| `config_backup.py`           | Save and load the configuration (timestamped JSON)      |
 | `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |

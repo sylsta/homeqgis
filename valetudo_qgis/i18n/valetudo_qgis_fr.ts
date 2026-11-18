@@ -2207,5 +2207,93 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Optional: with an address, the Status tab shows Kodi: its version, uptime and CPU temperature, what is playing, with Play/Pause and Stop. In Kodi: Settings › Services › Control, turn on Allow remote control via HTTP and set a username and password (port 8080 by default). The password is kept encrypted in the QGIS authentication database.</source>
         <translation>Facultatif : avec une adresse, l’onglet État affiche Kodi : sa version, sa durée de fonctionnement et la température du processeur, ce qui est en lecture, avec Lecture/Pause et Arrêt. Dans Kodi : Paramètres › Services › Contrôle, activez Autoriser le contrôle à distance via HTTP et définissez un nom d’utilisateur et un mot de passe (port 8080 par défaut). Le mot de passe est conservé chiffré dans la base d’authentification de QGIS.</translation>
     </message>
+    <message>
+        <source>Folder of the saved configurations</source>
+        <translation>Dossier des configurations enregistrées</translation>
+    </message>
+    <message>
+        <source>Load a configuration</source>
+        <translation>Charger une configuration</translation>
+    </message>
+    <message>
+        <source>Configurations (*.json)</source>
+        <translation>Configurations (*.json)</translation>
+    </message>
+    <message>
+        <source>No saved configuration in this folder yet.</source>
+        <translation>Aucune configuration enregistrée dans ce dossier pour l’instant.</translation>
+    </message>
+    <message>
+        <source>Saved: {file}</source>
+        <translation>Enregistrée : {file}</translation>
+    </message>
+    <message>
+        <source>Replace the current configuration by the one saved on {date}? This takes effect at once.</source>
+        <translation>Remplacer la configuration actuelle par celle enregistrée le {date} ? Cela prend effet immédiatement.</translation>
+    </message>
+    <message>
+        <source>It includes tokens and passwords.</source>
+        <translation>Elle contient des jetons et des mots de passe.</translation>
+    </message>
+    <message>
+        <source>Loaded: {count} settings, {secrets} tokens or passwords, from {date}.</source>
+        <translation>Chargée : {count} paramètres, {secrets} jetons ou mots de passe, du {date}.</translation>
+    </message>
+    <message>
+        <source>Not saved: {error}</source>
+        <translation>Non enregistrée : {error}</translation>
+    </message>
+    <message>
+        <source>Cannot load {file}: {error}</source>
+        <translation>Impossible de charger {file} : {error}</translation>
+    </message>
+    <message>
+        <source>Backup</source>
+        <translation>Sauvegarde</translation>
+    </message>
+    <message>
+        <source>Folder</source>
+        <translation>Dossier</translation>
+    </message>
+    <message>
+        <source>…</source>
+        <translation>…</translation>
+    </message>
+    <message>
+        <source>Choose the folder</source>
+        <translation>Choisir le dossier</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Ouvrir</translation>
+    </message>
+    <message>
+        <source>Open the folder in the file manager</source>
+        <translation>Ouvrir le dossier dans le gestionnaire de fichiers</translation>
+    </message>
+    <message>
+        <source>Saved configurations, newest first: double-click to load</source>
+        <translation>Configurations enregistrées, la plus récente d’abord : double-cliquez pour charger</translation>
+    </message>
+    <message>
+        <source>Include tokens and passwords (written in clear in the file)</source>
+        <translation>Inclure les jetons et mots de passe (écrits en clair dans le fichier)</translation>
+    </message>
+    <message>
+        <source>Save now</source>
+        <translation>Enregistrer maintenant</translation>
+    </message>
+    <message>
+        <source>Load selected…</source>
+        <translation>Charger la sélection…</translation>
+    </message>
+    <message>
+        <source>Load a file…</source>
+        <translation>Charger un fichier…</translation>
+    </message>
+    <message>
+        <source>Each save writes a new file named with its date and time (valetudo_qgis_config_YYYYMMDD_HHMMSS.json): all the settings of these tabs, the room groups and the panel's choices. Saving first applies the values on screen, as OK does. Loading a file replaces the current configuration at once, without waiting for OK.</source>
+        <translation>Chaque enregistrement écrit un nouveau fichier nommé avec sa date et son heure (valetudo_qgis_config_AAAAMMJJ_HHMMSS.json) : tous les paramètres de ces onglets, les groupes de pièces et les choix du panneau. L’enregistrement applique d’abord les valeurs affichées, comme OK. Charger un fichier remplace aussitôt la configuration actuelle, sans attendre OK.</translation>
+    </message>
 </context>
 </TS>

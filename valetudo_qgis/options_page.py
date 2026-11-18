@@ -4,15 +4,17 @@ QGIS calls ``apply()`` when the Options dialog is closed with OK (or Apply);
 Cancel saves nothing, like the other Options pages.
 """
 
+import os
 import time
 
-from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtCore import QDateTime, QLocale, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import QStackedWidget
+from qgis.PyQt.QtWidgets import (QFileDialog, QListWidgetItem, QMessageBox,
+                                 QStackedWidget)
 from qgis.core import QgsSettings
 from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 
-from . import host_info, room_groups
+from . import config_backup, host_info, room_groups
 from .client import ValetudoClient
 from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .kodi_client import KodiClient
@@ -37,6 +39,9 @@ UI_WIDGETS = (
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir", "btn_pi_test", "lbl_pi_test",
     "nuc_host", "nuc_user", "nuc_port", "btn_nuc_test", "lbl_nuc_test",
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
+    "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
+    "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
+    "lbl_backup_status",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
@@ -51,7 +56,12 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._on_applied = on_applied
         self._test_client = None
         self._ha_client = None
+        self._fill()
+        self._setup_backup()
+        self._connect_tests()
 
+    def _fill(self):
+        """Every field from the stored settings (also after loading a backup)."""
         s = QgsSettings()
         cfg = load_settings()
         self.url.setText(cfg["url"])
@@ -98,6 +108,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             else:
                 widget.setValue(cfg[key])
 
+    def _connect_tests(self):
         self.btn_test.clicked.connect(self._test_connection)
         self.btn_ha_test.clicked.connect(self._test_home_assistant)
         self.btn_pi_test.clicked.connect(self._test_pi)
@@ -109,6 +120,97 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.btn_room_groups.setToolTip(room_groups.file_path())
         self.btn_room_groups.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file())))
+
+    # -- Backup tab -----------------------------------------------------------------
+
+    def _setup_backup(self):
+        self.backup_folder.setText(config_backup.folder())
+        self.btn_backup_browse.clicked.connect(self._choose_backup_folder)
+        self.btn_backup_open.clicked.connect(self._open_backup_folder)
+        self.btn_backup_save.clicked.connect(self._save_backup)
+        self.btn_backup_load.clicked.connect(self._load_selected_backup)
+        self.btn_backup_load_file.clicked.connect(self._load_backup_file)
+        self.list_backups.itemDoubleClicked.connect(lambda _item: self._load_selected_backup())
+        self.list_backups.currentRowChanged.connect(
+            lambda row: self.btn_backup_load.setEnabled(row >= 0))
+        self._list_backups()
+
+    def _list_backups(self, select=None):
+        self.list_backups.clear()
+        for path, stamp in config_backup.backups(self.backup_folder.text()):
+            item = QListWidgetItem(QLocale().toString(stamp, QLocale.FormatType.LongFormat))
+            item.setData(Qt.ItemDataRole.UserRole, path)
+            item.setToolTip(path)
+            self.list_backups.addItem(item)
+            if path == select:
+                self.list_backups.setCurrentItem(item)
+        self.btn_backup_load.setEnabled(self.list_backups.currentRow() >= 0)
+        if not self.list_backups.count():
+            self.lbl_backup_status.setText(tr("No saved configuration in this folder yet."))
+
+    def _choose_backup_folder(self, *_):
+        folder = QFileDialog.getExistingDirectory(
+            self, tr("Folder of the saved configurations"), self.backup_folder.text())
+        if folder:
+            self.backup_folder.setText(folder)
+            QgsSettings().setValue(config_backup.KEY_BACKUP_DIR, folder)
+            self.lbl_backup_status.setText("")
+            self._list_backups()
+
+    def _open_backup_folder(self, *_):
+        folder = self.backup_folder.text()
+        os.makedirs(folder, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
+
+    def _save_backup(self, *_):
+        """Apply the values on screen (as OK does), then save them to a new file."""
+        self.apply()
+        try:
+            path = config_backup.save(self.backup_folder.text(),
+                                      self.chk_backup_secrets.isChecked())
+        except OSError as exc:
+            self.lbl_backup_status.setText("✗ " + tr("Not saved: {error}").format(error=exc))
+            return
+        self.lbl_backup_status.setText("✓ " + tr("Saved: {file}").format(
+            file=os.path.basename(path)))
+        self._list_backups(select=path)
+
+    def _load_selected_backup(self, *_):
+        item = self.list_backups.currentItem()
+        if item is not None:
+            self._load_backup(item.data(Qt.ItemDataRole.UserRole))
+
+    def _load_backup_file(self, *_):
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("Load a configuration"), self.backup_folder.text(),
+            tr("Configurations (*.json)"))
+        if path:
+            self._load_backup(path)
+
+    def _load_backup(self, path):
+        try:
+            data = config_backup.read(path)
+        except (OSError, ValueError) as exc:
+            self.lbl_backup_status.setText("✗ " + tr("Cannot load {file}: {error}").format(
+                file=os.path.basename(path), error=exc))
+            return
+        saved = QDateTime.fromString(data.get("saved", ""), Qt.DateFormat.ISODate)
+        when = QLocale().toString(saved, QLocale.FormatType.LongFormat) if saved.isValid() else "?"
+        answer = QMessageBox.question(
+            self, tr("Load a configuration"),
+            tr("Replace the current configuration by the one saved on {date}? "
+               "This takes effect at once.").format(date=when)
+            + ("\n\n" + tr("It includes tokens and passwords.") if data.get("secrets") else ""))
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        before = load_settings()
+        count, secrets = config_backup.apply(data)
+        self._fill()
+        self.lbl_backup_status.setText("✓ " + tr(
+            "Loaded: {count} settings, {secrets} tokens or passwords, from {date}.").format(
+                count=count, secrets=secrets, date=when))
+        if self._on_applied is not None and (secrets or load_settings() != before):
+            self._on_applied()
 
     def _test_connection(self, *_):
         """Ask the robot who it is, with the values being edited (nothing is saved)."""
