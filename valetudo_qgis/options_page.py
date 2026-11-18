@@ -4,16 +4,19 @@ QGIS calls ``apply()`` when the Options dialog is closed with OK (or Apply);
 Cancel saves nothing, like the other Options pages.
 """
 
+import time
+
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import QStackedWidget
 from qgis.core import QgsSettings
 from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 
-from . import room_groups
+from . import host_info, room_groups
 from .client import ValetudoClient
 from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .i18n import tr
+from .robot_survey import RobotSurvey
 from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
@@ -30,7 +33,7 @@ PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_
 UI_WIDGETS = (
     "url", "auth", "interval", "live_at_start", "btn_test", "lbl_test", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
-    "pi_host", "pi_user", "pi_port", "pi_wifi_dir",
+    "pi_host", "pi_user", "pi_port", "pi_wifi_dir", "btn_pi_test", "lbl_pi_test",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
@@ -87,6 +90,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
 
         self.btn_test.clicked.connect(self._test_connection)
         self.btn_ha_test.clicked.connect(self._test_home_assistant)
+        self.btn_pi_test.clicked.connect(self._test_pi)
+        self._pi_runner = None
         self.btn_room_groups.setToolTip(room_groups.file_path())
         self.btn_room_groups.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file())))
@@ -112,6 +117,40 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             self.btn_test.setEnabled(True)
 
         self._test_client.probe("/robot", ok, failed, timeout_ms=5000)
+
+    def _test_pi(self, *_):
+        """Log in over SSH with the values being edited: name, system, maps folder."""
+        host = self.pi_host.text().strip()
+        if not host:
+            self.lbl_pi_test.setText(tr("Enter the server address first."))
+            return
+        if self._pi_runner is None:
+            self._pi_runner = RobotSurvey(self)
+            self._pi_runner.finished.connect(self._on_pi_test)
+        if self._pi_runner.is_busy():
+            return
+        self.btn_pi_test.setEnabled(False)
+        self.lbl_pi_test.setText(tr("Testing…"))
+        self._pi_runner.run("pi_test", host, self.pi_user.text().strip() or "pi",
+                            self.pi_port.value(),
+                            host_info.pi_test_command(self.pi_wifi_dir.text().strip()))
+
+    def _on_pi_test(self, _operation, ok, output, detail):
+        self.btn_pi_test.setEnabled(True)
+        if not ok:
+            self.lbl_pi_test.setText("✗ " + tr("Connection failed: {error}").format(
+                error=detail or tr("no answer")))
+            return
+        pi = host_info.parse_pi(output, time.time())
+        name = " · ".join(p for p in (pi.get("hostname"), pi.get("uname")) if p)
+        maps = host_info.parse_maps_line(output)
+        folder = self.pi_wifi_dir.text().strip() or "valetudo_wifi"
+        if maps is None:
+            maps_text = tr("no folder {folder} yet").format(folder=folder)
+        else:
+            maps_text = tr("{count} Wi-Fi maps in {folder}").format(count=maps, folder=folder)
+        self.lbl_pi_test.setText("✓ " + tr("Connected: {name}").format(name=name or host)
+                                 + "\n" + maps_text)
 
     def _test_home_assistant(self, *_):
         """Ask Home Assistant who it is, with the values being edited.

@@ -2139,5 +2139,17 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Recording {duration} · {file}</source>
         <translation>Enregistrement {duration} · {file}</translation>
     </message>
+    <message>
+        <source>no folder {folder} yet</source>
+        <translation>pas encore de dossier {folder}</translation>
+    </message>
+    <message>
+        <source>{count} Wi-Fi maps in {folder}</source>
+        <translation>{count} cartes Wi-Fi dans {folder}</translation>
+    </message>
+    <message>
+        <source>no answer</source>
+        <translation>pas de réponse</translation>
+    </message>
 </context>
 </TS>

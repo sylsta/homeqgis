@@ -310,6 +310,9 @@ strip and its card in the System tab appear once an address is set. Its *Log*
 follows `~/valetudo/collect.log`, the log of the Pi's Wi-Fi collector (see its cron
 line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`.
 
+**Raspberry Pi** tab: **Test connection** logs in over SSH with the values being
+edited and shows the Pi's name and system, and how many Wi-Fi maps its folder holds.
+
 **Home Assistant** (*Settings > Options > Valetudo*, tab *Home Assistant*): the
 address of your Home Assistant server (`http://localhost:8123/` by default) and a
 long-lived access token (optional: without it the plugin can only check that Home

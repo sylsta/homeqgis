@@ -15,6 +15,24 @@ PI_COMMAND = ("hostname; uname -a; hostname -I 2>/dev/null || echo; date +%s; "
               "cut -d' ' -f1 /proc/uptime")
 
 
+def pi_test_command(maps_dir):
+    """PI_COMMAND, then one line about the Wi-Fi maps folder (relative to home):
+    "maps <number of GeoTIFFs>" or "nodir"."""
+    import shlex
+    folder = shlex.quote(maps_dir or "valetudo_wifi")
+    return (f"{PI_COMMAND}; cd; if [ -d {folder} ]; then "
+            f"echo maps $(ls {folder}/*.tif 2>/dev/null | wc -l); else echo nodir; fi")
+
+
+def parse_maps_line(text):
+    """Last line of pi_test_command's output -> number of maps, or None (no folder)."""
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    last = lines[-1].split() if lines else []
+    if len(last) == 2 and last[0] == "maps" and last[1].isdigit():
+        return int(last[1])
+    return None
+
+
 def format_uptime(seconds):
     """3 days 4 h -> '3 d 4 h'; under a day: '5 h 12 min'; under an hour: '7 min'."""
     seconds = int(seconds or 0)
