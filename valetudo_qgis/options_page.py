@@ -21,7 +21,7 @@ from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .kodi_client import KodiClient
 from .i18n import tr
 from .robot_survey import RobotSurvey
-from .icons import LOGO, icon
+from .icons import APP_ICON, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
@@ -452,12 +452,12 @@ class ValetudoOptionsFactory(QgsOptionsWidgetFactory):
     """Registered with iface.registerOptionsWidgetFactory() while the plugin is loaded."""
 
     def __init__(self, on_applied=None):
-        super().__init__(PLUGIN_NAME, icon(LOGO))
+        super().__init__(PLUGIN_NAME, icon(APP_ICON))
         self._on_applied = on_applied
         self._page = None
 
     def icon(self):
-        return icon(LOGO)
+        return icon(APP_ICON)
 
     def createWidget(self, parent):
         self._page = ValetudoOptionsPage(parent, self._on_applied)

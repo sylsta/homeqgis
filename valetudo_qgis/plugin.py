@@ -19,7 +19,7 @@ from .client import ValetudoClient
 from .coords import v2q
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
-from .icons import LOGO, has_icon, icon
+from .icons import APP_ICON, has_icon, icon
 from .map_layers import ValetudoLayers, layer_names
 from .map_overlay import MapOverlay
 from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, ZoneMapTool
@@ -251,8 +251,8 @@ class ValetudoPlugin:
         self.panel.hide()
         self.act["status_panel"] = self.panel.toggleViewAction()
         self.act["status_panel"].setText(tr("{name} panel").format(name=PLUGIN_NAME))
-        self.act["status_panel"].setIcon(icon(LOGO))
-        self.panel.setWindowIcon(icon(LOGO))   # shown when the panel floats
+        self.act["status_panel"].setIcon(icon(APP_ICON))
+        self.panel.setWindowIcon(icon(APP_ICON))   # shown when the panel floats
 
         self.toolbar = self.iface.addToolBar(PLUGIN_NAME)
         self.toolbar.setObjectName("ValetudoToolbar")
@@ -267,7 +267,7 @@ class ValetudoPlugin:
         # QGIS creates the plugin's submenu of Plugins without an icon: give it the logo.
         for entry in self.iface.pluginMenu().actions():
             if entry.text() == self.menu and entry.menu() is not None:
-                entry.setIcon(icon(LOGO))
+                entry.setIcon(icon(APP_ICON))
         # Frequent commands as icon buttons; the others in the panel's "More" menu.
         self.panel.bind_actions(self.act)
         self.panel.chk_goto_quiet.toggled.connect(lambda *_: self._apply_capabilities())

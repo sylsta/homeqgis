@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- DomotiQGIS: a house whose inside is a floor plan, with the robot and its path -->
+  <path d="M6 30 L32 8 L58 30" fill="none" stroke="#2e7d32" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="12" y="28" width="40" height="30" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="4"/>
+  <path d="M31 30v12M14 41h11" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
+  <path d="M18 52 C 24 45, 30 54, 36 47" fill="none" stroke="#43a047" stroke-width="3" stroke-dasharray="3.5 3" stroke-linecap="round"/>
+  <circle cx="43" cy="46" r="8" fill="#37474f"/>
+  <circle cx="43" cy="46" r="3" fill="#a5d6a7"/>
+</svg>

@@ -39,7 +39,7 @@ from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from . import host_info
-from .icons import HA_LOGO, KODI_ICON, LOGO, NUC_ICON, RPI_LOGO, icon
+from .icons import APP_ICON, HA_LOGO, KODI_ICON, LOGO, NUC_ICON, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
 from .ssh_host_block import SshHostBlock
 from .kodi_block import KodiBlock
@@ -712,7 +712,7 @@ class ValetudoPanel(QgsDockWidget):
         self.act_compact.setChecked(QgsSettings().value(KEY_COMPACT, False, type=bool))
         self.act_compact.toggled.connect(self.set_compact)
         self.menu.addSeparator()
-        self.menu.addAction(icon(LOGO), tr("About…"), self.show_about)
+        self.menu.addAction(icon(APP_ICON), tr("About…"), self.show_about)
         # Care: dock station commands (hidden when the robot has none)
         put(self.dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
         self._dock_actions = [act[k] for k in ("empty_dock", "mop_wash", "mop_dry") if k in act]

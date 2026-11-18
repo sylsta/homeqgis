@@ -20,7 +20,7 @@ from qgis.core import Qgis
 
 from .camera import find_ffmpeg
 from .i18n import tr
-from .icons import LOGO, icon
+from .icons import APP_ICON, icon
 from .settings import PLUGIN_NAME, load_settings
 
 VALETUDO_URL = "https://valetudo.cloud"
@@ -141,7 +141,7 @@ class AboutWidget(QWidget):
         # Header: logo, name, version
         header = QHBoxLayout()
         logo = QLabel()
-        logo.setPixmap(icon(LOGO).pixmap(48, 48))
+        logo.setPixmap(icon(APP_ICON).pixmap(48, 48))
         header.addWidget(logo)
         title = QLabel(f"<b style='font-size:16pt'>{PLUGIN_NAME}</b>"
                        f"&nbsp;&nbsp;{html.escape(meta.get('version', ''))}")
@@ -243,7 +243,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(tr("About {name}").format(name=PLUGIN_NAME))
-        self.setWindowIcon(icon(LOGO))
+        self.setWindowIcon(icon(APP_ICON))
         layout = QVBoxLayout(self)
         layout.addWidget(AboutWidget(self))
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
