@@ -2103,5 +2103,41 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>The robot does not answer.</source>
         <translation>Le robot ne répond pas.</translation>
     </message>
+    <message>
+        <source>Record</source>
+        <translation>Enregistrer</translation>
+    </message>
+    <message>
+        <source>Record the video to an MP4 file, at the size shown</source>
+        <translation>Enregistrer la vidéo dans un fichier MP4, à la taille affichée</translation>
+    </message>
+    <message>
+        <source>Record the video</source>
+        <translation>Enregistrer la vidéo</translation>
+    </message>
+    <message>
+        <source>MP4 videos (*.mp4)</source>
+        <translation>Vidéos MP4 (*.mp4)</translation>
+    </message>
+    <message>
+        <source>Stop recording</source>
+        <translation>Arrêter l’enregistrement</translation>
+    </message>
+    <message>
+        <source>Finishing the video…</source>
+        <translation>Finalisation de la vidéo…</translation>
+    </message>
+    <message>
+        <source>Video saved: {path}</source>
+        <translation>Vidéo enregistrée : {path}</translation>
+    </message>
+    <message>
+        <source>Recording failed: {error}</source>
+        <translation>Échec de l’enregistrement : {error}</translation>
+    </message>
+    <message>
+        <source>Recording {duration} · {file}</source>
+        <translation>Enregistrement {duration} · {file}</translation>
+    </message>
 </context>
 </TS>

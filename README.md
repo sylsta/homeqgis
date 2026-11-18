@@ -145,7 +145,13 @@ image can take a few seconds (the status shows how long); after leaving the tab,
 stream keeps running for a minute so that coming back is instant. The stream
 reconnects by itself if it drops, and **Save snapshot** (or Ctrl+Shift+S in the
 tab) saves the current image as PNG. **Full screen** shows the video in its own
-window (Esc or a double-click closes it).
+window (Esc or a double-click closes it). **Record** saves the video to an MP4
+file (H.264) until **Stop recording**; the status shows the elapsed time. It
+records the images already decoded for the live view, at their size (*Video
+width* in the settings) and real speed, so the robot gets no second connection.
+The camera keeps running while recording, even after leaving the tab. The file is
+a fragmented MP4: if QGIS is killed, it stays readable up to its last seconds.
+Needs ffmpeg 5.1 or newer, with libx264.
 
 **No-go zones and virtual walls**: *Edit no-go zones and walls* loads the
 robot's restrictions into two editable layers ("no-go zones" polygons, with a
@@ -350,6 +356,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `client.py`                  | Asynchronous HTTP calls to the Valetudo API             |
 | `ha_client.py`               | Calls to the Home Assistant REST API                    |
 | `ssh_auth.py`                | Optional SSH password (SSH_ASKPASS helper)              |
+| `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |
 | `camera.py`                  | H.264 stream decoding through an ffmpeg subprocess      |

@@ -49,6 +49,7 @@ def ffmpeg_arguments(url, width):
 
 class CameraStream(QObject):
     frameReady = pyqtSignal(QImage)
+    jpegReady = pyqtSignal(bytes)         # every image, as JPEG bytes (for recording)
     stateChanged = pyqtSignal(str, str)   # state key (see STATES), detail
 
     def __init__(self, parent=None):
@@ -127,6 +128,7 @@ class CameraStream(QObject):
                 break
             latest = bytes(self._buffer[start:end + 2])
             del self._buffer[:end + 2]
+            self.jpegReady.emit(latest)   # all of them; only the latest is shown
         if latest is not None:
             image = QImage.fromData(latest, "JPG")
             if not image.isNull():

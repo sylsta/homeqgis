@@ -6,6 +6,8 @@ visible and camera section open); nothing is decoded or downloaded otherwise.
 
 import time
 
+import os
+
 from qgis.PyQt.QtCore import QDateTime, Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import (
@@ -18,11 +20,15 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
+from qgis.core import QgsSettings
+
 from .camera import CameraStream
+from .camera_recorder import CameraRecorder
 from .i18n import tr
 from .settings import load_settings
 
 DEFAULT_ASPECT = 9 / 16   # height / width until the first image tells the real one
+KEY_RECORD_DIR = "valetudo/camera_record_dir"   # folder of the last recording
 
 
 class CameraWidget(QWidget):
@@ -38,6 +44,13 @@ class CameraWidget(QWidget):
         self.stream = CameraStream(self)
         self.stream.frameReady.connect(self._on_frame)
         self.stream.stateChanged.connect(self._on_state)
+        self.recorder = CameraRecorder(self)
+        self.stream.jpegReady.connect(self.recorder.add_jpeg)
+        self.recorder.stateChanged.connect(self._on_record_state)
+        self._record_clock = QTimer(self)
+        self._record_clock.setInterval(1000)
+        self._record_clock.timeout.connect(self._show_recording)
+        self._record_started = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -56,6 +69,11 @@ class CameraWidget(QWidget):
         self.btn_snapshot.clicked.connect(self.save_snapshot)
         self.btn_snapshot.setEnabled(False)
         bar.addWidget(self.btn_snapshot)
+        self.btn_record = QPushButton(tr("Record"))
+        self.btn_record.setToolTip(tr("Record the video to an MP4 file, at the size shown"))
+        self.btn_record.clicked.connect(self.toggle_recording)
+        self.btn_record.setEnabled(False)
+        bar.addWidget(self.btn_record)
         layout.addLayout(bar)
 
         self.lbl_status = QLabel()
@@ -79,6 +97,7 @@ class CameraWidget(QWidget):
         self.stream.start(cfg["camera_url"], cfg["ffmpeg"], cfg["camera_width"])
 
     def stop(self):
+        self.recorder.stop()   # a recording ends with the video
         if self.stream.is_running():
             self.stream.stop()
 
@@ -94,6 +113,7 @@ class CameraWidget(QWidget):
             self.play()
 
     def shutdown(self):
+        self.recorder.shutdown()
         self.stream.stop()
 
     # -- display ------------------------------------------------------------------
@@ -128,6 +148,9 @@ class CameraWidget(QWidget):
         now = time.monotonic()
         fps = round(self._frames / max(now - self._fps_clock, 1e-3))
         self._frames, self._fps_clock = 0, now
+        self._fps = fps
+        if self.recorder.is_recording():
+            return   # the status line shows the recording (see _show_recording)
         if self.stream.is_running() and self._image is not None and not self._error_detail:
             text = tr("Playing · {fps} fps").format(fps=fps)
             if self._startup:
@@ -137,6 +160,10 @@ class CameraWidget(QWidget):
     def _on_state(self, state, detail):
         running = state not in ("stopped", "ffmpeg_missing")
         self.btn_play.setText(tr("Stop") if running else tr("Play"))
+        if state == "playing":
+            self.btn_record.setEnabled(True)
+        elif not running and not self.recorder.is_recording():
+            self.btn_record.setEnabled(False)
         if state == "connecting":
             self.lbl_status.setText(tr("Connecting…"))
         elif state == "playing":
@@ -162,6 +189,60 @@ class CameraWidget(QWidget):
             if self._error_detail:
                 text += "\n" + tr("ffmpeg error: {detail}").format(detail=self._error_detail)
             self.lbl_status.setText(text)
+
+    # -- recording ----------------------------------------------------------------
+
+    def is_recording(self):
+        return self.recorder.is_recording()
+
+    def toggle_recording(self, *_):
+        if self.recorder.is_recording():
+            self.recorder.stop()
+            return
+        settings = QgsSettings()
+        folder = settings.value(KEY_RECORD_DIR, "", type=str)
+        name = "valetudo_{}.mp4".format(QDateTime.currentDateTime().toString("yyyyMMdd_HHmmss"))
+        path, _ = QFileDialog.getSaveFileName(
+            self, tr("Record the video"), os.path.join(folder, name) if folder else name,
+            tr("MP4 videos (*.mp4)"))
+        if not path:
+            return
+        if not path.lower().endswith(".mp4"):
+            path += ".mp4"
+        settings.setValue(KEY_RECORD_DIR, os.path.dirname(path))
+        self.recorder.start(path, load_settings()["ffmpeg"])
+
+    def _on_record_state(self, state, detail):
+        if state == "recording":
+            self._record_started = time.monotonic()
+            self._record_clock.start()
+            self.btn_record.setText(tr("Stop recording"))
+            self.btn_record.setStyleSheet("color: #c62828; font-weight: bold;")
+            self._show_recording()
+            return
+        self._record_clock.stop()
+        self.btn_record.setStyleSheet("")
+        self.btn_record.setText(tr("Record"))
+        if state == "finishing":
+            self.btn_record.setEnabled(False)
+            self.lbl_status.setText(tr("Finishing the video…"))
+            return
+        self.btn_record.setEnabled(self.stream.is_running())
+        if state == "saved":
+            self.lbl_status.setText(tr("Video saved: {path}").format(path=detail))
+        elif state == "failed":
+            self.lbl_status.setText(tr("Recording failed: {error}").format(error=detail))
+        elif state == "ffmpeg_missing":
+            self.lbl_status.setText(
+                tr("ffmpeg not found: install it or set its path in the settings."))
+
+    def _show_recording(self):
+        seconds = int(time.monotonic() - (self._record_started or time.monotonic()))
+        self.lbl_status.setText("<span style='color:#c62828'>●</span> " + tr(
+            "Recording {duration} · {file}").format(
+                duration=f"{seconds // 60:02d}:{seconds % 60:02d}",
+                file=os.path.basename(self.recorder.path()))
+            + (f" · {self._fps} fps" if getattr(self, "_fps", None) else ""))
 
     def save_snapshot(self, *_):
         if self._image is None:

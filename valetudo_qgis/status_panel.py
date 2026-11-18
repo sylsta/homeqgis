@@ -490,7 +490,7 @@ class ValetudoPanel(QgsDockWidget):
         self._camera_grace = QTimer(self)
         self._camera_grace.setSingleShot(True)
         self._camera_grace.setInterval(CAMERA_GRACE_MS)
-        self._camera_grace.timeout.connect(self.camera.stop)
+        self._camera_grace.timeout.connect(self._camera_grace_over)
         self.camera_light.setVisible(False)    # shown if the robot supports it
         self.camera_light.clicked.connect(self._on_camera_light_clicked)  # user only
         self.video_window = None
@@ -1560,6 +1560,12 @@ class ValetudoPanel(QgsDockWidget):
                 self.camera.play()
         elif self.camera.stream.is_running() and not self._camera_grace.isActive():
             self._camera_grace.start()
+
+    def _camera_grace_over(self):
+        """The Camera tab was left a while ago: stop, unless a recording runs."""
+        if self.camera.is_recording():
+            return   # stopped with the recording (Stop recording, or the panel closing)
+        self.camera.stop()
 
     def clear_boot_log(self):
         self.txt_boot.clear()
