@@ -526,6 +526,131 @@
                  </layout>
                 </widget>
                </item>
+               <item>
+                <widget class="QFrame" name="kodi_header">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="kodi_header_layout">
+                  <property name="leftMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>6</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="kodi_header_row" stretch="0,1,0">
+                    <item>
+                     <widget class="QLabel" name="lbl_kodi_logo">
+                      <property name="toolTip">
+                       <string>Kodi</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lbl_kodi_connection"/>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="btn_kodi_refresh">
+                      <property name="toolTip">
+                       <string>Refresh now</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_kodi_name">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lbl_kodi_info">
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QWidget" name="kodi_play_row">
+                    <layout class="QHBoxLayout" name="kodi_play_layout" stretch="3,2,0,0">
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <widget class="QLabel" name="lbl_kodi_playing">
+                       <property name="wordWrap">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QProgressBar" name="bar_kodi_progress">
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>14</height>
+                        </size>
+                       </property>
+                       <property name="value">
+                        <number>0</number>
+                       </property>
+                       <property name="textVisible">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QToolButton" name="btn_kodi_play">
+                       <property name="autoRaise">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QToolButton" name="btn_kodi_stop">
+                       <property name="autoRaise">
+                        <bool>true</bool>
+                       </property>
+                       <property name="text">
+                        <string>⏹</string>
+                       </property>
+                       <property name="toolTip">
+                        <string>Stop</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>

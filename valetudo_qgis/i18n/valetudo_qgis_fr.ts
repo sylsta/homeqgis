@@ -2060,10 +2060,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>S’exécute sur le serveur Home Assistant, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
     </message>
     <message>
-        <source>A Home Assistant token or password was not saved: the QGIS master password is needed to store it encrypted.</source>
-        <translation>Un jeton ou un mot de passe Home Assistant n’a pas été enregistré : le mot de passe principal de QGIS est nécessaire pour le stocker chiffré.</translation>
-    </message>
-    <message>
         <source>No robot is set yet: enter its address in the settings.</source>
         <translation>Aucun robot n’est encore défini : saisissez son adresse dans les paramètres.</translation>
     </message>
@@ -2174,6 +2170,42 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible. Login is by SSH key, as for the Raspberry Pi.</source>
         <translation>Facultatif : avec une adresse, l’onglet État affiche le NUC : son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus en SSH toutes les 30 s tant que le panneau est visible. La connexion se fait par clé SSH, comme pour le Raspberry Pi.</translation>
+    </message>
+    <message>
+        <source>CPU {temperature}</source>
+        <translation>processeur {temperature}</translation>
+    </message>
+    <message>
+        <source>the username or password was refused</source>
+        <translation>le nom d’utilisateur ou le mot de passe a été refusé</translation>
+    </message>
+    <message>
+        <source>no Kodi JSON-RPC at this address</source>
+        <translation>pas d’interface JSON-RPC de Kodi à cette adresse</translation>
+    </message>
+    <message>
+        <source>A token or password was not saved: the QGIS master password is needed to store it encrypted.</source>
+        <translation>Un jeton ou un mot de passe n’a pas été enregistré : le mot de passe principal de QGIS est nécessaire pour le stocker chiffré.</translation>
+    </message>
+    <message>
+        <source>Kodi</source>
+        <translation>Kodi</translation>
+    </message>
+    <message>
+        <source>Username</source>
+        <translation>Nom d’utilisateur</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>Mot de passe</translation>
+    </message>
+    <message>
+        <source>⏹</source>
+        <translation>⏹</translation>
+    </message>
+    <message>
+        <source>Optional: with an address, the Status tab shows Kodi: its version, uptime and CPU temperature, what is playing, with Play/Pause and Stop. In Kodi: Settings › Services › Control, turn on Allow remote control via HTTP and set a username and password (port 8080 by default). The password is kept encrypted in the QGIS authentication database.</source>
+        <translation>Facultatif : avec une adresse, l’onglet État affiche Kodi : sa version, sa durée de fonctionnement et la température du processeur, ce qui est en lecture, avec Lecture/Pause et Arrêt. Dans Kodi : Paramètres › Services › Contrôle, activez Autoriser le contrôle à distance via HTTP et définissez un nom d’utilisateur et un mot de passe (port 8080 par défaut). Le mot de passe est conservé chiffré dans la base d’authentification de QGIS.</translation>
     </message>
 </context>
 </TS>

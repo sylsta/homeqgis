@@ -861,6 +861,86 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_kodi">
+      <attribute name="title">
+       <string>Kodi</string>
+      </attribute>
+      <layout class="QFormLayout" name="kodi_form">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_kodi_url">
+         <property name="text">
+          <string>Address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="kodi_url">
+         <property name="placeholderText">
+          <string notr="true">http://192.168.50.2:8080/</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_kodi_user">
+         <property name="text">
+          <string>Username</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="kodi_user">
+         <property name="placeholderText">
+          <string notr="true">kodi</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_kodi_password">
+         <property name="text">
+          <string>Password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="kodi_password">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="kodi_test_layout" stretch="0,1">
+         <item>
+          <widget class="QPushButton" name="btn_kodi_test">
+           <property name="text">
+            <string>Test connection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_kodi_test">
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="lbl_kodi_hint">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Optional: with an address, the Status tab shows Kodi: its version, uptime and CPU temperature, what is playing, with Play/Pause and Stop. In Kodi: Settings › Services › Control, turn on Allow remote control via HTTP and set a username and password (port 8080 by default). The password is kept encrypted in the QGIS authentication database.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>

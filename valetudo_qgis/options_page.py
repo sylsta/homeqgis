@@ -15,15 +15,16 @@ from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 from . import host_info, room_groups
 from .client import ValetudoClient
 from .ha_client import UNAUTHORISED, HomeAssistantClient
+from .kodi_client import KodiClient
 from .i18n import tr
 from .robot_survey import RobotSurvey
 from .icons import LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
-    KEY_HA_URL, KEY_INTERVAL, KEY_NUC_HOST, KEY_NUC_PORT, KEY_NUC_USER, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
+    KEY_HA_URL, KEY_INTERVAL, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST, KEY_NUC_PORT, KEY_NUC_USER, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_PI_HOST,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
-    HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, WIFI_DEFAULTS, default_camera_url,
+    HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_SETTING, WIFI_DEFAULTS, default_camera_url,
     load_settings, secret, set_secret,
 )
 from .ui_loader import load_ui
@@ -35,6 +36,7 @@ UI_WIDGETS = (
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir", "btn_pi_test", "lbl_pi_test",
     "nuc_host", "nuc_user", "nuc_port", "btn_nuc_test", "lbl_nuc_test",
+    "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
     *WIFI_DEFAULTS,   # one widget per Wi-Fi survey setting, named like the setting
@@ -71,6 +73,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.pi_wifi_dir.setText(cfg["pi_wifi_dir"])
         self.ha_url.setText(cfg["ha_url"])
         self.nuc_host.setText(cfg["nuc_host"])
+        self.kodi_url.setText(cfg["kodi_url"])
+        self.kodi_user.setText(cfg["kodi_user"])
         self.nuc_user.setText(cfg["nuc_user"])
         self.nuc_port.setValue(cfg["nuc_port"])
         self.ha_ssh_host.setText(cfg["ha_ssh_host"])
@@ -82,7 +86,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         # Secrets (encrypted): field -> (storage key, value as last saved)
         self._secrets = {self.ha_token: [HA_TOKEN_SETTING, secret(HA_TOKEN_SETTING).strip()],
                          self.ha_ssh_password: [HA_SSH_PASSWORD_SETTING,
-                                                secret(HA_SSH_PASSWORD_SETTING)]}
+                                                secret(HA_SSH_PASSWORD_SETTING)],
+                         self.kodi_password: [KODI_PASSWORD_SETTING,
+                                              secret(KODI_PASSWORD_SETTING)]}
         for field, (_, value) in self._secrets.items():
             field.setText(value)
         for key, (_, kind) in WIFI_DEFAULTS.items():
@@ -96,6 +102,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.btn_ha_test.clicked.connect(self._test_home_assistant)
         self.btn_pi_test.clicked.connect(self._test_pi)
         self.btn_nuc_test.clicked.connect(self._test_nuc)
+        self.btn_kodi_test.clicked.connect(self._test_kodi)
+        self._kodi_client = None
         self._nuc_runner = None
         self._pi_runner = None
         self.btn_room_groups.setToolTip(room_groups.file_path())
@@ -187,6 +195,35 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             "✓ " + tr("Connected: {name}").format(name=name or self.nuc_host.text().strip())
             + ("\n" + resources if resources else ""))
 
+    def _test_kodi(self, *_):
+        """Ask Kodi its version, with the values being edited."""
+        url = self.kodi_url.text().strip()
+        if not url:
+            self.lbl_kodi_test.setText(tr("Enter the server address first."))
+            return
+        if self._kodi_client is not None:
+            self._kodi_client.close()
+        self.btn_kodi_test.setEnabled(False)
+        self.lbl_kodi_test.setText(tr("Testing…"))
+        self._kodi_client = KodiClient(url, self.kodi_user.text().strip(),
+                                       self.kodi_password.text(), self)
+
+        def ok(result):
+            version = (result or {}).get("version") or {}
+            number = (f" {version['major']}.{version.get('minor', 0)}"
+                      if isinstance(version, dict) and "major" in version else "")
+            self.lbl_kodi_test.setText("✓ " + tr("Connected: {name}").format(
+                name=f"{(result or {}).get('name') or 'Kodi'}{number}"))
+            self.btn_kodi_test.setEnabled(True)
+
+        def failed(error):
+            self.lbl_kodi_test.setText(
+                "✗ " + tr("Connection failed: {error}").format(error=error))
+            self.btn_kodi_test.setEnabled(True)
+
+        self._kodi_client.call("Application.GetProperties",
+                               {"properties": ["version", "name"]}, ok, failed)
+
     def _test_home_assistant(self, *_):
         """Ask Home Assistant who it is, with the values being edited.
 
@@ -242,6 +279,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_PI_WIFI_DIR, self.pi_wifi_dir.text().strip() or "valetudo_wifi")
         s.setValue(KEY_HA_URL, self.ha_url.text().strip())
         s.setValue(KEY_NUC_HOST, self.nuc_host.text().strip())
+        s.setValue(KEY_KODI_URL, self.kodi_url.text().strip())
+        s.setValue(KEY_KODI_USER, self.kodi_user.text().strip())
         s.setValue(KEY_NUC_USER, self.nuc_user.text().strip() or "root")
         s.setValue(KEY_NUC_PORT, self.nuc_port.value())
         s.setValue(KEY_HA_SSH_HOST, self.ha_ssh_host.text().strip())
@@ -260,8 +299,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             else:
                 from qgis.utils import iface
                 iface.messageBar().pushWarning("Valetudo", tr(
-                    "A Home Assistant token or password was not saved: the QGIS "
-                    "master password is needed to store it encrypted."))
+                    "A token or password was not saved: the QGIS master password "
+                    "is needed to store it encrypted."))
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             s.setValue(f"valetudo/{key}", widget.isChecked() if kind is bool else widget.value())

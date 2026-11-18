@@ -39,16 +39,17 @@ from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from . import host_info
-from .icons import HA_LOGO, LOGO, NUC_ICON, RPI_LOGO, icon
+from .icons import HA_LOGO, KODI_ICON, LOGO, NUC_ICON, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
 from .ssh_host_block import SshHostBlock
+from .kodi_block import KodiBlock
 from .log_tab import LogTab
 from .log_tail import COMMAND_PREFIX, LOG_PATH
 from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (HA_SSH_PASSWORD_SETTING, has_ha_token, has_secret, ha_token,
+from .settings import (HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, has_ha_token, has_secret, ha_token,
                        load_settings, secret)
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
@@ -75,7 +76,10 @@ UI_WIDGETS = (
     "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
     "ha_header", "lbl_ha_logo", "lbl_ha_connection", "btn_ha_refresh", "lbl_ha_name",
     "lbl_ha_info", "nuc_header", "lbl_nuc_logo", "lbl_nuc_connection", "btn_nuc_refresh",
-    "lbl_nuc_name", "lbl_nuc_info", "lbl_nuc_resources", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "lbl_nuc_name", "lbl_nuc_info", "lbl_nuc_resources",
+    "kodi_header", "lbl_kodi_logo", "lbl_kodi_connection", "btn_kodi_refresh",
+    "lbl_kodi_name", "lbl_kodi_info", "kodi_play_row", "lbl_kodi_playing",
+    "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection", "btn_refresh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
     "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
@@ -416,6 +420,16 @@ class ValetudoPanel(QgsDockWidget):
             self._nuc_target, lambda epoch: self._local_time(epoch),
             lambda wrong: self._set_problem(
                 "nuc_clock", tr("The NUC's clock is wrong.") if wrong else None), self)
+        # Kodi: read over its JSON-RPC (kodi_block), shown only when set
+        self.lbl_kodi_logo.setPixmap(icon(KODI_ICON).pixmap(20, 20))
+        self.btn_kodi_refresh.setIcon(theme("/mActionRefresh.svg"))
+        self.kodi = KodiBlock(
+            {"header": self.kodi_header, "connection": self.lbl_kodi_connection,
+             "refresh": self.btn_kodi_refresh, "name": self.lbl_kodi_name,
+             "info": self.lbl_kodi_info, "play_row": self.kodi_play_row,
+             "playing": self.lbl_kodi_playing, "progress": self.bar_kodi_progress,
+             "play": self.btn_kodi_play, "stop": self.btn_kodi_stop},
+            self._kodi_settings, self)
         self.pi_runner.finished.connect(self._on_pi_info)
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
@@ -1333,6 +1347,15 @@ class ValetudoPanel(QgsDockWidget):
         return target
 
     @staticmethod
+    def _kodi_settings():
+        """(url, user, password) of Kodi, or None when no address is set."""
+        cfg = load_settings()
+        if not cfg["kodi_url"]:
+            return None
+        password = secret(KODI_PASSWORD_SETTING) if has_secret(KODI_PASSWORD_SETTING) else ""
+        return (cfg["kodi_url"], cfg["kodi_user"], password)
+
+    @staticmethod
     def _nuc_target():
         """(host, user, port) of the NUC, or None when none is set."""
         cfg = load_settings()
@@ -1342,6 +1365,7 @@ class ValetudoPanel(QgsDockWidget):
         """The Pi's details, card and terminal exist only when a Pi address is set;
         its details are read while the panel is visible. Same for the NUC's block."""
         self.nuc.update(self.isVisible())
+        self.kodi.update(self.isVisible())
         has_pi = self._pi_target() is not None
         self.pi_header.setVisible(has_pi)
         for widget in (self.sep_pi, self.lbl_pi_strip_logo, self.lbl_pi_strip):
@@ -1586,6 +1610,7 @@ class ValetudoPanel(QgsDockWidget):
         self._pi_timer.stop()
         self.pi_runner.stop()
         self.nuc.stop()
+        self.kodi.stop()
         self._ha_timer.stop()
         if self._ha_client is not None:
             self._ha_client.close()
@@ -1695,6 +1720,7 @@ class ValetudoPanel(QgsDockWidget):
     def _update_header(self):
         self._update_pi_header()
         self.nuc.render()
+        self.kodi.render()
         if self._ha_state == "online":
             self._update_ha_header()
         if self.client is None or self._reachable is None:

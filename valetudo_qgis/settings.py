@@ -25,6 +25,8 @@ KEY_HA_URL = "valetudo/ha_url"   # Home Assistant server
 KEY_NUC_HOST = "valetudo/nuc_host"   # empty = no NUC block in the Status tab
 KEY_NUC_USER = "valetudo/nuc_user"
 KEY_NUC_PORT = "valetudo/nuc_port"
+KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
+KEY_KODI_USER = "valetudo/kodi_user"
 DEFAULT_HA_URL = "http://localhost:8123/"
 KEY_HA_SSH_HOST = "valetudo/ha_ssh_host"   # empty = no Home Assistant terminal
 KEY_HA_SSH_USER = "valetudo/ha_ssh_user"
@@ -36,6 +38,7 @@ DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
 # in the QGIS authentication database under this key (see ha_token()).
 HA_TOKEN_SETTING = "valetudo/ha_token"
 HA_SSH_PASSWORD_SETTING = "valetudo/ha_ssh_password"   # same: encrypted, optional
+KODI_PASSWORD_SETTING = "valetudo/kodi_password"         # same
 
 # Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
 WIFI_DEFAULTS = {
@@ -81,6 +84,8 @@ def load_settings():
                        or "valetudo_wifi",
         "ha_url": s.value(KEY_HA_URL, DEFAULT_HA_URL, type=str).strip() or DEFAULT_HA_URL,
         "nuc_host": s.value(KEY_NUC_HOST, "", type=str).strip(),
+        "kodi_url": s.value(KEY_KODI_URL, "", type=str).strip(),
+        "kodi_user": s.value(KEY_KODI_USER, "kodi", type=str).strip(),
         "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip() or "root",
         "nuc_port": s.value(KEY_NUC_PORT, 22, type=int),
         "ha_ssh_host": s.value(KEY_HA_SSH_HOST, "", type=str).strip(),
