@@ -1075,6 +1075,12 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_about">
+      <attribute name="title">
+       <string>About</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="about_layout"/>
+     </widget>
     </widget>
    </item>
    <item>

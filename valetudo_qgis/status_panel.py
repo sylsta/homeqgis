@@ -711,6 +711,8 @@ class ValetudoPanel(QgsDockWidget):
         self.act_compact.setCheckable(True)
         self.act_compact.setChecked(QgsSettings().value(KEY_COMPACT, False, type=bool))
         self.act_compact.toggled.connect(self.set_compact)
+        self.menu.addSeparator()
+        self.menu.addAction(icon(LOGO), tr("About…"), self.show_about)
         # Care: dock station commands (hidden when the robot has none)
         put(self.dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
         self._dock_actions = [act[k] for k in ("empty_dock", "mop_wash", "mop_dry") if k in act]
@@ -752,6 +754,10 @@ class ValetudoPanel(QgsDockWidget):
                 self.show_tab("status")
             return True
         return super().eventFilter(obj, event)
+
+    def show_about(self, *_):
+        from .about import AboutDialog
+        AboutDialog(self).exec()
 
     def show_tab(self, key):
         """Bring a side tab to the front (unfolding a compact panel)."""

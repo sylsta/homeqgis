@@ -15,6 +15,7 @@ from qgis.core import QgsSettings
 from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 
 from . import config_backup, host_info, room_groups
+from .about import AboutWidget
 from .client import ValetudoClient
 from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .kodi_client import KodiClient
@@ -43,7 +44,7 @@ UI_WIDGETS = (
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
-    "btn_backup_reset",
+    "btn_backup_reset", "about_layout",
     "lbl_backup_status",
     "ha_url", "ha_token", "btn_ha_test", "lbl_ha_test",
     "ha_ssh_host", "ha_ssh_user", "ha_ssh_port", "ha_ssh_password", "ha_log_command",
@@ -61,6 +62,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._ha_client = None
         self._fill()
         self._setup_backup()
+        self.about_layout.addWidget(AboutWidget(self))
         self._connect_tests()
 
     def _fill(self):

@@ -364,6 +364,13 @@ systemd runs, else `/var/log/syslog` (sysvinit, as MX Linux by default); set
 another *Log command* in the settings if needed. Reading the system log may need
 `root` or a user in the `adm` group.
 
+**About** (tab *About* of the settings, or *About…* in the panel's ⋮ menu): what
+the plugin does, in foldable sections (the robot, then the Raspberry Pi, Home
+Assistant, NUC and Kodi), links to this repository and to Valetudo, the author and
+licence (from `metadata.txt`), and the system it runs on (QGIS, Qt, Python, and
+whether `ffmpeg` and `ssh` are found), with **Copy system information** for a bug
+report.
+
 **Boot log**: after *Reboot robot (SSH)…*, or with *Watch robot boot* (e.g.
 after using the power button), the plugin follows the robot's startup and
 times each stage: offline, network up (SSH port answers), Valetudo answers
@@ -392,6 +399,7 @@ is the Swagger UI embedded in the robot: `http://<robot-ip>/swagger/`.
 | `kodi_client.py`             | Calls to Kodi's JSON-RPC (HTTP)                         |
 | `kodi_block.py`              | Kodi in the Status tab: state, playback, remote         |
 | `config_backup.py`           | Save and load the configuration (timestamped JSON)      |
+| `about.py`                   | About page (settings tab and ⋮ menu window)             |
 | `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
 | `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
 | `status_panel.py`            | Dockable status panel with controls                     |

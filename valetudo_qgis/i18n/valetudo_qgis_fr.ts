@@ -2339,5 +2339,213 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key, as for the Raspberry Pi. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog (sysvinit, as MX Linux by default); reading them may need root or the adm group.</source>
         <translation>Facultatif : avec une adresse, l’onglet État affiche le NUC : son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus en SSH toutes les 30 s tant que le panneau est visible, et l’onglet Terminal propose une console et un journal sur lui. La connexion se fait par clé SSH, comme pour le Raspberry Pi. Commande du journal : vide, elle suit le journal système (journalctl) là où systemd tourne, sinon /var/log/syslog (sysvinit, comme MX Linux par défaut) ; les lire peut demander root ou le groupe adm.</translation>
     </message>
+    <message>
+        <source>Robot: map</source>
+        <translation>Robot : carte</translation>
+    </message>
+    <message>
+        <source>Robot: cleaning</source>
+        <translation>Robot : nettoyage</translation>
+    </message>
+    <message>
+        <source>Robot: rooms and restrictions</source>
+        <translation>Robot : pièces et restrictions</translation>
+    </message>
+    <message>
+        <source>Robot: schedule</source>
+        <translation>Robot : planning</translation>
+    </message>
+    <message>
+        <source>Robot: Wi-Fi</source>
+        <translation>Robot : Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Robot: camera</source>
+        <translation>Robot : caméra</translation>
+    </message>
+    <message>
+        <source>Robot: care and system</source>
+        <translation>Robot : entretien et système</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Paramètres</translation>
+    </message>
+    <message>
+        <source>A control centre in QGIS for a robot vacuum running Valetudo, with its map as real GIS layers, and for the home servers around it: Raspberry Pi, Home Assistant, NUC and Kodi.</source>
+        <translation>Un centre de contrôle dans QGIS pour un robot aspirateur sous Valetudo, avec sa carte en vraies couches SIG, et pour les serveurs de la maison autour de lui : Raspberry Pi, Home Assistant, NUC et Kodi.</translation>
+    </message>
+    <message>
+        <source>Unfold all</source>
+        <translation>Tout déplier</translation>
+    </message>
+    <message>
+        <source>Fold all</source>
+        <translation>Tout replier</translation>
+    </message>
+    <message>
+        <source>Copy system information</source>
+        <translation>Copier les informations système</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Copié</translation>
+    </message>
+    <message>
+        <source>About Valetudo for QGIS</source>
+        <translation>À propos de Valetudo pour QGIS</translation>
+    </message>
+    <message>
+        <source>Floor, walls, rooms, robot, dock, path and planned path as QGIS layers</source>
+        <translation>Sol, murs, pièces, robot, station, trajet et trajet prévu en couches QGIS</translation>
+    </message>
+    <message>
+        <source>Live tracking that keeps the robot in view, status card on the map</source>
+        <translation>Suivi en direct qui garde le robot en vue, carte d’état sur la carte</translation>
+    </message>
+    <message>
+        <source>Shown by itself when QGIS starts with an empty project</source>
+        <translation>Affichée d’elle-même quand QGIS démarre avec un projet vide</translation>
+    </message>
+    <message>
+        <source>All rooms, ticked rooms, room groups, a zone drawn on the map, 1 to 3 passes</source>
+        <translation>Toutes les pièces, les pièces cochées, des groupes de pièces, une zone dessinée sur la carte, 1 à 3 passages</translation>
+    </message>
+    <message>
+        <source>Cleaning profile: mode, water usage, fan speed</source>
+        <translation>Profil de nettoyage : mode, débit d’eau, puissance d’aspiration</translation>
+    </message>
+    <message>
+        <source>Rooms picked on the map; Go to, also on robots without it, with or without cleaning</source>
+        <translation>Pièces choisies sur la carte ; Aller à, même sur les robots qui ne l’ont pas, avec ou sans nettoyage</translation>
+    </message>
+    <message>
+        <source>Start, pause, resume, back to the dock</source>
+        <translation>Démarrer, mettre en pause, reprendre, retour à la station</translation>
+    </message>
+    <message>
+        <source>Rename, join and split rooms</source>
+        <translation>Renommer, fusionner et diviser les pièces</translation>
+    </message>
+    <message>
+        <source>No-go zones, no-mop zones and virtual walls edited with the QGIS tools and sent to the robot</source>
+        <translation>Zones interdites, zones sans serpillière et murs virtuels modifiés avec les outils de QGIS et envoyés au robot</translation>
+    </message>
+    <message>
+        <source>Valetudo's timers in a week view; drag rooms onto it to create one</source>
+        <translation>Les minuteries de Valetudo dans une vue de la semaine ; glissez-y des pièces pour en créer une</translation>
+    </message>
+    <message>
+        <source>A cleaning profile per timer, run now, one-off cleanings for tonight</source>
+        <translation>Un profil de nettoyage par minuterie, lancement immédiat, nettoyages ponctuels pour ce soir</translation>
+    </message>
+    <message>
+        <source>Signal now and over the last 10 minutes</source>
+        <translation>Signal actuel et sur les 10 dernières minutes</translation>
+    </message>
+    <message>
+        <source>Survey recorded in QGIS, or on the robot itself while QGIS is closed</source>
+        <translation>Relevé enregistré dans QGIS, ou sur le robot lui-même quand QGIS est fermé</translation>
+    </message>
+    <message>
+        <source>Interpolated signal maps, per run and cumulative ones built on the Raspberry Pi</source>
+        <translation>Cartes du signal interpolées, par passage et cumulées, construites sur le Raspberry Pi</translation>
+    </message>
+    <message>
+        <source>Live view, full screen, snapshots, MP4 recording, camera light</source>
+        <translation>Vue en direct, plein écran, captures, enregistrement MP4, lumière de la caméra</translation>
+    </message>
+    <message>
+        <source>Consumables, dock station (empty the bin, wash and dry the mops), tank and bag warnings, statistics, robot settings, events</source>
+        <translation>Consommables, station (vider le bac, laver et sécher les serpillières), alertes des réservoirs et du sac, statistiques, réglages du robot, événements</translation>
+    </message>
+    <message>
+        <source>Reboot over SSH, boot watch with Valetudo's log, clock check</source>
+        <translation>Redémarrage par SSH, suivi du démarrage avec le journal de Valetudo, contrôle de l’horloge</translation>
+    </message>
+    <message>
+        <source>SSH console and live log on the robot</source>
+        <translation>Console SSH et journal en direct sur le robot</translation>
+    </message>
+    <message>
+        <source>Status: system, clock, uptime</source>
+        <translation>État : système, horloge, durée de fonctionnement</translation>
+    </message>
+    <message>
+        <source>SSH console and live log</source>
+        <translation>Console SSH et journal en direct</translation>
+    </message>
+    <message>
+        <source>Builds the Wi-Fi maps by itself after each run; loaded into QGIS in one click</source>
+        <translation>Construit les cartes Wi-Fi tout seul après chaque passage ; chargées dans QGIS en un clic</translation>
+    </message>
+    <message>
+        <source>Status: version, home, clock, uptime</source>
+        <translation>État : version, maison, horloge, durée de fonctionnement</translation>
+    </message>
+    <message>
+        <source>SSH console and live log, by key or password</source>
+        <translation>Console SSH et journal en direct, par clé ou mot de passe</translation>
+    </message>
+    <message>
+        <source>Status: system, clock, uptime, load, memory, disk, temperature</source>
+        <translation>État : système, horloge, durée de fonctionnement, charge, mémoire, disque, température</translation>
+    </message>
+    <message>
+        <source>SSH console and live system log</source>
+        <translation>Console SSH et journal système en direct</translation>
+    </message>
+    <message>
+        <source>Status: version, uptime, temperature</source>
+        <translation>État : version, durée de fonctionnement, température</translation>
+    </message>
+    <message>
+        <source>What is playing, with its progress; play, pause and stop</source>
+        <translation>Ce qui est en lecture, avec sa progression ; lecture, pause et arrêt</translation>
+    </message>
+    <message>
+        <source>One Options page for all of them, with a test button for each</source>
+        <translation>Une seule page d’options pour tous, avec un bouton de test pour chacun</translation>
+    </message>
+    <message>
+        <source>Tokens and passwords kept encrypted</source>
+        <translation>Jetons et mots de passe conservés chiffrés</translation>
+    </message>
+    <message>
+        <source>Timestamped backups of the configuration, reset</source>
+        <translation>Sauvegardes horodatées de la configuration, réinitialisation</translation>
+    </message>
+    <message>
+        <source>English and French</source>
+        <translation>Anglais et français</translation>
+    </message>
+    <message>
+        <source>not found (camera)</source>
+        <translation>introuvable (caméra)</translation>
+    </message>
+    <message>
+        <source>not found (terminal, reboot)</source>
+        <translation>introuvable (terminal, redémarrage)</translation>
+    </message>
+    <message>
+        <source>Documentation and source code</source>
+        <translation>Documentation et code source</translation>
+    </message>
+    <message>
+        <source>Report a problem</source>
+        <translation>Signaler un problème</translation>
+    </message>
+    <message>
+        <source>Author: {author} · Licence: {licence}</source>
+        <translation>Auteur : {author} · Licence : {licence}</translation>
+    </message>
+    <message>
+        <source>About…</source>
+        <translation>À propos…</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>À propos</translation>
+    </message>
 </context>
 </TS>
