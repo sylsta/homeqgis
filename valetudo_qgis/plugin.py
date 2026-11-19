@@ -8,7 +8,7 @@ enabled/checked state can never disagree.
 import os
 
 from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
-from qgis.PyQt.QtWidgets import QAction, QCheckBox, QMessageBox, QPushButton
+from qgis.PyQt.QtWidgets import QAction, QCheckBox, QMessageBox, QPushButton, QToolButton
 from qgis.core import (
     Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsProject, QgsSettings,
 )
@@ -77,6 +77,7 @@ REQUIRED_CAPABILITY = {
 # Layout, None = separator. The panel shows the robot and map rows.
 # Simple menu and toolbar: everything else is in the panel's command list.
 TOOLBAR = ["status_panel"]
+MAP_TOOLS = ["pick_rooms", "edit_restrictions", "send_restrictions"]   # shown with "Show on map"
 MENU = ["status_panel", "settings"]
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
@@ -160,7 +161,8 @@ class ValetudoPlugin:
         self._edit_bar = None           # message bar shown while restrictions are edited
         self._reload_quietly = False    # next restrictions reload: no editing, no bar
         self.zone_tool = self.goto_tool = None
-        self.pick_tool = self.map_toolbar = self.overlay = None
+        self.pick_tool = self.overlay = None
+        self._map_tool_entries = []
         self.panel = None
         self.options_factory = None   # our page in Settings › Options
         self._dock_state = {}  # dock component -> last known value
@@ -301,12 +303,17 @@ class ValetudoPlugin:
         self.pick_tool.roomClicked.connect(self._on_room_clicked)
         self.panel.piMapRequested.connect(lambda full: self.load_pi_wifi_map(full=full))
 
-        # While "Show on map" is on: a map toolbar and a status card over the canvas.
-        self.map_toolbar = self.iface.addToolBar(tr("Valetudo map"))
-        self.map_toolbar.setObjectName("ValetudoMapToolbar")
-        for key in ("pick_rooms", "edit_restrictions", "send_restrictions"):
-            self.map_toolbar.addAction(self.act[key])
-        self.map_toolbar.setVisible(False)
+        # While "Show on map" is on: the map tools at the end of the toolbar (as
+        # buttons, so that hiding them there leaves the menus alone), and a status
+        # card over the canvas.
+        self._map_tool_entries = [self.toolbar.addSeparator()]
+        for key in MAP_TOOLS:
+            button = QToolButton(self.toolbar)
+            button.setDefaultAction(self.act[key])
+            button.setAutoRaise(True)
+            self._map_tool_entries.append(self.toolbar.addWidget(button))
+        for entry in self._map_tool_entries:
+            entry.setVisible(False)
         self.overlay = MapOverlay(canvas)
         self.panel.summaryChanged.connect(self.overlay.set_html)
         self.act["live"].toggled.connect(self._on_live_toggled)
@@ -380,10 +387,7 @@ class ValetudoPlugin:
         if getattr(self, "overlay", None) is not None:
             self.overlay.remove()
             self.overlay = None
-        if getattr(self, "map_toolbar", None) is not None:
-            self.iface.mainWindow().removeToolBar(self.map_toolbar)
-            self.map_toolbar.deleteLater()
-            self.map_toolbar = None
+        self._map_tool_entries = []
         if self.zone_tool is not None:
             self.zone_tool.cleanup()
         if split_tool is not None:
@@ -824,9 +828,9 @@ class ValetudoPlugin:
             self.panel.toggle_room(seg_id)
 
     def _on_live_toggled(self, checked):
-        """The map toolbar and the status card come with "Show on map"."""
-        if self.map_toolbar is not None:
-            self.map_toolbar.setVisible(checked)
+        """The map tools and the status card come with "Show on map"."""
+        for entry in getattr(self, "_map_tool_entries", []):
+            entry.setVisible(checked)
         if self.overlay is not None:
             self.overlay.set_visible(checked)
 

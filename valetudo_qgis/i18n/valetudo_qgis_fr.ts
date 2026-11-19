@@ -1790,10 +1790,6 @@ Continuer ?</translation>
         <translation>Choisir les pièces sur la carte</translation>
     </message>
     <message>
-        <source>Valetudo map</source>
-        <translation>Carte Valetudo</translation>
-    </message>
-    <message>
         <source>Click rooms on the map to tick them in the Clean tab; right-click a room for its menu.</source>
         <translation>Cliquez sur des pièces de la carte pour les cocher dans l’onglet Nettoyer ; clic droit sur une pièce pour son menu.</translation>
     </message>

@@ -157,7 +157,7 @@ The panel (titled *Connection*), from top to bottom:
   within a minute (*Settings > Options > DomotiQGIS*, tab *Robot*: "Show the robot on
   the map when QGIS starts with an empty project"); a project with layers is left
   untouched.
-- While it is on, a **Valetudo map** toolbar appears: *Pick rooms on the map* (click a
+- While it is on, the map tools appear at the end of the DomotiQGIS toolbar: *Pick rooms on the map* (click a
   room to tick or untick it in the Clean tab, right-click it for its menu), *Edit
   no-go zones and walls*, *Send no-go zones and walls to robot…*; and a small
   **status card** (state, battery, job) sits in the map's top right corner, so the
