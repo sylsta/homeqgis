@@ -2016,14 +2016,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>S’exécute sur le serveur Home Assistant, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
     </message>
     <message>
-        <source>No robot is set yet: enter its address in the settings.</source>
-        <translation>Aucun robot n’est encore défini : saisissez son adresse dans les paramètres.</translation>
-    </message>
-    <message>
-        <source>Open settings…</source>
-        <translation>Ouvrir les paramètres…</translation>
-    </message>
-    <message>
         <source>SSH password</source>
         <translation>Mot de passe SSH</translation>
     </message>
@@ -2598,6 +2590,46 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Servers</source>
         <translation>Serveurs</translation>
+    </message>
+    <message>
+        <source>Setup assistant…</source>
+        <translation>Assistant de configuration…</translation>
+    </message>
+    <message>
+        <source>No robot is set yet.</source>
+        <translation>Aucun robot n’est encore défini.</translation>
+    </message>
+    <message>
+        <source>Set up…</source>
+        <translation>Configurer…</translation>
+    </message>
+    <message>
+        <source>Your robot</source>
+        <translation>Votre robot</translation>
+    </message>
+    <message>
+        <source>The address of Valetudo on your robot, as you open it in a browser.</source>
+        <translation>L’adresse de Valetudo sur votre robot, telle que vous l’ouvrez dans un navigateur.</translation>
+    </message>
+    <message>
+        <source>Other servers (optional)</source>
+        <translation>Autres serveurs (facultatif)</translation>
+    </message>
+    <message>
+        <source>Tick those you have. Their logins (SSH keys, Home Assistant token, Kodi password) are set later in the settings.</source>
+        <translation>Cochez ceux que vous avez. Leurs identifiants (clés SSH, jeton Home Assistant, mot de passe Kodi) se règlent ensuite dans les paramètres.</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Prêt</translation>
+    </message>
+    <message>
+        <source>{name} setup</source>
+        <translation>Configuration de {name}</translation>
+    </message>
+    <message>
+        <source>Finish saves these, and the panel shows the robot. Everything can be changed later in Settings › Options › {name}.</source>
+        <translation>Terminer enregistre ces valeurs, et le panneau affiche le robot. Tout se modifie ensuite dans Préférences › Options › {name}.</translation>
     </message>
 </context>
 </TS>

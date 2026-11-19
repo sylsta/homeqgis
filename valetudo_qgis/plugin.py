@@ -78,7 +78,7 @@ REQUIRED_CAPABILITY = {
 # Simple menu and toolbar: everything else is in the panel's command list.
 TOOLBAR = ["status_panel"]
 MAP_TOOLS = ["pick_rooms", "edit_restrictions", "send_restrictions"]   # shown with "Show on map"
-MENU = ["status_panel", "settings"]
+MENU = ["status_panel", "settings", "setup"]
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
 
@@ -190,6 +190,7 @@ class ValetudoPlugin:
         win = self.iface.mainWindow()
 
         self._new_action("settings", tr("Settings…"), self.configure)
+        self._new_action("setup", tr("Setup assistant…"), self.run_setup)
         # The settings are a page of Settings › Options; "Settings…" opens it.
         self.options_factory = ValetudoOptionsFactory(self._on_settings_applied)
         self.iface.registerOptionsWidgetFactory(self.options_factory)
@@ -698,22 +699,32 @@ class ValetudoPlugin:
         self._show_edit_bar()
 
     def _propose_settings(self):
-        """No robot set yet (first start): offer to open the settings, once."""
+        """No robot set yet (first start): offer the setup assistant, once."""
         bar = self.iface.messageBar()
-        item = bar.createMessage(
-            PLUGIN_NAME, tr("No robot is set yet: enter its address in the settings."))
-        button = QPushButton(tr("Open settings…"), item)
+        item = bar.createMessage(PLUGIN_NAME, tr("No robot is set yet."))
+        button = QPushButton(tr("Set up…"), item)
 
-        def open_settings():
+        def open_setup():
             try:
                 bar.popWidget(item)
             except RuntimeError:   # already closed
                 pass
-            self.configure()
+            self.run_setup()
 
-        button.clicked.connect(open_settings)
+        button.clicked.connect(open_setup)
         item.layout().addWidget(button)
         bar.pushWidget(item, Qgis.MessageLevel.Info, 0)
+
+    def run_setup(self, *_):
+        """The setup assistant: robot address, other servers; then show the robot."""
+        from .setup_wizard import SetupWizard
+        wizard = SetupWizard(self.iface.mainWindow())
+        if not wizard.exec():
+            return
+        wizard.save()
+        self._on_settings_applied()
+        if self.panel is not None:
+            self.panel.show()
 
     def _show_edit_bar(self):
         """Persistent bar while editing: what to do, Send to robot…, Discard changes."""
