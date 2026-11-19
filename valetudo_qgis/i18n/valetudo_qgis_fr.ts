@@ -2747,5 +2747,137 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>History not written: {error}</source>
         <translation>Historique non écrit : {error}</translation>
     </message>
+    <message>
+        <source>Other</source>
+        <translation>Autre</translation>
+    </message>
+    <message>
+        <source>Back on dock</source>
+        <translation>Revenu à la base</translation>
+    </message>
+    <message>
+        <source>Stopped away</source>
+        <translation>Arrêté hors base</translation>
+    </message>
+    <message>
+        <source>No outing</source>
+        <translation>Aucune sortie</translation>
+    </message>
+    <message>
+        <source>Day</source>
+        <translation>Jour</translation>
+    </message>
+    <message>
+        <source>Week</source>
+        <translation>Semaine</translation>
+    </message>
+    <message>
+        <source>Previous day or week</source>
+        <translation>Jour ou semaine précédents</translation>
+    </message>
+    <message>
+        <source>Next day or week</source>
+        <translation>Jour ou semaine suivants</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Aujourd'hui</translation>
+    </message>
+    <message>
+        <source>Back to today</source>
+        <translation>Revenir à aujourd'hui</translation>
+    </message>
+    <message>
+        <source>Load on map</source>
+        <translation>Charger sur la carte</translation>
+    </message>
+    <message>
+        <source>Add the day (or the week) to the map, in a group per week; the points layer starts hidden</source>
+        <translation>Ajoute le jour (ou la semaine) à la carte, dans un groupe par semaine ; la couche des points est d'abord masquée</translation>
+    </message>
+    <message>
+        <source>Replay</source>
+        <translation>Rejouer</translation>
+    </message>
+    <message>
+        <source>Replay the selected outing (or the whole day) with QGIS's Temporal Controller</source>
+        <translation>Rejoue la sortie sélectionnée (ou toute la journée) avec le contrôleur temporel de QGIS</translation>
+    </message>
+    <message>
+        <source>Open folder</source>
+        <translation>Ouvrir le dossier</translation>
+    </message>
+    <message>
+        <source>Open the history folder</source>
+        <translation>Ouvrir le dossier de l'historique</translation>
+    </message>
+    <message>
+        <source>Replay in the Temporal Controller: the points appear as the robot went; the segments and outings layers of the day are hidden meanwhile.</source>
+        <translation>Lecture dans le contrôleur temporel : les points apparaissent au fil du trajet du robot ; les couches des segments et des sorties du jour sont masquées pendant ce temps.</translation>
+    </message>
+    <message>
+        <source>{n} outing(s)</source>
+        <translation>{n} sortie(s)</translation>
+    </message>
+    <message>
+        <source>Activities</source>
+        <translation>Activités</translation>
+    </message>
+    <message>
+        <source>Job</source>
+        <translation>Tâche</translation>
+    </message>
+    <message>
+        <source>Result</source>
+        <translation>Fin</translation>
+    </message>
+    <message>
+        <source>Save the project: the robot's history is kept in a history folder next to the project file.</source>
+        <translation>Enregistrez le projet : l'historique du robot est conservé dans un dossier history à côté du fichier projet.</translation>
+    </message>
+    <message>
+        <source>Started by a schedule</source>
+        <translation>Lancée par une programmation</translation>
+    </message>
+    <message>
+        <source>Started by hand or from QGIS</source>
+        <translation>Lancée à la main ou depuis QGIS</translation>
+    </message>
+    <message>
+        <source>Robot history</source>
+        <translation>Historique du robot</translation>
+    </message>
+    <message>
+        <source>Points</source>
+        <translation>Points</translation>
+    </message>
+    <message>
+        <source>Segments</source>
+        <translation>Segments</translation>
+    </message>
+    <message>
+        <source>Outings</source>
+        <translation>Sorties</translation>
+    </message>
+    <message>
+        <source>{start} – {end}</source>
+        <translation>{start} – {end}</translation>
+    </message>
+    <message>
+        <source>Distance: {d:g} m</source>
+        <translation>Distance : {d:g} m</translation>
+    </message>
+    <message>
+        <source>Nothing recorded yet in {folder}.</source>
+        <translation>Rien d'enregistré pour l'instant dans {folder}.</translation>
+    </message>
+    <message>
+        <source>Area cleaned: {a:g} m²</source>
+        <translation>Surface nettoyée : {a:g} m²</translation>
+    </message>
+    <message>
+        <source>Week {n} · {year}</source>
+        <translation>Semaine {n} · {year}</translation>
+    </message>
 </context>
 </TS>

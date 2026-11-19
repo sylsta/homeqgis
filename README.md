@@ -227,6 +227,16 @@ minutes of one of the robot's timers and not from the plugin. Time on the dock i
 recorded. The project must have been saved (the history folder sits next to it): until
 then the outing is kept in memory, and a message offers to save the project.
 
+**History** tab (clock icon, after *Schedule*): the outings of a day or a week (◀ ▶,
+*Today*), with their start (⏰ when started by a schedule), duration, activities, job,
+rooms and how they ended, and the totals. Selecting an outing already on the map selects
+it and zooms to it. **Load on map** (or a double-click) adds the day, or the whole week,
+under *Robot history > Week NN · YYYY > day*: segments coloured by activity over a light
+halo of each outing, and the points, hidden at first. **Replay** shows the selected outing
+(or the day) in QGIS's Temporal Controller in about 30 seconds: the points appear as the
+robot went, the day's other layers are hidden meanwhile. Layers already on the map are
+refreshed as new readings are written.
+
 **Wi-Fi tab**: the signal now, with a graph of the last 10 minutes, and the three
 colour thresholds (green, yellow, red from), used by the strip, the graph and the
 maps. *Record Wi-Fi survey* (with QGIS open) reads the robot's Wi-Fi
@@ -503,6 +513,7 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `history_logic.py`           | Outings, segments and points from the robot's readings  |
 | `history_store.py`           | Daily GeoPackages of the history (`<project>/history`)  |
 | `history_recorder.py`        | Polls the robot and records its history                 |
+| `history_tab.py`             | History tab: outings by day or week, load, replay       |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
 | `quiet_travel.py`            | Quiet presets for "Go to", restored afterwards          |
 | `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |

@@ -281,3 +281,36 @@ class OutingTracker:
                       result="error" if had_error else result,
                       geometry=path if len(path) >= 2 else None)
         self._outings.append(outing)
+
+
+# -- browsing (History tab) -----------------------------------------------------------
+
+def week_days(day):
+    """The seven dates (Monday first) of the ISO week of a datetime.date."""
+    monday = day - timedelta(days=day.weekday())
+    return [monday + timedelta(days=i) for i in range(7)]
+
+
+def week_key(day):
+    """(ISO year, ISO week number) of a datetime.date."""
+    year, week, _ = day.isocalendar()
+    return year, week
+
+
+def summarize(outings):
+    """Totals of outing records (dicts with duration_s, distance_m, area_m2)."""
+    return {"count": len(outings),
+            "duration_s": sum(o.get("duration_s") or 0 for o in outings),
+            "distance_m": round(sum(o.get("distance_m") or 0 for o in outings), 1),
+            "area_m2": round(sum(o.get("area_m2") or 0 for o in outings), 1)}
+
+
+def format_duration(seconds):
+    """'45 s', '12 min', '1 h 05'."""
+    seconds = int(seconds or 0)
+    if seconds < 60:
+        return f"{seconds} s"
+    minutes = round(seconds / 60)
+    if minutes < 60:
+        return f"{minutes} min"
+    return f"{minutes // 60} h {minutes % 60:02d}"

@@ -27,6 +27,8 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QToolButton,
     QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 from qgis.core import QgsApplication, QgsSettings
 
@@ -40,6 +42,7 @@ from .camera_widget import CameraWidget
 from . import room_groups
 from .i18n import tr
 from . import host_info
+from .history_tab import HistoryTab
 from .icons import APP_ICON, HA_LOGO, KODI_ICON, LOGO, NUC_ICON, RPI_LOGO, icon
 from .robot_survey import RobotSurvey
 from .ssh_host_block import SshHostBlock
@@ -629,6 +632,15 @@ class ValetudoPanel(QgsDockWidget):
         # -- Sections remember whether they are open, under our own keys -----------------
         for name, key in SECTIONS.items():
             self._remember_section(getattr(self, name), key)
+
+        # -- History: the robot's recorded outings (after the Schedule tab) -------------
+        self.tab_history = QWidget()
+        self.tab_history.setObjectName("tab_history")
+        QVBoxLayout(self.tab_history).setContentsMargins(4, 0, 4, 4)
+        self.history_tab = HistoryTab(self.tab_history)
+        self.tab_history.layout().addWidget(self.history_tab)
+        self.tabs.insertTab(self.tabs.indexOf(self.tab_schedule) + 1, self.tab_history,
+                            tr("History"))
 
         # -- Side tabs: icons, their titles as tooltips; each page starts with its title
         self._tab_keys = [self.tabs.widget(i).objectName().removeprefix("tab_")
@@ -1800,6 +1812,7 @@ class ValetudoPanel(QgsDockWidget):
 
     def shutdown(self):
         """Called by the plugin on unload."""
+        self.history_tab.shutdown()
         self._camera_grace.stop()
         self.camera.shutdown()
         self._pi_timer.stop()

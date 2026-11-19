@@ -661,8 +661,10 @@ class ValetudoPlugin:
         elif status == "error":
             bar.pushMessage(PLUGIN_NAME, tr("History not written: {error}").format(error=detail),
                             level=Qgis.MessageLevel.Warning, duration=8)
-        elif self._history_bar is not None:   # written: the project has been saved
-            self._hide_history_bar()
+        else:   # written
+            self._hide_history_bar()   # the project has been saved
+            if self.panel is not None:
+                self.panel.history_tab.written(detail)
 
     def _save_project_for_history(self):
         self._hide_history_bar()
