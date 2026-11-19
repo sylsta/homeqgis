@@ -174,6 +174,15 @@ The panel (titled *Connection*), from top to bottom:
   no-go zones and walls*, *Send no-go zones and walls to robot…*; and a small
   **status card** (state, battery, job) sits in the map's top right corner, so the
   robot can be watched with the panel closed.
+- **Saved with the project**: once the project is saved, the map (rooms, walls,
+  floor) and its zones are kept in `<project folder>/map/robot_map.gpkg`, so they show
+  when the project is reopened, even with the robot off; each version of the map
+  (after a new mapping) is also kept as `robot_map_<map id>.gpkg`, the map id being the
+  one the history's outings carry. The robot, its path and the sensors stay temporary
+  layers, filled while the robot answers. The Wi-Fi survey points go to
+  `<project folder>/wifi/robot_wifi.gpkg`, and the Wi-Fi map to
+  `wifi/robot_wifi_signal.tif`. Reopening a project reuses its layers instead of
+  adding a second set (duplicates left by older versions are removed).
 
 The panel refreshes itself while visible (every 5 s while the robot works, every
 30 s otherwise), even when the robot is docked. Sections fold with their arrow
@@ -528,6 +537,7 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `quiet_travel.py`            | Quiet presets for "Go to", restored afterwards          |
 | `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |
 | `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
+| `project_layers.py`          | Our layers found again in a project, saved next to it   |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings.py`                | Setting keys, defaults and `load_settings()`            |
 | `options_page.py`            | The Valetudo page of *Settings > Options*               |

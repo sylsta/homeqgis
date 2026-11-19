@@ -5,9 +5,13 @@ robot > lines > zones > map. Afterwards only entities are refreshed; rooms
 are recomputed only when the map itself has changed.
 """
 
+import hashlib
+import os
+
 from qgis.PyQt.QtCore import QMetaType
 from qgis.PyQt.QtGui import QColor
 from qgis.core import (
+    Qgis,
     QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsExpression,
@@ -28,7 +32,10 @@ from qgis.core import (
 )
 
 from .coords import v2q
+from .history_logic import map_fingerprint
 from .i18n import tr
+from .project_layers import (adopt, make_permanent, new_feature, project_folder,
+                             replace_features, tag, write_gpkg)
 
 GROUP_NAME = "Valetudo"
 AREA_ENTITIES = {"no_go_area", "no_mop_area", "active_zone"}
@@ -233,21 +240,6 @@ def _signature(map_json):
     return tuple(sig)
 
 
-def _feature(lyr, geom, attrs):
-    f = QgsFeature(lyr.fields())
-    f.setGeometry(geom)
-    f.setAttributes(attrs)
-    return f
-
-
-def _replace_features(lyr, feats):
-    pr = lyr.dataProvider()
-    pr.truncate()
-    pr.addFeatures(feats)
-    lyr.updateExtents()
-    lyr.triggerRepaint()
-
-
 def _memory_layer(geom_type, name, fields):
     lyr = QgsVectorLayer(geom_type, name, "memory")
     lyr.setCrs(QgsCoordinateReferenceSystem())
@@ -256,15 +248,59 @@ def _memory_layer(geom_type, name, fields):
     return lyr
 
 
+def _set_features(lyr, feats):
+    provider = lyr.dataProvider()
+    provider.truncate()
+    provider.addFeatures(feats)
+    lyr.updateExtents()
+    lyr.triggerRepaint()
+
+
+def _area_signature(features):
+    return tuple(sorted((f["type"] or "", f.geometry().asWkt(0)) for f in features))
+
+
 # ---------------------------------------------------------------------------
 # Layer manager
 # ---------------------------------------------------------------------------
 
+# role -> (geometry, fields, file layer name or None for a live, temporary layer)
+ROLES = {
+    "sensors": ("Point", [QgsField("entity_id", STR), QgsField("label", STR),
+                          QgsField("value", STR), QgsField("unit", STR),
+                          QgsField("available", STR)], None),
+    "robot": ("Point", [QgsField("type", STR), QgsField("angle", DBL)], None),
+    "lines": ("LineString", [QgsField("type", STR)], None),
+    "areas": ("Polygon", [QgsField("type", STR)], "zones"),
+    "rooms": ("Polygon", [QgsField("type", STR), QgsField("segment_id", STR),
+                          QgsField("name", STR)], "rooms"),
+}   # in layer tree order, top to bottom
+MAP_FOLDER = "map"
+MAP_FILE = "robot_map.gpkg"
+SIGNATURE_KEY = "domotiqgis/map_signature"
+ENGLISH_NAMES = {"rooms": "Valetudo - map", "areas": "Valetudo - zones",
+                 "lines": "Valetudo - lines", "robot": "Valetudo - robot",
+                 "sensors": "Valetudo - sensors"}
+GEOMETRY = {"Point": Qgis.GeometryType.Point, "LineString": Qgis.GeometryType.Line,
+            "Polygon": Qgis.GeometryType.Polygon}
+
+
+def map_folder():
+    return project_folder(MAP_FOLDER)
+
+
 class ValetudoLayers:
+    """The robot's map layers. The map (rooms, walls, floor) and its zones are kept in
+    <project folder>/map/robot_map.gpkg once the project is saved, with a copy per
+    version of the map (robot_map_<map id>.gpkg, map id as in the history); the robot,
+    its path and the sensors are live, temporary layers."""
+
     def __init__(self, project):
         self.project = project
         self._ids = {}          # role -> layer id (we do NOT keep the objects:
         self._signature = None  # if the user deletes a layer, the Python object dies)
+        self._areas = None      # signature of the zones last written
+        self.map_id = ""
 
     # -- access ---------------------------------------------------------------
 
@@ -273,45 +309,75 @@ class ValetudoLayers:
         return self.project.mapLayer(lid) if lid else None
 
     def exists(self):
-        return bool(self._ids) and all(self.layer(r) for r in self._ids)
+        return all(self.layer(r) for r in ROLES)
 
     # -- life cycle -----------------------------------------------------------
 
-    def _create(self):
+    def find(self):
+        """A project was opened: take over its layers of ours (removing duplicates),
+        without creating any. The map saved with it shows even with the robot off."""
         names = layer_names()
-        layers = {
-            "rooms": _memory_layer("Polygon", names["rooms"], [
-                QgsField("type", STR), QgsField("segment_id", STR), QgsField("name", STR)]),
-            "areas": _memory_layer("Polygon", names["areas"], [QgsField("type", STR)]),
-            "lines": _memory_layer("LineString", names["lines"], [QgsField("type", STR)]),
-            "robot": _memory_layer("Point", names["robot"], [
-                QgsField("type", STR), QgsField("angle", DBL)]),
-            "sensors": _memory_layer("Point", names["sensors"], [
-                QgsField("entity_id", STR), QgsField("label", STR),
-                QgsField("value", STR), QgsField("unit", STR),
-                QgsField("available", STR)]),
-        }
-        self.project.addMapLayers(list(layers.values()), False)
+        self._ids, self._signature, self._areas = {}, None, None
+        for role, (geometry, _fields, _file_name) in ROLES.items():
+            lyr = adopt(self.project, f"map/{role}", {names[role], ENGLISH_NAMES[role]},
+                        GEOMETRY[geometry])
+            if lyr is not None:
+                self._ids[role] = lyr.id()
+        rooms = self.layer("rooms")
+        if rooms is not None and rooms.featureCount():
+            self._signature = rooms.customProperty(SIGNATURE_KEY)
 
+    def _ensure(self):
+        """Find the layers in the project, create the missing ones.
+        Returns True if the map layer had to be created."""
+        names = layer_names()
+        created = {}
+        for role, (geometry, fields, _file_name) in ROLES.items():
+            if self.layer(role) is not None:
+                continue
+            lyr = adopt(self.project, f"map/{role}", {names[role], ENGLISH_NAMES[role]},
+                        GEOMETRY[geometry])
+            if lyr is None:
+                lyr = _memory_layer(geometry, names[role], fields)
+                tag(lyr, f"map/{role}")
+                created[role] = lyr
+            self._ids[role] = lyr.id()
+        if created:
+            self._add_to_tree(created)
+        if "rooms" in created or "areas" in created:
+            self._signature = self._areas = None
+        elif self._signature is None:   # found again: was it drawn from the same map?
+            rooms = self.layer("rooms")
+            self._signature = rooms.customProperty(SIGNATURE_KEY) if rooms.featureCount() else None
+        return "rooms" in created
+
+    def _add_to_tree(self, created):
+        self.project.addMapLayers(list(created.values()), False)
         root = self.project.layerTreeRoot()
         group = root.findGroup(GROUP_NAME) or root.insertGroup(0, GROUP_NAME)
-        for role in ("sensors", "robot", "lines", "areas", "rooms"):  # top to bottom
-            lyr = layers[role]
+        roles = list(ROLES)
+        for role, lyr in created.items():
             lyr.setCrs(QgsCoordinateReferenceSystem())     # undo any default CRS
-            group.addLayer(lyr)
-
-        layers["sensors"].setRenderer(_sensors_renderer())
-        layers["sensors"].setLabeling(_sensor_labeling())
-        layers["sensors"].setLabelsEnabled(True)
-        layers["robot"].setRenderer(_points_renderer())
-        layers["rooms"].setLabeling(_room_labeling())
-        layers["rooms"].setLabelsEnabled(True)
-        layers["rooms"].setRenderer(_rooms_renderer([]))
-        layers["lines"].setRenderer(_lines_renderer())
-        layers["areas"].setRenderer(_areas_renderer())
-
-        self._ids = {role: lyr.id() for role, lyr in layers.items()}
-        self._signature = None
+            # Above the first existing layer of a role further down the list
+            index = len(group.children())
+            for lower in roles[roles.index(role) + 1:]:
+                other = self.layer(lower)
+                node = group.findLayer(other.id()) if other is not None else None
+                if node is not None:
+                    index = group.children().index(node)
+                    break
+            group.insertLayer(index, lyr)
+        renderers = {"sensors": _sensors_renderer, "robot": _points_renderer,
+                     "lines": _lines_renderer, "areas": _areas_renderer,
+                     "rooms": lambda: _rooms_renderer([])}
+        for role, lyr in created.items():
+            lyr.setRenderer(renderers[role]())
+        if "sensors" in created:
+            created["sensors"].setLabeling(_sensor_labeling())
+            created["sensors"].setLabelsEnabled(True)
+        if "rooms" in created:
+            created["rooms"].setLabeling(_room_labeling())
+            created["rooms"].setLabelsEnabled(True)
 
     def remove(self):
         ids = [lid for lid in self._ids.values() if self.project.mapLayer(lid)]
@@ -321,23 +387,53 @@ class ValetudoLayers:
         if group is not None and not group.children():
             group.parent().removeChildNode(group)
         self._ids = {}
-        self._signature = None
+        self._signature = self._areas = None
+
+    # -- files ----------------------------------------------------------------
+
+    def persist(self):
+        """Once the project is saved: the map and its zones go to map/robot_map.gpkg
+        (nothing to do if they are there already). Raises OSError."""
+        folder = map_folder()
+        if folder is None:
+            return False
+        moved = False
+        for role, (_geometry, _fields, file_name) in ROLES.items():
+            if file_name and self.layer(role) is not None:
+                moved |= make_permanent(self.layer(role), os.path.join(folder, MAP_FILE),
+                                        file_name)
+        if moved:
+            self._archive()
+        return moved
+
+    def _archive(self):
+        """A copy of this version of the map, by map id (kept after a remap)."""
+        folder = map_folder()
+        if folder is None or not self.map_id:
+            return
+        path = os.path.join(folder, f"robot_map_{self.map_id}.gpkg")
+        for role, (_geometry, _fields, file_name) in ROLES.items():
+            if file_name and self.layer(role) is not None:
+                write_gpkg(self.layer(role), path, file_name)
 
     # -- update ---------------------------------------------------------------
 
     def update(self, map_json):
-        """Refresh the layers. Returns True if they have just been created."""
-        created = False
-        if not self.exists():
-            self.remove()   # clean up leftovers if the user deleted one of them
-            self._create()
-            created = True
-
-        sig = _signature(map_json)
+        """Refresh the layers. Returns True if the map layer has just been created.
+        Raises OSError when the map file cannot be written (the layers are updated)."""
+        created = self._ensure() if not self.exists() else False
+        self.map_id = map_fingerprint(map_json) or self.map_id
+        changed = False
+        sig = hashlib.sha1(repr(_signature(map_json)).encode()).hexdigest()[:16]
         if sig != self._signature:
             self._signature = sig
             self._update_rooms(map_json)
-        self._update_entities(map_json)
+            self.layer("rooms").setCustomProperty(SIGNATURE_KEY, sig)
+            changed = True
+        changed |= self._update_entities(map_json)
+        if map_folder() is not None:
+            if not self.persist() and changed:
+                self._archive()
         return created
 
     def _update_rooms(self, map_json):
@@ -348,17 +444,19 @@ class ValetudoLayers:
             meta = layer.get("metaData") or {}
             geom = _layer_geometry(layer, layer.get("pixelSize", default_ps))
             if not geom.isEmpty():
-                feats.append(_feature(rooms, geom, [
-                    layer.get("type"),
-                    str(meta["segmentId"]) if meta.get("segmentId") is not None else None,
-                    meta.get("name"),
-                ]))
-        _replace_features(rooms, feats)
+                feats.append((geom, {
+                    "type": layer.get("type"),
+                    "segment_id": (str(meta["segmentId"]) if meta.get("segmentId") is not None
+                                   else None),
+                    "name": meta.get("name"),
+                }))
+        feats = replace_features(rooms, feats)
         segment_ids = {f["segment_id"] for f in feats if f["segment_id"]}
         rooms.setRenderer(_rooms_renderer(segment_ids))   # one colour per room
         rooms.triggerRepaint()
 
     def _update_entities(self, map_json):
+        """Zones, lines, robot and dock. Returns True if the zones changed."""
         areas, lines, robot = self.layer("areas"), self.layer("lines"), self.layer("robot")
         area_f, line_f, point_f = [], [], []
         for ent in map_json.get("entities", []):
@@ -371,18 +469,28 @@ class ValetudoLayers:
             # single point (e.g. right after a start): it is skipped, not shown as a point.
             if etype in POINT_ENTITIES:
                 angle = (ent.get("metaData") or {}).get("angle")
-                point_f.append(_feature(robot, QgsGeometry.fromPointXY(pts[0]), [etype, angle]))
+                point_f.append(new_feature(robot, QgsGeometry.fromPointXY(pts[0]),
+                                           {"type": etype, "angle": angle}))
             elif etype in AREA_ENTITIES:
                 if len(pts) >= 3:
-                    area_f.append(_feature(
-                        areas, QgsGeometry.fromPolygonXY([pts + [pts[0]]]), [etype]))
+                    area_f.append(new_feature(areas, QgsGeometry.fromPolygonXY([pts + [pts[0]]]),
+                                              {"type": etype}))
             elif len(pts) >= 2:  # path, predicted_path, virtual_wall...
-                line_f.append(_feature(lines, QgsGeometry.fromPolylineXY(pts), [etype]))
+                line_f.append(new_feature(lines, QgsGeometry.fromPolylineXY(pts),
+                                          {"type": etype}))
         # Features are drawn in insertion order: put the robot last, on top of its dock.
         point_f.sort(key=lambda f: f["type"] == "robot_position")
-        _replace_features(areas, area_f)
-        _replace_features(lines, line_f)
-        _replace_features(robot, point_f)
+        changed = False
+        signature = _area_signature(area_f)
+        if self._areas is None:   # found again: compare with what the layer holds
+            self._areas = _area_signature(areas.getFeatures())
+        if signature != self._areas:   # zones change rarely: no rewrite every 2 s
+            self._areas = signature
+            _set_features(areas, area_f)
+            changed = True
+        _set_features(lines, line_f)
+        _set_features(robot, point_f)
+        return changed
 
     def update_sensors(self, items):
         """Refresh the sensors layer from items (each: x, y in cm, entity_id,
@@ -393,13 +501,13 @@ class ValetudoLayers:
         feats = []
         for it in items:
             geom = QgsGeometry.fromPointXY(v2q(it["x"], it["y"]))
-            feats.append(_feature(sensors, geom, [
-                it.get("entity_id", ""), it.get("label", ""),
-                "" if it.get("value") is None else str(it.get("value")),
-                it.get("unit", "") or "",
-                "yes" if it.get("available") else "no",
-            ]))
-        _replace_features(sensors, feats)
+            feats.append((geom, {
+                "entity_id": it.get("entity_id", ""), "label": it.get("label", ""),
+                "value": "" if it.get("value") is None else str(it.get("value")),
+                "unit": it.get("unit", "") or "",
+                "available": "yes" if it.get("available") else "no",
+            }))
+        replace_features(sensors, feats)
 
     # -- selection --------------------------------------------------------------
 

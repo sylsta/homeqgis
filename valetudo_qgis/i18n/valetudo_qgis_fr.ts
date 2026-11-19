@@ -2931,5 +2931,13 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Could not read the robot's recorder: {detail}</source>
         <translation>Impossible de lire l'enregistreur du robot : {detail}</translation>
     </message>
+    <message>
+        <source>Could not save the robot's layers next to the project: {error}</source>
+        <translation>Impossible d'enregistrer les couches du robot à côté du projet : {error}</translation>
+    </message>
+    <message>
+        <source>Robot map not saved: {error}</source>
+        <translation>Carte du robot non enregistrée : {error}</translation>
+    </message>
 </context>
 </TS>

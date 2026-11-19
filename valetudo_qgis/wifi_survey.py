@@ -10,6 +10,7 @@ surveys can be compared.
 All tuning values come from the settings (see ``settings.py``, edited in Settings › Options).
 """
 
+import os
 import time
 
 from qgis.PyQt.QtCore import QDateTime, QMetaType, QObject, QTimer, pyqtSignal
@@ -22,6 +23,18 @@ from qgis.core import (
 
 from .coords import v2q
 from .i18n import tr
+from .project_layers import adopt, make_permanent, new_feature, project_folder, tag
+
+WIFI_FOLDER = "wifi"
+WIFI_FILE = "robot_wifi.gpkg"        # the survey points (layer "points")
+WIFI_RASTER = "robot_wifi_signal.tif"
+ROLE = "wifi/points"
+ENGLISH_NAME = "Wi-Fi survey"
+
+
+def wifi_folder():
+    """<project folder>/wifi, or None while the project has never been saved."""
+    return project_folder(WIFI_FOLDER)
 
 # Colours of the fixed thresholds: bad, fair, good.
 COLOR_BAD, COLOR_FAIR, COLOR_GOOD = "#d7191c", "#fdd835", "#1a9641"
@@ -57,8 +70,22 @@ class WifiSurvey(QObject):
     # -- layer ----------------------------------------------------------------------
 
     def layer(self):
-        """The survey layer, or None if it was never created or has been removed."""
-        return self.project.mapLayer(self._layer_id) if self._layer_id else None
+        """The survey layer, or None if there is none in the project (found again in a
+        reopened project by its role tag)."""
+        lyr = self.project.mapLayer(self._layer_id) if self._layer_id else None
+        if lyr is None:
+            lyr = adopt(self.project, ROLE, {layer_names()["points"], ENGLISH_NAME},
+                        Qgis.GeometryType.Point)
+            self._layer_id = lyr.id() if lyr is not None else None
+        return lyr
+
+    def persist(self):
+        """Once the project is saved, the points go to wifi/robot_wifi.gpkg.
+        Raises OSError."""
+        folder = wifi_folder()
+        if folder is None:
+            return False
+        return make_permanent(self.layer(), os.path.join(folder, WIFI_FILE), "points")
 
     def _ensure_layer(self):
         lyr = self.layer()
@@ -74,11 +101,16 @@ class WifiSurvey(QObject):
             QgsField("time", QMetaType.Type.QDateTime),
         ])
         lyr.updateFields()
+        tag(lyr, ROLE)
         style_wifi_points(lyr, self.cfg)
         self.project.addMapLayer(lyr, False)
         self.project.layerTreeRoot().insertLayer(0, lyr)
         lyr.setCrs(QgsCoordinateReferenceSystem())   # undo any default CRS
         self._layer_id = lyr.id()
+        try:
+            self.persist()
+        except OSError:
+            pass   # stays a memory layer; tried again when the project is saved
         return lyr
 
     def add_rows(self, rows, cfg):
@@ -101,11 +133,11 @@ class WifiSurvey(QObject):
             if row["time"] in known:
                 continue
             known.add(row["time"])
-            f = QgsFeature(lyr.fields())
-            f.setGeometry(QgsGeometry.fromPointXY(v2q(row["x"], row["y"])))
-            f.setAttributes([int(row["signal"]), row.get("frequency", ""), row.get("ssid", ""),
-                             QDateTime.fromSecsSinceEpoch(int(row["time"]))])
-            features.append(f)
+            features.append(new_feature(
+                lyr, QgsGeometry.fromPointXY(v2q(row["x"], row["y"])),
+                {"signal": int(row["signal"]), "frequency": row.get("frequency", ""),
+                 "ssid": row.get("ssid", ""),
+                 "time": QDateTime.fromSecsSinceEpoch(int(row["time"]))}))
         if features:
             lyr.dataProvider().addFeatures(features)
             lyr.updateExtents()
@@ -163,10 +195,10 @@ class WifiSurvey(QObject):
         lyr = self.layer()
         if lyr is None:      # removed by the user while recording: start a new one
             lyr = self._ensure_layer()
-        f = QgsFeature(lyr.fields())
-        f.setGeometry(QgsGeometry.fromPointXY(self._pos))
-        f.setAttributes([int(signal), str(details.get("frequency") or ""),
-                         str(details.get("ssid") or ""), QDateTime.currentDateTime()])
+        f = new_feature(lyr, QgsGeometry.fromPointXY(self._pos),
+                        {"signal": int(signal), "frequency": str(details.get("frequency") or ""),
+                         "ssid": str(details.get("ssid") or ""),
+                         "time": QDateTime.currentDateTime()})
         lyr.dataProvider().addFeatures([f])
         lyr.updateExtents()
         lyr.triggerRepaint()
@@ -225,6 +257,9 @@ def build_wifi_map(points, rooms, cfg, project):
             clipped = True
         except Exception:   # e.g. GDAL refusing a frame without CRS: keep the full raster
             clipped = False
+    folder = wifi_folder()
+    if folder is not None:   # saved project: keep the map next to it
+        output = _keep_raster(output, os.path.join(folder, WIFI_RASTER))
 
     raster = QgsRasterLayer(output, layer_names()["map"])
     if not raster.isValid():
@@ -241,6 +276,18 @@ def build_wifi_map(points, rooms, cfg, project):
         root.insertChildNode(0, clone)
         node.parent().removeChildNode(node)
     return raster, clipped
+
+
+def _keep_raster(path, target):
+    """Copy a temporary GeoTIFF next to the project (the previous map is replaced).
+    Returns the path to use (the temporary one if the copy fails)."""
+    import shutil
+    try:
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        shutil.copyfile(path, target)
+        return target
+    except OSError:
+        return path
 
 
 def style_wifi_points(lyr, cfg):

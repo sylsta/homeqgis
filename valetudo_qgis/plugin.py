@@ -381,9 +381,43 @@ class ValetudoPlugin:
     def _on_panel_needs_client(self):
         if not self._unloaded:
             self._get_client(prompt=False)
+        # Our layers in the project: found again when one is opened, saved next to it
+        project = QgsProject.instance()
+        project.readProject.connect(self._on_project_read)
+        project.homePathChanged.connect(self._persist_layers)
+        self._on_project_read()   # a project opened with QGIS, before the plugin
+
+    def _on_project_read(self, *_):
+        if self._unloaded:
+            return
+        self.layers.find()
+        self.restrictions._adopt()
+        if self.survey is not None:
+            self.survey.layer()   # takes over a survey layer of the project
+        self._persist_layers()   # e.g. a project saved by an older version
+
+    def _persist_layers(self, *_):
+        """The project has a folder (first save, Save as…): the map and the Wi-Fi survey
+        go to files next to it."""
+        if self._unloaded or not QgsProject.instance().fileName():
+            return
+        try:
+            self.layers.persist()
+            if self.survey is not None and self.survey.layer() is not None:
+                self.survey.persist()
+        except OSError as exc:
+            self._message(tr("Could not save the robot's layers next to the project: {error}")
+                          .format(error=exc), Qgis.MessageLevel.Warning)
 
     def unload(self):
         self._unloaded = True   # before anything else: removing the panel emits signals
+        project = QgsProject.instance()
+        for signal, slot in ((project.readProject, self._on_project_read),
+                             (project.homePathChanged, self._persist_layers)):
+            try:
+                signal.disconnect(slot)
+            except (TypeError, RuntimeError):
+                pass
         if getattr(self, "_groups_timer", None) is not None:
             self._groups_timer.stop()
             self._groups_watcher.deleteLater()
@@ -1553,7 +1587,15 @@ class ValetudoPlugin:
         self.panel.update_map(map_json)
         if not self.layers.exists():
             self._prepare_project()
-        if self.layers.update(map_json):
+        try:
+            created = self.layers.update(map_json)
+        except OSError as exc:   # layers updated, but the map file not written
+            created = False
+            if not getattr(self, "_map_file_error", False):
+                self._map_file_error = True
+                self._message(tr("Robot map not saved: {error}").format(error=exc),
+                              Qgis.MessageLevel.Warning)
+        if created:
             canvas = self.iface.mapCanvas()
             canvas.setExtent(self.layers.layer("rooms").extent())
             canvas.refresh()

@@ -13,6 +13,7 @@ oriented bounding box of a polygon) and reported as warnings.
 
 from qgis.PyQt.QtCore import QMetaType
 from qgis.core import (
+    Qgis,
     QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsDefaultValue,
@@ -28,6 +29,7 @@ from qgis.core import (
 
 from .coords import q2v, v2q
 from .i18n import tr
+from .project_layers import adopt, tag
 
 GROUP_NAME = "Valetudo"
 ZONE_TYPES = ("regular", "mop")
@@ -89,7 +91,29 @@ class RestrictionLayers:
     def exists(self):
         return bool(self._ids) and all(self.layer(r) for r in ("zones", "walls"))
 
+    def _adopt(self):
+        """Layers left by a saved project (they are a working copy, kept temporary):
+        reuse them instead of adding a second pair. True if both were found."""
+        names = layer_names()
+        english = {"zones": "Valetudo - no-go zones (editable)",
+                   "walls": "Valetudo - virtual walls (editable)"}
+        kinds = {"zones": Qgis.GeometryType.Polygon, "walls": Qgis.GeometryType.Line}
+        for role in ("zones", "walls"):
+            lyr = adopt(self.project, f"restrictions/{role}", {names[role], english[role]},
+                        kinds[role])
+            if lyr is not None:
+                self._ids[role] = lyr.id()
+        if self.exists():
+            return True
+        ids = [lid for lid in self._ids.values() if self.project.mapLayer(lid)]
+        if ids:   # only one of the pair: start again with a new pair
+            self.project.removeMapLayers(ids)
+        self._ids = {}
+        return False
+
     def _create(self):
+        if self._adopt():
+            return
         names = layer_names()
         zones = _new_layer("Polygon", names["zones"],
                            [QgsField("type", QMetaType.Type.QString)])
@@ -112,6 +136,8 @@ class RestrictionLayers:
         for lyr in (walls, zones):
             lyr.setCrs(QgsCoordinateReferenceSystem())
             group.insertLayer(0, lyr)   # on top of the map layers
+        tag(zones, "restrictions/zones")
+        tag(walls, "restrictions/walls")
         self._ids = {"zones": zones.id(), "walls": walls.id()}
 
     def load(self, data):
