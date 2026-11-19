@@ -18,6 +18,7 @@ from qgis.PyQt.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QTimeEdit,
+    QHBoxLayout,
     QLabel,
     QInputDialog,
     QMenu,
@@ -81,7 +82,7 @@ UI_WIDGETS = (
     "lbl_nuc_name", "lbl_nuc_info", "lbl_nuc_resources",
     "kodi_header", "lbl_kodi_logo", "lbl_kodi_connection",
     "lbl_kodi_name", "lbl_kodi_info", "kodi_play_row", "lbl_kodi_playing",
-    "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection", "btn_refresh_all",
+    "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection",
     "btn_robot_web", "btn_robot_ssh", "btn_pi_web", "btn_pi_ssh", "btn_ha_web", "btn_ha_ssh",
     "btn_nuc_web", "btn_nuc_ssh", "btn_kodi_web", "btn_kodi_ssh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
@@ -105,7 +106,7 @@ UI_WIDGETS = (
     "box_current", "lbl_cur_time", "lbl_cur_area", "box_total", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area",
     # Terminal
-    "tab_terminal", "lbl_term_server", "btn_term_close", "btn_term_console",
+    "tab_terminal", "btn_term_close", "btn_term_console",
     "btn_term_log",
     "terminal_stack",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
@@ -485,8 +486,6 @@ class ValetudoPanel(QgsDockWidget):
         self._ha_timer = QTimer(self)
         self._ha_timer.setInterval(HA_INTERVAL_MS)
         self._ha_timer.timeout.connect(self._refresh_ha)
-        self.btn_refresh_all.setIcon(theme("/mActionRefresh.svg"))
-        self.btn_refresh_all.clicked.connect(self.refresh_all)
         self._set_badge(None)
         self.lbl_error.setVisible(False)
 
@@ -630,15 +629,30 @@ class ValetudoPanel(QgsDockWidget):
         for name, key in SECTIONS.items():
             self._remember_section(getattr(self, name), key)
 
-        # -- Side tabs: icons, their titles as tooltips --------------------------------------
+        # -- Side tabs: icons, their titles as tooltips; each page starts with its title
         self._tab_keys = [self.tabs.widget(i).objectName().removeprefix("tab_")
                           for i in range(self.tabs.count())]
         self._tab_icons = {}
+        self._tab_titles = {}
         for i, key in enumerate(self._tab_keys):
             self._tab_icons[key] = icon(f"tab_{key}")
-            self.tabs.setTabToolTip(i, self.tabs.tabText(i))
+            title = self.tabs.tabText(i)
+            self.tabs.setTabToolTip(i, title)
             self.tabs.setTabText(i, "")
             self.tabs.setTabIcon(i, self._tab_icons[key])
+            self._tab_titles[key] = self._add_page_title(self.tabs.widget(i),
+                                                         self._tab_icons[key], title)
+        # Status: Refresh all, at the right of its title
+        self.btn_refresh_all = QToolButton()
+        self.btn_refresh_all.setText(tr("Refresh all"))
+        self.btn_refresh_all.setToolTip(tr("Read every server again now (each one also "
+                                           "refreshes by itself)"))
+        self.btn_refresh_all.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.btn_refresh_all.setAutoRaise(True)
+        self.btn_refresh_all.setIcon(QgsApplication.getThemeIcon("/mActionRefresh.svg"))
+        self.btn_refresh_all.clicked.connect(self.refresh_all)
+        if "status" in self._tab_titles:
+            self._tab_titles["status"][1].addWidget(self.btn_refresh_all)
         self._set_tab_shown("terminal", False)   # see open_terminal
         last = QgsSettings().value(KEY_TAB, "clean", type=str)
         last = {"care": "maintenance", "system": "maintenance", "terminal": "status"}.get(last, last)
@@ -817,6 +831,24 @@ class ValetudoPanel(QgsDockWidget):
         if not on:
             self.close_terminal()
 
+    @staticmethod
+    def _add_page_title(page, tab_icon, text):
+        """A title row (icon, name in bold) at the top of a tab's page, outside its
+        scrolling area. Returns (label, row layout) so that a page can add buttons."""
+        row = QHBoxLayout()
+        row.setContentsMargins(6, 4, 4, 2)
+        picture = QLabel()
+        picture.setPixmap(tab_icon.pixmap(20, 20))
+        label = QLabel(text)
+        font = label.font()
+        font.setBold(True)
+        font.setPointSizeF(font.pointSizeF() * 1.15)
+        label.setFont(font)
+        row.addWidget(picture)
+        row.addWidget(label, 1)
+        page.layout().insertLayout(0, row)
+        return label, row
+
     def _set_tab_shown(self, key, shown):
         """Show or hide a side tab (Qt 5.15+)."""
         if key in self._tab_keys:
@@ -947,7 +979,9 @@ class ValetudoPanel(QgsDockWidget):
         self._update_console()
 
     def _show_terminal_page(self):
-        self.lbl_term_server.setText(_device_name(self._term_device))
+        if "terminal" in self._tab_titles:
+            self._tab_titles["terminal"][0].setText(
+                tr("Terminal · {server}").format(server=_device_name(self._term_device)))
         pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
                  ("ha", "console"): self.tab_ha_console,
                  ("nuc", "console"): self.tab_nuc_console, ("nuc", "log"): self.tab_nuc_log,

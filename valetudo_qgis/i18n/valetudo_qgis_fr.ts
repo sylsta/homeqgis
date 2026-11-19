@@ -2719,5 +2719,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>—</source>
         <translation>—</translation>
     </message>
+    <message>
+        <source>Terminal · {server}</source>
+        <translation>Terminal · {server}</translation>
+    </message>
 </context>
 </TS>

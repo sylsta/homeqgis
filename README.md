@@ -69,7 +69,8 @@ The panel (titled *Connection*), from top to bottom:
   Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with
   how far off, when it differs from the computer's by more than 2 minutes) and
   uptime, the state and battery, with *Show on map* on the first line; **Refresh
-  all** at the top reads every server again (each also refreshes by itself); with a Raspberry Pi set in the settings, the same for the Pi (read over
+  all**, at the right of the tab's title, reads every server again (each also
+  refreshes by itself); with a Raspberry Pi set in the settings, the same for the Pi (read over
   SSH every 30 s while the panel is visible); then Home Assistant: version, home
   name and time zone, its address, its own clock and its uptime (from the *Uptime*
   integration's `sensor.uptime`, if you have it); then the NUC, when its address
@@ -106,7 +107,9 @@ The panel (titled *Connection*), from top to bottom:
   cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
   paused; *Dock* next to it while away from the dock.
 - **Side tabs**: icons, their names as tooltips; a tab gets an orange dot when one
-  of the problems of the ⚠ belongs to it.
+  of the problems of the ⚠ belongs to it. Each tab's page starts with its title (its
+  icon and name), which stays in place while the page scrolls; the Terminal's also
+  names the server it is on.
 - **Compact mode** (⋮ menu, off by default): only the strip and the big button;
   click the strip to unfold or fold the rest. The panel never folds by itself (when
   QGIS loses the focus or the mouse goes elsewhere).

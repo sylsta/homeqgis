@@ -231,39 +231,6 @@
                 <number>0</number>
                </property>
                <item>
-                <layout class="QHBoxLayout" name="status_top_layout">
-                 <item>
-                  <spacer name="status_top_spacer">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QToolButton" name="btn_refresh_all">
-                   <property name="text">
-                    <string>Refresh all</string>
-                   </property>
-                   <property name="toolButtonStyle">
-                    <enum>Qt::ToolButtonTextBesideIcon</enum>
-                   </property>
-                   <property name="autoRaise">
-                    <bool>true</bool>
-                   </property>
-                   <property name="toolTip">
-                    <string>Read every server again now (each one also refreshes by itself)</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
                 <widget class="QFrame" name="robot_header">
                  <property name="frameShape">
                   <enum>QFrame::StyledPanel</enum>
@@ -1762,15 +1729,6 @@
         </property>
         <item>
          <layout class="QHBoxLayout" name="terminal_switches">
-          <item>
-           <widget class="QLabel" name="lbl_term_server">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
-           </widget>
-          </item>
           <item>
            <spacer name="terminal_switches_spacer">
             <property name="orientation">
