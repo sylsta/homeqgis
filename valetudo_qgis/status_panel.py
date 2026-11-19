@@ -412,6 +412,7 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_warning.clicked.connect(self._on_warning_clicked)
         self._problems = {}          # key -> (text, tab key): shown by the ⚠ button
         self.lbl_job.setVisible(False)
+        self.lbl_wifi_strip.setVisible(False)   # the Wi-Fi is in the strip's tooltip
         self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.strip.installEventFilter(self)
 
@@ -855,8 +856,7 @@ class ValetudoPanel(QgsDockWidget):
         the rest. Nothing folds by itself (focus or mouse moving elsewhere)."""
         self._compact = compact
         QgsSettings().setValue(KEY_COMPACT, compact)
-        self.strip.setToolTip(tr("Click to unfold or fold the panel") if compact
-                              else tr("Click for the detailed status"))
+        self._update_strip_tip()
         self._show_body(not compact)
 
     def _show_body(self, visible):
@@ -1444,8 +1444,10 @@ class ValetudoPanel(QgsDockWidget):
         self.kodi.update(self.isVisible())
         has_pi = self._pi_target() is not None
         self.pi_header.setVisible(has_pi)
-        for widget in (self.sep_pi, self.lbl_pi_strip_logo, self.lbl_pi_strip):
+        for widget in (self.lbl_pi_strip_logo, self.lbl_pi_strip):
             widget.setVisible(has_pi)
+        self._strip_servers = {**getattr(self, "_strip_servers", {}), "pi": has_pi}
+        self._update_strip_separators()
         self.box_pi_card.setVisible(has_pi)
         self.btn_term_pi.setEnabled(has_pi)
         if not has_pi and self.btn_term_pi.isChecked():
@@ -1521,10 +1523,30 @@ class ValetudoPanel(QgsDockWidget):
         self._set_problem("pi_clock", tr("The Raspberry Pi's clock is wrong.") if wrong else None,
                           "system")
 
-    @staticmethod
-    def _set_strip_status(label, color, text, tooltip=""):
-        label.setText(f"<span style='color:{color}'>●</span> {html.escape(text)}")
-        label.setToolTip(tooltip)
+    def _update_strip_tip(self):
+        """What a click on the strip does, then the Wi-Fi signal (no longer shown in it)."""
+        lines = [tr("Click to unfold or fold the panel") if self.is_compact()
+                 else tr("Click for the detailed status")]
+        wifi = getattr(self, "_wifi_html", "")
+        if wifi:
+            lines.append(wifi + (" · " + html.escape(self._wifi_tip) if self._wifi_tip else ""))
+        self.strip.setToolTip("<br>".join(lines))
+
+    def _set_strip_status(self, label, color, text, tooltip=""):
+        """A server in the strip: its logo and a coloured dot; the words in the tooltip."""
+        name = tr("Raspberry Pi") if label is self.lbl_pi_strip else "Home Assistant"
+        label.setText(f"<span style='color:{color}'>●</span>")
+        tip = f"<b>{html.escape(name)}</b>: {html.escape(text)}" + (
+            f"<br>{html.escape(tooltip)}" if tooltip else "")
+        label.setToolTip(tip)
+        logo = self.lbl_pi_strip_logo if label is self.lbl_pi_strip else self.lbl_ha_strip_logo
+        logo.setToolTip(tip)
+
+    def _update_strip_separators(self):
+        """One separator before the servers, whichever are shown."""
+        shown = getattr(self, "_strip_servers", {})
+        self.sep_pi.setVisible(any(shown.values()))
+        self.sep_ha.setVisible(False)
 
     # -- Home Assistant (strip) -----------------------------------------------------
 
@@ -1591,8 +1613,10 @@ class ValetudoPanel(QgsDockWidget):
         """Home Assistant in the strip (status) and in the details (three lines)."""
         state = self._ha_state
         shown = state is not None
-        for widget in (self.sep_ha, self.lbl_ha_strip_logo, self.lbl_ha_strip, self.ha_header):
+        for widget in (self.lbl_ha_strip_logo, self.lbl_ha_strip, self.ha_header):
             widget.setVisible(shown)
+        self._strip_servers = {**getattr(self, "_strip_servers", {}), "ha": shown}
+        self._update_strip_separators()
         if not shown:
             return
         ha, url = self._ha, self._ha.get("url", "")
@@ -1762,7 +1786,7 @@ class ValetudoPanel(QgsDockWidget):
         self._wifi_html, self._wifi_tip = "", ""
         self._robot_ip, self._host = "", {}
         self.lbl_robot_info.setText("")
-        self.lbl_wifi_strip.setText("")
+        self._update_strip_tip()
         self.lbl_wifi_now.setText(tr("Not connected."))
         self.sparkline.clear()
         self._state, self._job, self._battery = None, None, None
@@ -1796,9 +1820,8 @@ class ValetudoPanel(QgsDockWidget):
             bar.setFormat("—")
             bar.setEnabled(False)
         self.lbl_state.setText(tr("Unreachable"))
-        self.lbl_wifi_strip.setText("")
-        self.lbl_wifi_strip.setToolTip("")
         self._wifi_html, self._wifi_tip = "", ""
+        self._update_strip_tip()
         self.lbl_wifi_now.setText(tr("The robot does not answer."))
         self._host = {}
         self._update_robot_info()
@@ -2048,12 +2071,12 @@ class ValetudoPanel(QgsDockWidget):
         signal = details.get("signal")
         if signal is None:
             self._wifi_html, self._wifi_tip = "", ""
+            self._update_strip_tip()
         else:
             cfg = load_settings()
             color = signal_color(signal, cfg["wifi_good_dbm"], cfg["wifi_fair_dbm"],
                                  cfg["wifi_bad_dbm"])
             text = tr("Wi-Fi {signal} dBm").format(signal=signal)
-            self.lbl_wifi_strip.setText(f"<span style='color:{color}'>Wi-Fi {signal}</span>")
             self.sparkline.add(signal)
             self._wifi_html = f"<span style='color:{color}'>{html.escape(text)}</span>"
             parts = [details.get("ssid"), details.get("frequency"),
@@ -2062,7 +2085,7 @@ class ValetudoPanel(QgsDockWidget):
             self._update_robot_info()
             self._wifi_tip = tr("Wi-Fi: {details}").format(
                 details=" · ".join(str(p) for p in parts if p) or "—")
-            self.lbl_wifi_strip.setToolTip(self._wifi_tip)
+            self._update_strip_tip()
             self.lbl_wifi_now.setText(" · ".join(
                 [f"<b style='color:{color}'>{signal} dBm</b>"]
                 + [html.escape(str(p)) for p in parts if p]))
