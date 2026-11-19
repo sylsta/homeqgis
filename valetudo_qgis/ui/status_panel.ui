@@ -1354,11 +1354,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_care">
+      <widget class="QWidget" name="tab_maintenance">
        <attribute name="title">
-        <string>Care</string>
+        <string>Maintenance</string>
        </attribute>
-       <layout class="QVBoxLayout" name="tab_care_layout">
+       <layout class="QVBoxLayout" name="tab_maintenance_layout">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -1372,15 +1372,121 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QScrollArea" name="scroll_care">
+         <widget class="QScrollArea" name="scroll_maintenance">
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
-          <widget class="QWidget" name="scroll_care_contents">
-           <layout class="QVBoxLayout" name="care_layout">
+          <widget class="QWidget" name="scroll_maintenance_contents">
+           <layout class="QVBoxLayout" name="maintenance_layout">
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_status">
+              <property name="title">
+               <string>Robot</string>
+              </property>
+              <layout class="QVBoxLayout" name="robot_card_layout">
+               <item>
+                <layout class="QFormLayout" name="status_form">
+                 <property name="fieldGrowthPolicy">
+                  <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="lbl_state_caption">
+                   <property name="text">
+                    <string>State</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QLabel" name="lbl_state">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lbl_dock_caption">
+                   <property name="text">
+                    <string>Dock</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="lbl_dock">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="lbl_attachments_caption">
+                   <property name="text">
+                    <string>Attachments</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="lbl_attachments">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="lbl_position_caption">
+                   <property name="text">
+                    <string>Position</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLabel" name="lbl_position">
+                   <property name="text">
+                    <string notr="true">—</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                   <property name="textInteractionFlags">
+                    <set>Qt::TextSelectableByMouse</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QGridLayout" name="system_grid">
+                 <property name="horizontalSpacing">
+                  <number>4</number>
+                 </property>
+                 <property name="verticalSpacing">
+                  <number>4</number>
+                 </property>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
             <item>
              <widget class="QgsCollapsibleGroupBox" name="box_consumables">
               <property name="title">
@@ -1544,7 +1650,82 @@
              </widget>
             </item>
             <item>
-             <spacer name="care_spacer">
+             <widget class="QgsCollapsibleGroupBox" name="box_boot">
+              <property name="title">
+               <string>Boot log</string>
+              </property>
+              <layout class="QFormLayout" name="boot_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QPlainTextEdit" name="txt_boot">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>220</height>
+                  </size>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Use “Watch robot boot”, or reboot the robot.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_events">
+              <property name="title">
+               <string>Recent events</string>
+              </property>
+              <layout class="QFormLayout" name="events_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QListWidget" name="list_events">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QgsCollapsibleGroupBox" name="box_features">
+              <property name="title">
+               <string>Features</string>
+              </property>
+              <layout class="QFormLayout" name="features_form">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
+               <item row="0" column="0" colspan="2">
+                <widget class="QLabel" name="lbl_features">
+                 <property name="text">
+                  <string notr="true">—</string>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="maintenance_spacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
@@ -1582,66 +1763,11 @@
         <item>
          <layout class="QHBoxLayout" name="terminal_switches">
           <item>
-           <widget class="QToolButton" name="btn_term_robot">
-            <property name="text">
-             <string>Robot</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Commands and log of the robot</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_term_pi">
-            <property name="text">
-             <string>Raspberry Pi</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Commands and log of the Raspberry Pi</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_term_ha">
-            <property name="text">
-             <string>Home Assistant</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Commands and log of the Home Assistant server</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btn_term_nuc">
-            <property name="text">
-             <string>NUC</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Commands and log of the NUC</string>
+           <widget class="QLabel" name="lbl_term_server">
+            <property name="font">
+             <font>
+              <bold>true</bold>
+             </font>
             </property>
            </widget>
           </item>
@@ -1706,6 +1832,19 @@
               </widget>
              </item>
             </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btn_term_close">
+            <property name="text">
+             <string>✕</string>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Close the terminal (open it again from a server's &gt;_ button in the Status tab)</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -2305,252 +2444,6 @@
                <number>5000</number>
               </property>
              </widget>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_system">
-       <attribute name="title">
-        <string>System</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="tab_system_layout">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QScrollArea" name="scroll_system">
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
-          <widget class="QWidget" name="scroll_system_contents">
-           <layout class="QVBoxLayout" name="system_layout">
-            <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_status">
-              <property name="title">
-               <string>Robot</string>
-              </property>
-              <layout class="QVBoxLayout" name="robot_card_layout">
-               <item>
-                <layout class="QFormLayout" name="status_form">
-                 <property name="fieldGrowthPolicy">
-                  <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-                 </property>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="lbl_state_caption">
-                   <property name="text">
-                    <string>State</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="lbl_state">
-                   <property name="text">
-                    <string notr="true">—</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                   <property name="textInteractionFlags">
-                    <set>Qt::TextSelectableByMouse</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="lbl_dock_caption">
-                   <property name="text">
-                    <string>Dock</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QLabel" name="lbl_dock">
-                   <property name="text">
-                    <string notr="true">—</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                   <property name="textInteractionFlags">
-                    <set>Qt::TextSelectableByMouse</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="lbl_attachments_caption">
-                   <property name="text">
-                    <string>Attachments</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QLabel" name="lbl_attachments">
-                   <property name="text">
-                    <string notr="true">—</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                   <property name="textInteractionFlags">
-                    <set>Qt::TextSelectableByMouse</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="lbl_position_caption">
-                   <property name="text">
-                    <string>Position</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLabel" name="lbl_position">
-                   <property name="text">
-                    <string notr="true">—</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                   <property name="textInteractionFlags">
-                    <set>Qt::TextSelectableByMouse</set>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QGridLayout" name="system_grid">
-                 <property name="horizontalSpacing">
-                  <number>4</number>
-                 </property>
-                 <property name="verticalSpacing">
-                  <number>4</number>
-                 </property>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_pi_card">
-              <property name="title">
-               <string>Raspberry Pi</string>
-              </property>
-              <layout class="QVBoxLayout" name="pi_card_layout">
-               <item>
-                <widget class="QLabel" name="lbl_pi_card">
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_boot">
-              <property name="title">
-               <string>Boot log</string>
-              </property>
-              <layout class="QFormLayout" name="boot_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0" colspan="2">
-                <widget class="QPlainTextEdit" name="txt_boot">
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>220</height>
-                  </size>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Use “Watch robot boot”, or reboot the robot.</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_events">
-              <property name="title">
-               <string>Recent events</string>
-              </property>
-              <layout class="QFormLayout" name="events_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0" colspan="2">
-                <widget class="QListWidget" name="list_events">
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QgsCollapsibleGroupBox" name="box_features">
-              <property name="title">
-               <string>Features</string>
-              </property>
-              <layout class="QFormLayout" name="features_form">
-               <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-               </property>
-               <item row="0" column="0" colspan="2">
-                <widget class="QLabel" name="lbl_features">
-                 <property name="text">
-                  <string notr="true">—</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <spacer name="system_spacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint">
-               <size>
-                <width>20</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>

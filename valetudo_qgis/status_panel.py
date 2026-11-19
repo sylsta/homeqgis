@@ -100,13 +100,12 @@ UI_WIDGETS = (
     "btn_pi_latest", "btn_pi_full", "lbl_pi_thumb",
     # Camera
     "tab_camera", "camera_layout", "camera_light", "btn_camera_full",
-    # Care
-    "tab_care", "box_consumables", "consumables_form", "box_dock", "dock_form", "dock_grid",
+    # Maintenance (robot, consumables, dock station, statistics, boot, events)
+    "tab_maintenance", "box_consumables", "consumables_form", "box_dock", "dock_form", "dock_grid",
     "box_current", "lbl_cur_time", "lbl_cur_area", "box_total", "lbl_tot_count",
     "lbl_tot_time", "lbl_tot_area",
     # Terminal
-    "tab_terminal", "btn_term_robot", "btn_term_pi", "btn_term_ha", "btn_term_nuc",
-    "btn_term_console",
+    "tab_terminal", "lbl_term_server", "btn_term_close", "btn_term_console",
     "btn_term_log",
     "terminal_stack",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
@@ -124,9 +123,8 @@ UI_WIDGETS = (
     "btn_nuc_console_clear", "txt_nuc_console", "lbl_nuc_console_prompt", "edit_nuc_console",
     "btn_nuc_console_run", "btn_nuc_console_stop",
     "tab_nuc_log", "lbl_nuc_log_status", "chk_nuc_log_follow", "btn_nuc_log_clear", "txt_nuc_log",
-    # System
-    "tab_system", "box_status", "status_form", "lbl_state", "lbl_dock", "lbl_attachments",
-    "lbl_position", "system_grid", "box_pi_card", "lbl_pi_card", "txt_boot", "list_events",
+    "box_status", "status_form", "lbl_state", "lbl_dock", "lbl_attachments",
+    "lbl_position", "system_grid", "txt_boot", "list_events",
     "lbl_features",
 )
 # Collapsible sections -> key of their remembered open/closed state.
@@ -134,7 +132,7 @@ SECTIONS = {
     "box_settings": "settings", "box_wifi_live": "wifi_live", "box_wifi_legend": "wifi_legend",
     "box_wifi_qgis": "wifi_qgis", "box_wifi_robot": "wifi_robot", "box_wifi_pi": "wifi_pi",
     "box_consumables": "consumables", "box_dock": "dock", "box_current": "current",
-    "box_total": "totals", "box_status": "status", "box_pi_card": "pi_card",
+    "box_total": "totals", "box_status": "status",
     "box_boot": "boot", "box_events": "events", "box_features": "features",
 }
 STATE_COLORS = {
@@ -145,6 +143,14 @@ STATE_COLORS = {
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
 SERVERS = ("robot", "pi", "ha", "nuc", "kodi")   # frames of the Status tab
+
+
+TERMINAL_DEVICES = ("robot", "pi", "ha", "nuc")   # with a console and a log in QGIS
+
+
+def _device_name(key):
+    return {"robot": tr("Robot"), "pi": tr("Raspberry Pi"), "ha": "Home Assistant",
+            "nuc": "NUC", "kodi": "Kodi"}.get(key, "")
 PI_INTERVAL_MS = 30_000    # Pi block refresh (one short SSH command) while visible
 HA_INTERVAL_MS = 60_000    # Home Assistant check (one GET) while visible
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
@@ -444,6 +450,17 @@ class ValetudoPanel(QgsDockWidget):
             ssh.setIcon(icon("tab_terminal"))
             web.clicked.connect(lambda _=False, p=prefix: self.open_web(p))
             ssh.clicked.connect(lambda _=False, p=prefix: self.open_ssh(p))
+            if prefix in TERMINAL_DEVICES:
+                # Click: the system terminal; its arrow: the console or log in QGIS
+                menu = QMenu(ssh)
+                menu.addAction(icon("tab_terminal"), tr("Terminal window"),
+                               lambda p=prefix: self.open_ssh(p))
+                menu.addAction(tr("Console in QGIS"),
+                               lambda p=prefix: self.open_terminal(p, "console"))
+                menu.addAction(tr("Log in QGIS"),
+                               lambda p=prefix: self.open_terminal(p, "log"))
+                ssh.setMenu(menu)
+                ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.pi_runner.finished.connect(self._on_pi_info)
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
@@ -572,15 +589,15 @@ class ValetudoPanel(QgsDockWidget):
                                              or NUC_AUTO_LOG_COMMAND),
                    tr("No NUC set in the settings."), self),
         ]
+        # The Terminal tab is opened on a server from its >_ menu in the Status tab,
+        # and hidden again with its ✕.
         choice = QgsSettings().value(KEY_TERMINAL, "robot/console", type=str) or "robot/console"
         device, _, mode = str(choice).partition("/")
-        self._term_devices = {"robot": self.btn_term_robot, "pi": self.btn_term_pi,
-                              "ha": self.btn_term_ha, "nuc": self.btn_term_nuc}
-        self._term_devices.get(device, self.btn_term_robot).setChecked(True)
+        self._term_device = device if device in TERMINAL_DEVICES else "robot"
         (self.btn_term_log if mode == "log" else self.btn_term_console).setChecked(True)
-        for button in (self.btn_term_robot, self.btn_term_pi, self.btn_term_ha,
-                       self.btn_term_nuc, self.btn_term_console, self.btn_term_log):
+        for button in (self.btn_term_console, self.btn_term_log):
             button.toggled.connect(self._on_terminal_switch)
+        self.btn_term_close.clicked.connect(self.close_terminal)
         self._show_terminal_page()
 
         # -- Schedule: Valetudo's timers (run by the robot); read when the tab is shown --
@@ -619,7 +636,9 @@ class ValetudoPanel(QgsDockWidget):
             self.tabs.setTabToolTip(i, self.tabs.tabText(i))
             self.tabs.setTabText(i, "")
             self.tabs.setTabIcon(i, self._tab_icons[key])
+        self._set_tab_shown("terminal", False)   # see open_terminal
         last = QgsSettings().value(KEY_TAB, "clean", type=str)
+        last = {"care": "maintenance", "system": "maintenance", "terminal": "status"}.get(last, last)
         if last in self._tab_keys:
             self.tabs.setCurrentIndex(self._tab_keys.index(last))
         self.tabs.currentChanged.connect(self._on_tab_changed)
@@ -766,6 +785,11 @@ class ValetudoPanel(QgsDockWidget):
         from .about import AboutDialog
         AboutDialog(self).exec()
 
+    def _set_tab_shown(self, key, shown):
+        """Show or hide a side tab (Qt 5.15+)."""
+        if key in self._tab_keys:
+            self.tabs.setTabVisible(self._tab_keys.index(key), shown)
+
     def show_tab(self, key):
         """Bring a side tab to the front (unfolding a compact panel)."""
         if key in self._tab_keys:
@@ -873,7 +897,25 @@ class ValetudoPanel(QgsDockWidget):
         self._show_terminal_page()
         self._update_console()
 
+    def open_terminal(self, device, mode="console"):
+        """Show the Terminal tab on a server's console or log."""
+        self._term_device = device
+        (self.btn_term_log if mode == "log" else self.btn_term_console).setChecked(True)
+        QgsSettings().setValue(KEY_TERMINAL, f"{device}/{mode}")
+        self._set_tab_shown("terminal", True)
+        self._show_terminal_page()
+        self.show_tab("terminal")
+        self._update_console()
+
+    def close_terminal(self, *_):
+        """Hide the Terminal tab; its sessions stop (they run only while shown)."""
+        self._set_tab_shown("terminal", False)
+        if self.tabs.currentWidget() is self.tab_terminal:
+            self.show_tab("status")
+        self._update_console()
+
     def _show_terminal_page(self):
+        self.lbl_term_server.setText(_device_name(self._term_device))
         pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
                  ("ha", "console"): self.tab_ha_console,
                  ("nuc", "console"): self.tab_nuc_console, ("nuc", "log"): self.tab_nuc_log,
@@ -882,10 +924,8 @@ class ValetudoPanel(QgsDockWidget):
         self.terminal_stack.setCurrentWidget(pages[self._terminal_choice()])
 
     def _terminal_choice(self):
-        """(device, mode) chosen by the Terminal tab's switches."""
-        device = next((key for key, button in self._term_devices.items()
-                       if button.isChecked()), "robot")
-        return device, ("log" if self.btn_term_log.isChecked() else "console")
+        """(device, mode) of the Terminal tab."""
+        return self._term_device, ("log" if self.btn_term_log.isChecked() else "console")
 
     # -- Wi-Fi tab ------------------------------------------------------------------------
 
@@ -1448,18 +1488,6 @@ class ValetudoPanel(QgsDockWidget):
             widget.setVisible(has_pi)
         self._strip_servers = {**getattr(self, "_strip_servers", {}), "pi": has_pi}
         self._update_strip_separators()
-        self.box_pi_card.setVisible(has_pi)
-        self.btn_term_pi.setEnabled(has_pi)
-        if not has_pi and self.btn_term_pi.isChecked():
-            self.btn_term_robot.setChecked(True)
-        has_nuc = self._nuc_target() is not None
-        self.btn_term_nuc.setEnabled(has_nuc)
-        if not has_nuc and self.btn_term_nuc.isChecked():
-            self.btn_term_robot.setChecked(True)
-        has_ha_ssh = self._ha_ssh_target() is not None
-        self.btn_term_ha.setEnabled(has_ha_ssh)
-        if not has_ha_ssh and self.btn_term_ha.isChecked():
-            self.btn_term_robot.setChecked(True)
         if has_pi and self.isVisible():
             if not self._pi_timer.isActive():
                 self._pi_timer.start()
@@ -1516,12 +1544,8 @@ class ValetudoPanel(QgsDockWidget):
                                           self._local_time)
         self.lbl_pi_info.setText(line)
         self.lbl_pi_info.setStyleSheet("color: #ef6c00;" if wrong else "")
-        # System tab: the same, as a card
-        state = (tr("Connected") if self._pi_ok else tr("Unreachable over SSH"))
-        self.lbl_pi_card.setText("\n".join(p for p in (
-            state, self.lbl_pi_name.text(), line) if p))
         self._set_problem("pi_clock", tr("The Raspberry Pi's clock is wrong.") if wrong else None,
-                          "system")
+                          "maintenance")
 
     def _update_strip_tip(self):
         """What a click on the strip does, then the Wi-Fi signal (no longer shown in it)."""
@@ -1872,7 +1896,7 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_robot_info.setToolTip(
             tr("The robot's clock is wrong: check Valetudo's NTP settings.") if wrong else "")
         self._set_problem("robot_clock", tr("The robot's clock is wrong: check Valetudo's "
-                                            "NTP settings.") if wrong else None, "system")
+                                            "NTP settings.") if wrong else None, "maintenance")
 
     def _update_robot_label(self):
         """Second header line: robot model · Valetudo version · Wi-Fi signal."""
@@ -2001,7 +2025,7 @@ class ValetudoPanel(QgsDockWidget):
                                  dock_component_advice())
         issues = [f"{_label(names, c)}: {advice[v]}" for c, v in components.items()
                   if v in DOCK_COMPONENT_PROBLEMS]
-        self._set_problem("dock", " · ".join(issues) or None, "care")
+        self._set_problem("dock", " · ".join(issues) or None, "maintenance")
         order = DOCK_COMPONENT_ORDER + sorted(c for c in components
                                               if c not in DOCK_COMPONENT_ORDER)
         for component in order:
@@ -2045,7 +2069,7 @@ class ValetudoPanel(QgsDockWidget):
                 widget.setToolTip(tr("Replace soon"))
             form.addRow(label, widget)
         self._set_problem("consumables", tr("Replace soon: {parts}").format(
-            parts=", ".join(worn)) if worn else None, "care")
+            parts=", ".join(worn)) if worn else None, "maintenance")
 
     @staticmethod
     def _stats(items):

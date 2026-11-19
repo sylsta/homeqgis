@@ -1820,10 +1820,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Démarrer à</translation>
     </message>
     <message>
-        <source>Connected</source>
-        <translation>Connecté</translation>
-    </message>
-    <message>
         <source>The Raspberry Pi's clock is wrong.</source>
         <translation>L’horloge du Raspberry Pi est fausse.</translation>
     </message>
@@ -1920,20 +1916,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Afficher la vidéo dans sa propre fenêtre (Échap pour fermer)</translation>
     </message>
     <message>
-        <source>Care</source>
-        <translation>Entretien</translation>
-    </message>
-    <message>
         <source>Terminal</source>
         <translation>Terminal</translation>
-    </message>
-    <message>
-        <source>Commands and log of the robot</source>
-        <translation>Commandes et journal du robot</translation>
-    </message>
-    <message>
-        <source>Commands and log of the Raspberry Pi</source>
-        <translation>Commandes et journal du Raspberry Pi</translation>
     </message>
     <message>
         <source>Console</source>
@@ -1946,10 +1930,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Follow the log file</source>
         <translation>Suivre le fichier journal</translation>
-    </message>
-    <message>
-        <source>System</source>
-        <translation>Système</translation>
     </message>
     <message>
         <source>Start cleaning all rooms</source>
@@ -2030,10 +2010,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Log command</source>
         <translation>Commande du journal</translation>
-    </message>
-    <message>
-        <source>Commands and log of the Home Assistant server</source>
-        <translation>Commandes et journal du serveur Home Assistant</translation>
     </message>
     <message>
         <source>Runs on the Home Assistant server, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
@@ -2308,10 +2284,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Aucun NUC défini dans les paramètres.</translation>
     </message>
     <message>
-        <source>Commands and log of the NUC</source>
-        <translation>Commandes et journal du NUC</translation>
-    </message>
-    <message>
         <source>Runs on the NUC, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
         <translation>S’exécute sur le NUC, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
     </message>
@@ -2578,6 +2550,34 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Read every server again now (each one also refreshes by itself)</source>
         <translation>Relire tous les serveurs maintenant (chacun s’actualise aussi tout seul)</translation>
+    </message>
+    <message>
+        <source>Terminal window</source>
+        <translation>Fenêtre de terminal</translation>
+    </message>
+    <message>
+        <source>Console in QGIS</source>
+        <translation>Console dans QGIS</translation>
+    </message>
+    <message>
+        <source>Log in QGIS</source>
+        <translation>Journal dans QGIS</translation>
+    </message>
+    <message>
+        <source>Maintenance</source>
+        <translation>Maintenance</translation>
+    </message>
+    <message>
+        <source>✕</source>
+        <translation>✕</translation>
+    </message>
+    <message>
+        <source>Close the terminal (open it again from a server's &gt;_ button in the Status tab)</source>
+        <translation>Fermer le terminal (le rouvrir depuis le bouton &gt;_ d’un serveur dans l’onglet État)</translation>
+    </message>
+    <message>
+        <source>System</source>
+        <translation>Système</translation>
     </message>
 </context>
 </TS>
