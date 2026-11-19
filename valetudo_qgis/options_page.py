@@ -25,12 +25,12 @@ from .icons import APP_ICON, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
-    KEY_HA_URL, KEY_INTERVAL, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
+    KEY_HA_ON_NUC, KEY_HA_URL, KEY_INTERVAL, KEY_KODI_ON_NUC, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
     KEY_NUC_LOG_COMMAND, KEY_NUC_PORT, KEY_NUC_USER, KEY_NUC_WEB_URL, KEY_PI_WEB_URL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK,
     KEY_PI_HOST, PLUGIN_NAME,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
     HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_SETTING, WIFI_DEFAULTS, default_camera_url,
-    load_settings, secret, set_secret,
+    load_settings, on_host, secret, set_secret,
 )
 from .ui_loader import load_ui
 
@@ -43,6 +43,7 @@ UI_WIDGETS = (
     "nuc_host", "nuc_user", "nuc_port", "nuc_log_command", "btn_nuc_test", "lbl_nuc_test",
     "nuc_web_url", "pi_web_url",
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
+    "chk_ha_on_nuc", "chk_kodi_on_nuc",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
     "btn_backup_reset", "about_layout",
@@ -61,6 +62,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._on_applied = on_applied
         self._test_client = None
         self._ha_client = None
+        self._on_nuc_tips = None   # the "On the NUC" boxes' own tooltips, see _sync_on_nuc
         self._fill()
         self._setup_backup()
         self.about_layout.addWidget(AboutWidget(self))
@@ -90,6 +92,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.ha_url.setText(cfg["ha_url"])
         self.nuc_host.setText(cfg["nuc_host"])
         self.kodi_url.setText(cfg["kodi_url"])
+        self.chk_ha_on_nuc.setChecked(cfg["ha_on_nuc"])
+        self.chk_kodi_on_nuc.setChecked(cfg["kodi_on_nuc"])
+        self._sync_on_nuc()
         self.kodi_user.setText(cfg["kodi_user"])
         self.nuc_user.setText(cfg["nuc_user"])
         self.nuc_port.setValue(cfg["nuc_port"])
@@ -131,6 +136,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.btn_pi_test.clicked.connect(self._test_pi)
         self.btn_nuc_test.clicked.connect(self._test_nuc)
         self.btn_kodi_test.clicked.connect(self._test_kodi)
+        for widget in (self.chk_ha_on_nuc, self.chk_kodi_on_nuc):
+            widget.toggled.connect(lambda *_: self._sync_on_nuc())
+        self.nuc_host.textChanged.connect(lambda *_: self._sync_on_nuc())
         self._kodi_client = None
         self._nuc_runner = None
         self._pi_runner = None
@@ -343,6 +351,23 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             "✓ " + tr("Connected: {name}").format(name=name or self.nuc_host.text().strip())
             + ("\n" + resources if resources else ""))
 
+    def _sync_on_nuc(self):
+        """"On the NUC": the address takes the NUC's host (its port stays editable by
+        unticking); without a NUC address, the box cannot be used."""
+        nuc = self.nuc_host.text().strip()
+        if self._on_nuc_tips is None:
+            self._on_nuc_tips = {box: box.toolTip()
+                                 for box in (self.chk_ha_on_nuc, self.chk_kodi_on_nuc)}
+        for box, field, port in ((self.chk_ha_on_nuc, self.ha_url, 8123),
+                                 (self.chk_kodi_on_nuc, self.kodi_url, 8080)):
+            box.setEnabled(bool(nuc) or box.isChecked())
+            box.setToolTip(self._on_nuc_tips[box] if nuc
+                           else tr("Set the NUC's address first."))
+            linked = box.isChecked() and bool(nuc)
+            if linked:
+                field.setText(on_host(field.text().strip(), nuc, port))
+            field.setEnabled(not linked)
+
     def _test_kodi(self, *_):
         """Ask Kodi its version, with the values being edited."""
         url = self.kodi_url.text().strip()
@@ -428,6 +453,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_HA_URL, self.ha_url.text().strip())
         s.setValue(KEY_NUC_HOST, self.nuc_host.text().strip())
         s.setValue(KEY_KODI_URL, self.kodi_url.text().strip())
+        s.setValue(KEY_HA_ON_NUC, self.chk_ha_on_nuc.isChecked())
+        s.setValue(KEY_KODI_ON_NUC, self.chk_kodi_on_nuc.isChecked())
         s.setValue(KEY_KODI_USER, self.kodi_user.text().strip())
         s.setValue(KEY_NUC_USER, self.nuc_user.text().strip() or "root")
         s.setValue(KEY_NUC_PORT, self.nuc_port.value())

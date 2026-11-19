@@ -641,14 +641,24 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="chk_ha_on_nuc">
+         <property name="text">
+          <string>On the NUC (use its address)</string>
+         </property>
+         <property name="toolTip">
+          <string>Home Assistant runs on the NUC itself (e.g. in Docker): its address is the NUC's, with the port above. Not for Home Assistant OS in a virtual machine, which has its own address.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
         <widget class="QLabel" name="lbl_ha_token">
          <property name="text">
           <string>Access token</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="ha_token">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
@@ -658,7 +668,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="2">
+       <item row="3" column="0" colspan="2">
         <layout class="QHBoxLayout" name="ha_test_layout" stretch="0,1">
          <item>
           <widget class="QPushButton" name="btn_ha_test">
@@ -676,7 +686,7 @@
          </item>
         </layout>
        </item>
-       <item row="3" column="0" colspan="2">
+       <item row="4" column="0" colspan="2">
         <widget class="QLabel" name="lbl_ha_hint">
          <property name="wordWrap">
           <bool>true</bool>
@@ -686,7 +696,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="5" column="0" colspan="2">
         <widget class="QLabel" name="lbl_ha_ssh_title">
          <property name="text">
           <string>SSH (Terminal tab)</string>
@@ -698,42 +708,42 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="lbl_ha_ssh_host">
          <property name="text">
           <string>SSH address</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="6" column="1">
         <widget class="QLineEdit" name="ha_ssh_host">
          <property name="placeholderText">
           <string notr="true">192.168.50.1</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="0">
+       <item row="7" column="0">
         <widget class="QLabel" name="lbl_ha_ssh_user">
          <property name="text">
           <string>SSH user</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="7" column="1">
         <widget class="QLineEdit" name="ha_ssh_user">
          <property name="placeholderText">
           <string notr="true">root</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
+       <item row="8" column="0">
         <widget class="QLabel" name="lbl_ha_ssh_password">
          <property name="text">
           <string>SSH password</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
+       <item row="8" column="1">
         <widget class="QLineEdit" name="ha_ssh_password">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
@@ -743,14 +753,14 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
+       <item row="9" column="0">
         <widget class="QLabel" name="lbl_ha_ssh_port">
          <property name="text">
           <string>SSH port</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
+       <item row="9" column="1">
         <widget class="QSpinBox" name="ha_ssh_port">
          <property name="minimum">
           <number>1</number>
@@ -763,21 +773,21 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <widget class="QLabel" name="lbl_ha_log_command">
          <property name="text">
           <string>Log command</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
+       <item row="10" column="1">
         <widget class="QLineEdit" name="ha_log_command">
          <property name="placeholderText">
           <string notr="true">ha core logs -n 200 -f</string>
          </property>
         </widget>
        </item>
-       <item row="10" column="0" colspan="2">
+       <item row="11" column="0" colspan="2">
         <widget class="QLabel" name="lbl_ha_ssh_hint">
          <property name="wordWrap">
           <bool>true</bool>
@@ -921,35 +931,45 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="chk_kodi_on_nuc">
+         <property name="text">
+          <string>On the NUC (use its address)</string>
+         </property>
+         <property name="toolTip">
+          <string>Kodi runs on the NUC: its address is the NUC's, with the port above.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
         <widget class="QLabel" name="lbl_kodi_user">
          <property name="text">
           <string>Username</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="kodi_user">
          <property name="placeholderText">
           <string notr="true">kodi</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="lbl_kodi_password">
          <property name="text">
           <string>Password</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QLineEdit" name="kodi_password">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
+       <item row="4" column="0" colspan="2">
         <layout class="QHBoxLayout" name="kodi_test_layout" stretch="0,1">
          <item>
           <widget class="QPushButton" name="btn_kodi_test">
@@ -967,7 +987,7 @@
          </item>
         </layout>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="5" column="0" colspan="2">
         <widget class="QLabel" name="lbl_kodi_hint">
          <property name="wordWrap">
           <bool>true</bool>

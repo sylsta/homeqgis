@@ -33,6 +33,8 @@ KEY_NUC_LOG_COMMAND = "valetudo/nuc_log_command"   # empty = NUC_AUTO_LOG_COMMAN
 # (sysvinit, e.g. MX Linux by default).
 NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl >/dev/null; "
                         "then journalctl -n 200 -f; else tail -n 200 -F /var/log/syslog; fi")
+KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the NUC's host
+KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
 KEY_KODI_USER = "valetudo/kodi_user"
 DEFAULT_HA_URL = "http://localhost:8123/"
@@ -71,7 +73,29 @@ def default_camera_url(robot_url):
     return f"tcp://{host}:{DEFAULT_CAMERA_PORT}" if host else ""
 
 
+def on_host(url, host, default_port):
+    """url with its host replaced by host (scheme, port and path kept):
+    on_host("http://localhost:8123/", "192.168.50.2", 8123) -> http://192.168.50.2:8123/"""
+    from urllib.parse import urlsplit, urlunsplit
+    parts = urlsplit(url if "://" in url else "http://" + url if url else "http://")
+    port = parts.port or default_port
+    return urlunsplit((parts.scheme or "http", f"{host}:{port}", parts.path or "/",
+                       parts.query, parts.fragment))
+
+
 def load_settings():
+    """The settings; with "on the NUC", Home Assistant's and Kodi's addresses use the
+    NUC's host (their stored address still gives the port)."""
+    cfg = _stored_settings()
+    nuc = cfg["nuc_host"]
+    if nuc and cfg["ha_on_nuc"]:
+        cfg["ha_url"] = on_host(cfg["ha_url"], nuc, 8123)
+    if nuc and cfg["kodi_on_nuc"]:
+        cfg["kodi_url"] = on_host(cfg["kodi_url"], nuc, 8080)
+    return cfg
+
+
+def _stored_settings():
     s = QgsSettings()
     url = s.value(KEY_URL, "", type=str)
     return {
@@ -93,6 +117,8 @@ def load_settings():
         "ha_url": s.value(KEY_HA_URL, DEFAULT_HA_URL, type=str).strip() or DEFAULT_HA_URL,
         "nuc_host": s.value(KEY_NUC_HOST, "", type=str).strip(),
         "kodi_url": s.value(KEY_KODI_URL, "", type=str).strip(),
+        "ha_on_nuc": s.value(KEY_HA_ON_NUC, False, type=bool),
+        "kodi_on_nuc": s.value(KEY_KODI_ON_NUC, False, type=bool),
         "kodi_user": s.value(KEY_KODI_USER, "kodi", type=str).strip(),
         "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip() or "root",
         "nuc_port": s.value(KEY_NUC_PORT, 22, type=int),

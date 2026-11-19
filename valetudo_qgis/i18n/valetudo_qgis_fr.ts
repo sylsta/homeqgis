@@ -2579,5 +2579,21 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>System</source>
         <translation>Système</translation>
     </message>
+    <message>
+        <source>Set the NUC's address first.</source>
+        <translation>Définissez d’abord l’adresse du NUC.</translation>
+    </message>
+    <message>
+        <source>On the NUC (use its address)</source>
+        <translation>Sur le NUC (utiliser son adresse)</translation>
+    </message>
+    <message>
+        <source>Home Assistant runs on the NUC itself (e.g. in Docker): its address is the NUC's, with the port above. Not for Home Assistant OS in a virtual machine, which has its own address.</source>
+        <translation>Home Assistant tourne sur le NUC lui-même (par exemple dans Docker) : son adresse est celle du NUC, avec le port ci-dessus. Pas pour Home Assistant OS dans une machine virtuelle, qui a sa propre adresse.</translation>
+    </message>
+    <message>
+        <source>Kodi runs on the NUC: its address is the NUC's, with the port above.</source>
+        <translation>Kodi tourne sur le NUC : son adresse est celle du NUC, avec le port ci-dessus.</translation>
+    </message>
 </context>
 </TS>
