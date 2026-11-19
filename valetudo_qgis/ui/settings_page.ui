@@ -212,6 +212,28 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="box_history">
+         <property name="title">
+          <string>History</string>
+         </property>
+         <layout class="QFormLayout" name="history_form">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
+          <item row="0" column="0" colspan="2">
+           <widget class="QCheckBox" name="record_history">
+            <property name="text">
+             <string>Record the robot's outings</string>
+            </property>
+            <property name="toolTip">
+             <string>Every outing of the robot (cleaning, Go to, return to the dock…) is written, one GeoPackage per day, in the history folder next to the project file. Nothing is written until the project has been saved.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="box_ssh">
          <property name="title">
           <string>SSH</string>

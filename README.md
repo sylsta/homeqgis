@@ -209,6 +209,24 @@ persistent warning when the fresh water tank or the detergent is empty, the
 waste water tank or the dust bag is full, or a tank is missing; a short message
 confirms when it is OK again. Turn it off in the settings.
 
+**History** (on by default; *Settings > Options > DomotiQGIS*, tab *Robot*, *Record the
+robot's outings*): as long as QGIS runs and the robot is configured, every outing (from
+leaving the dock to coming back) is recorded, whether the panel is open or not, in
+`<project folder>/history/robot_YYYY-MM-DD.gpkg`, one GeoPackage per day (an outing that
+crosses midnight stays in the file of the day it started). Each file has three layers:
+
+| Layer      | One feature per                           | Main attributes                                                                 |
+|------------|-------------------------------------------|----------------------------------------------------------------------------------|
+| `outings`  | outing (line)                             | start, end, duration, distance, activities, `job_type`, `scheduled`, rooms, area, result |
+| `segments` | continuous activity within an outing (line) | `activity`, detail (rooms, zone, spot, whole home), `job_type`, `scheduled`    |
+| `points`   | reading, about every 2 s while moving     | time, `activity`, state, battery, Wi-Fi signal                                   |
+
+`activity` is `cleaning`, `go_to`, `returning`, `manual`, `mapping` or `other`; `job_type`
+is `vacuum`, `mop` or `both`; `scheduled` is true when the outing started within two
+minutes of one of the robot's timers and not from the plugin. Time on the dock is not
+recorded. The project must have been saved (the history folder sits next to it): until
+then the outing is kept in memory, and a message offers to save the project.
+
 **Wi-Fi tab**: the signal now, with a graph of the last 10 minutes, and the three
 colour thresholds (green, yellow, red from), used by the strip, the graph and the
 maps. *Record Wi-Fi survey* (with QGIS open) reads the robot's Wi-Fi
@@ -482,6 +500,9 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `robot/valetudo_wifi_survey.sh` | Wi-Fi recorder that runs on the robot (BusyBox sh)   |
 | `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
 | `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
+| `history_logic.py`           | Outings, segments and points from the robot's readings  |
+| `history_store.py`           | Daily GeoPackages of the history (`<project>/history`)  |
+| `history_recorder.py`        | Polls the robot and records its history                 |
 | `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
 | `quiet_travel.py`            | Quiet presets for "Go to", restored afterwards          |
 | `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |

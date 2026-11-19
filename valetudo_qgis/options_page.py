@@ -26,7 +26,7 @@ from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
     KEY_ADVANCED, KEY_HA_ON_NUC, KEY_HA_URL, KEY_INTERVAL, KEY_KODI_ON_NUC, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
-    KEY_NUC_LOG_COMMAND, KEY_NUC_PORT, KEY_NUC_USER, KEY_NUC_WEB_URL, KEY_PI_WEB_URL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK,
+    KEY_NUC_LOG_COMMAND, KEY_NUC_PORT, KEY_NUC_USER, KEY_NUC_WEB_URL, KEY_PI_WEB_URL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_HISTORY,
     KEY_PI_HOST, PLUGIN_NAME,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
     HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_SETTING, WIFI_DEFAULTS, default_camera_url,
@@ -38,7 +38,7 @@ PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_
 
 UI_WIDGETS = (
     "url", "auth", "interval", "live_at_start", "btn_test", "lbl_test", "btn_room_groups",
-    "camera_url", "ffmpeg", "camera_width", "notify_dock", "ssh_user", "ssh_port",
+    "camera_url", "ffmpeg", "camera_width", "notify_dock", "record_history", "ssh_user", "ssh_port",
     "pi_host", "pi_user", "pi_port", "pi_wifi_dir", "btn_pi_test", "lbl_pi_test",
     "nuc_host", "nuc_user", "nuc_port", "nuc_log_command", "btn_nuc_test", "lbl_nuc_test",
     "nuc_web_url", "pi_web_url",
@@ -84,6 +84,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.ffmpeg.setText(cfg["ffmpeg"])
         self.camera_width.setValue(cfg["camera_width"])
         self.notify_dock.setChecked(cfg["notify_dock"])
+        self.record_history.setChecked(cfg["history"])
         self.ssh_user.setText(cfg["ssh_user"])
         self.ssh_port.setValue(cfg["ssh_port"])
         self.pi_host.setText(cfg["pi_host"])
@@ -454,6 +455,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_FFMPEG, self.ffmpeg.text().strip())
         s.setValue(KEY_CAMERA_WIDTH, self.camera_width.value())
         s.setValue(KEY_NOTIFY_DOCK, self.notify_dock.isChecked())
+        s.setValue(KEY_HISTORY, self.record_history.isChecked())
         s.setValue(KEY_SSH_USER, self.ssh_user.text().strip() or "root")
         s.setValue(KEY_SSH_PORT, self.ssh_port.value())
         s.setValue(KEY_PI_HOST, self.pi_host.text().strip())

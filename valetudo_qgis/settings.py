@@ -36,6 +36,7 @@ NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl 
 KEY_ADVANCED = "valetudo/advanced_tools"   # Terminal, robot Wi-Fi recorder, boot watch, restrictions
 KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the NUC's host
 KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
+KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
 KEY_KODI_USER = "valetudo/kodi_user"
 DEFAULT_HA_URL = "http://localhost:8123/"
@@ -111,6 +112,7 @@ def _stored_settings():
         "camera_width": s.value(KEY_CAMERA_WIDTH, 640, type=int),
         "notify_dock": s.value(KEY_NOTIFY_DOCK, True, type=bool),
         "live_at_start": s.value(KEY_LIVE_AT_START, True, type=bool),
+        "history": s.value(KEY_HISTORY, True, type=bool),
         "ssh_user": s.value(KEY_SSH_USER, "root", type=str) or "root",
         "ssh_port": s.value(KEY_SSH_PORT, 22, type=int),
         "pi_host": s.value(KEY_PI_HOST, "", type=str).strip(),

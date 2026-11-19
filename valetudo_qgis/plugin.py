@@ -19,6 +19,7 @@ from . import room_groups
 from .boot_monitor import BootMonitor
 from .client import ValetudoClient
 from .coords import q2v, v2q
+from .history_recorder import HistoryRecorder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
@@ -181,6 +182,8 @@ class ValetudoPlugin:
         self._watch = None
         self._reboot = None
         self.survey = None
+        self.history = None   # HistoryRecorder, while the robot is connected
+        self._history_bar = None
 
     # ------------------------------------------------------------------
     # GUI setup / teardown
@@ -404,6 +407,10 @@ class ValetudoPlugin:
             self._watch.stop()
             self._watch = None
         self._drop_client()
+        self._hide_history_bar()
+        if self.history is not None:
+            self.history.deleteLater()
+            self.history = None
         if getattr(self, "options_factory", None) is not None:
             self.iface.unregisterOptionsWidgetFactory(self.options_factory)
             self.options_factory = None
@@ -474,9 +481,12 @@ class ValetudoPlugin:
             self.panel.attach(self.client)
         self.client.fetch_capabilities(quiet=True)   # retried once the robot answers
         self._ensure_robot_survey()   # started again if the robot has rebooted
+        self._start_history()
         return self.client
 
     def _drop_client(self):
+        if self.history is not None:
+            self.history.stop()   # closes the outing under way and writes it
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
         if getattr(self, "quiet_travel", None) is not None:
@@ -499,6 +509,8 @@ class ValetudoPlugin:
 
     def _on_capabilities(self, capabilities):
         self.capabilities = set(capabilities) if capabilities is not None else None
+        if self.history is not None:
+            self.history.set_capabilities(self.capabilities)
         self._apply_capabilities()
 
     def _apply_capabilities(self):
@@ -614,13 +626,55 @@ class ValetudoPlugin:
         if self._unloaded:
             return
         self._drop_client()
-        if self.panel is not None and self.panel.isVisible():
-            self._get_client(prompt=False)   # reconnect the visible panel at once
+        # Reconnect at once (as at start-up): the history records without the panel.
+        self._get_client(prompt=False)
         if self.panel is not None:
             self.panel.camera.restart_if_running()
             self.panel.settings_changed()   # e.g. Pi address: show or hide its console
         self._update_pi_actions()
         self._apply_advanced()
+
+    # -- history ---------------------------------------------------------------------
+
+    def _start_history(self):
+        if not load_settings()["history"] or self.client is None:
+            return
+        if self.history is None:
+            self.history = HistoryRecorder()
+            self.history.statusChanged.connect(self._on_history_status)
+        self.history.start(self.client, self.capabilities)
+
+    def _on_history_status(self, status, detail):
+        if self._unloaded:
+            return
+        bar = self.iface.messageBar()
+        if status == "unsaved":
+            if self._history_bar is not None:
+                return
+            item = bar.createMessage(
+                PLUGIN_NAME, tr("The robot is out: save the project to record its history "
+                                "(kept in memory until then)."))
+            button = QPushButton(tr("Save project…"))
+            button.clicked.connect(self._save_project_for_history)
+            item.layout().addWidget(button)
+            self._history_bar = bar.pushWidget(item, Qgis.MessageLevel.Info, 0)
+        elif status == "error":
+            bar.pushMessage(PLUGIN_NAME, tr("History not written: {error}").format(error=detail),
+                            level=Qgis.MessageLevel.Warning, duration=8)
+        elif self._history_bar is not None:   # written: the project has been saved
+            self._hide_history_bar()
+
+    def _save_project_for_history(self):
+        self._hide_history_bar()
+        self.iface.actionSaveProject().trigger()
+
+    def _hide_history_bar(self):
+        if self._history_bar is not None:
+            try:
+                self.iface.messageBar().popWidget(self._history_bar)
+            except RuntimeError:
+                pass
+            self._history_bar = None
 
     def _center_on_robot(self, map_json, force=False):
         """Recentre on the robot when it leaves the middle of the view (no constant jitter)."""
@@ -1048,6 +1102,8 @@ class ValetudoPlugin:
 
     def _start_goto(self, client, point):
         self.goto_emulator.start(client, point)
+        if self.history is not None:
+            self.history.expect("go_to")   # not the zone cleaning that emulates it
         self._message(tr("Robot on its way; it will be paused on arrival."),
                       Qgis.MessageLevel.Info)
 
@@ -1063,6 +1119,8 @@ class ValetudoPlugin:
         changes = ", ".join(f"{names.get(cap, cap)}: {labels.get(value, value)}"
                             for cap, value in applied)
         self.goto_emulator.start(self.client, point)
+        if self.history is not None:
+            self.history.expect("go_to")
         self._message(tr("Robot on its way without cleaning ({changes}); it will be paused on "
                          "arrival, then your settings restored.").format(
                              changes=changes or tr("settings already at their lowest")),

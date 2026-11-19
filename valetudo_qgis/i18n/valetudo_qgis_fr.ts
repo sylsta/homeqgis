@@ -2723,5 +2723,29 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Terminal · {server}</source>
         <translation>Terminal · {server}</translation>
     </message>
+    <message>
+        <source>History</source>
+        <translation>Historique</translation>
+    </message>
+    <message>
+        <source>Record the robot's outings</source>
+        <translation>Enregistrer les sorties du robot</translation>
+    </message>
+    <message>
+        <source>Every outing of the robot (cleaning, Go to, return to the dock…) is written, one GeoPackage per day, in the history folder next to the project file. Nothing is written until the project has been saved.</source>
+        <translation>Chaque sortie du robot (nettoyage, Aller à, retour à la base…) est enregistrée, un GeoPackage par jour, dans le dossier history à côté du fichier projet. Rien n'est écrit tant que le projet n'a pas été enregistré.</translation>
+    </message>
+    <message>
+        <source>The robot is out: save the project to record its history (kept in memory until then).</source>
+        <translation>Le robot est sorti : enregistrez le projet pour enregistrer son historique (gardé en mémoire d'ici là).</translation>
+    </message>
+    <message>
+        <source>Save project…</source>
+        <translation>Enregistrer le projet…</translation>
+    </message>
+    <message>
+        <source>History not written: {error}</source>
+        <translation>Historique non écrit : {error}</translation>
+    </message>
 </context>
 </TS>

@@ -64,6 +64,7 @@ class ValetudoClient(QObject):
     timersReceived = pyqtSignal(list)          # Valetudo timers (dicts with their "id")
     timerPropertiesReceived = pyqtSignal(dict)  # supportedActions, supportedPreActions
     commandDone = pyqtSignal(str)
+    commandSent = pyqtSignal(str)              # a command was sent (same key as commandDone)
     reachable = pyqtSignal(bool)              # emitted after every request
     error = pyqtSignal(str)
 
@@ -306,6 +307,7 @@ class ValetudoClient(QObject):
     # -- commands -----------------------------------------------------------
 
     def _command(self, capability, payload, key, path_suffix=""):
+        self.commandSent.emit(key)
         self._put(f"/robot/capabilities/{capability}{path_suffix}", payload,
                   lambda _data: self.commandDone.emit(key))
 
