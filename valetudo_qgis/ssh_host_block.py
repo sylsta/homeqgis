@@ -22,7 +22,7 @@ INTERVAL_MS = 30_000
 
 class SshHostBlock(QObject):
     def __init__(self, widgets, target, local_time, on_clock, parent=None):
-        """widgets: dict header, connection, refresh, name, info, resources (QLabels
+        """widgets: dict header, connection, name, info, resources (QLabels
         and the header widget); target(): (host, user, port) or None;
         local_time(epoch) -> text; on_clock(wrong): called after each read."""
         super().__init__(parent)
@@ -38,7 +38,6 @@ class SshHostBlock(QObject):
         self.timer = QTimer(self)
         self.timer.setInterval(INTERVAL_MS)
         self.timer.timeout.connect(self.refresh)
-        self.w["refresh"].clicked.connect(self.refresh)
         self.w["header"].setVisible(False)
 
     def update(self, panel_visible):

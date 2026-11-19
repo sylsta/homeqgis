@@ -23,7 +23,7 @@ LABELS_EVERY = 6          # polls: the system labels every 30 s
 
 class KodiBlock(QObject):
     def __init__(self, widgets, settings, parent=None):
-        """widgets: dict header, connection, refresh, name, info, play_row, playing,
+        """widgets: dict header, connection, name, info, play_row, playing,
         progress, play, stop; settings(): (url, user, password) or None."""
         super().__init__(parent)
         self.w = widgets
@@ -40,7 +40,6 @@ class KodiBlock(QObject):
         self.timer = QTimer(self)
         self.timer.setInterval(POLL_MS)
         self.timer.timeout.connect(self.refresh)
-        self.w["refresh"].clicked.connect(self.refresh)
         self.w["play"].clicked.connect(self.play_pause)
         self.w["stop"].clicked.connect(self.stop_playback)
         self.w["header"].setVisible(False)

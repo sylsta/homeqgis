@@ -231,6 +231,39 @@
                 <number>0</number>
                </property>
                <item>
+                <layout class="QHBoxLayout" name="status_top_layout">
+                 <item>
+                  <spacer name="status_top_spacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="btn_refresh_all">
+                   <property name="text">
+                    <string>Refresh all</string>
+                   </property>
+                   <property name="toolButtonStyle">
+                    <enum>Qt::ToolButtonTextBesideIcon</enum>
+                   </property>
+                   <property name="autoRaise">
+                    <bool>true</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string>Read every server again now (each one also refreshes by itself)</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
                 <widget class="QFrame" name="robot_header">
                  <property name="frameShape">
                   <enum>QFrame::StyledPanel</enum>
@@ -252,7 +285,7 @@
                    <number>6</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0,0,0">
+                   <layout class="QHBoxLayout" name="header_layout" stretch="0,1,0,0">
                     <item>
                      <widget class="QLabel" name="lbl_details_logo">
                       <property name="toolTip">
@@ -274,13 +307,6 @@
                      <widget class="QToolButton" name="btn_robot_ssh">
                       <property name="autoRaise">
                        <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="btn_refresh">
-                      <property name="toolTip">
-                       <string>Refresh now</string>
                       </property>
                      </widget>
                     </item>
@@ -363,7 +389,7 @@
                    <number>6</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0,0,0">
+                   <layout class="QHBoxLayout" name="pi_header_row" stretch="0,1,0,0">
                     <item>
                      <widget class="QLabel" name="lbl_pi_logo">
                       <property name="toolTip">
@@ -385,13 +411,6 @@
                      <widget class="QToolButton" name="btn_pi_ssh">
                       <property name="autoRaise">
                        <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="btn_pi_refresh">
-                      <property name="toolTip">
-                       <string>Refresh now</string>
                       </property>
                      </widget>
                     </item>
@@ -441,7 +460,7 @@
                    <number>6</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="ha_header_row" stretch="0,1,0,0,0">
+                   <layout class="QHBoxLayout" name="ha_header_row" stretch="0,1,0,0">
                     <item>
                      <widget class="QLabel" name="lbl_ha_logo">
                       <property name="toolTip">
@@ -463,13 +482,6 @@
                      <widget class="QToolButton" name="btn_ha_ssh">
                       <property name="autoRaise">
                        <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="btn_ha_refresh">
-                      <property name="toolTip">
-                       <string>Refresh now</string>
                       </property>
                      </widget>
                     </item>
@@ -519,7 +531,7 @@
                    <number>6</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="nuc_header_row" stretch="0,1,0,0,0">
+                   <layout class="QHBoxLayout" name="nuc_header_row" stretch="0,1,0,0">
                     <item>
                      <widget class="QLabel" name="lbl_nuc_logo">
                       <property name="toolTip">
@@ -541,13 +553,6 @@
                      <widget class="QToolButton" name="btn_nuc_ssh">
                       <property name="autoRaise">
                        <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="btn_nuc_refresh">
-                      <property name="toolTip">
-                       <string>Refresh now</string>
                       </property>
                      </widget>
                     </item>
@@ -604,7 +609,7 @@
                    <number>6</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="kodi_header_row" stretch="0,1,0,0,0">
+                   <layout class="QHBoxLayout" name="kodi_header_row" stretch="0,1,0,0">
                     <item>
                      <widget class="QLabel" name="lbl_kodi_logo">
                       <property name="toolTip">
@@ -626,13 +631,6 @@
                      <widget class="QToolButton" name="btn_kodi_ssh">
                       <property name="autoRaise">
                        <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="btn_kodi_refresh">
-                      <property name="toolTip">
-                       <string>Refresh now</string>
                       </property>
                      </widget>
                     </item>

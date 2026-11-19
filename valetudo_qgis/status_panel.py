@@ -76,16 +76,16 @@ UI_WIDGETS = (
     "btn_warning", "sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
     "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu",
     "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
-    "ha_header", "lbl_ha_logo", "lbl_ha_connection", "btn_ha_refresh", "lbl_ha_name",
-    "lbl_ha_info", "nuc_header", "lbl_nuc_logo", "lbl_nuc_connection", "btn_nuc_refresh",
+    "ha_header", "lbl_ha_logo", "lbl_ha_connection", "lbl_ha_name",
+    "lbl_ha_info", "nuc_header", "lbl_nuc_logo", "lbl_nuc_connection",
     "lbl_nuc_name", "lbl_nuc_info", "lbl_nuc_resources",
-    "kodi_header", "lbl_kodi_logo", "lbl_kodi_connection", "btn_kodi_refresh",
+    "kodi_header", "lbl_kodi_logo", "lbl_kodi_connection",
     "lbl_kodi_name", "lbl_kodi_info", "kodi_play_row", "lbl_kodi_playing",
-    "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection", "btn_refresh",
+    "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection", "btn_refresh_all",
     "btn_robot_web", "btn_robot_ssh", "btn_pi_web", "btn_pi_ssh", "btn_ha_web", "btn_ha_ssh",
     "btn_nuc_web", "btn_nuc_ssh", "btn_kodi_web", "btn_kodi_ssh",
     "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
-    "btn_pi_refresh", "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
+    "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
     # Clean
     "tab_clean", "rooms", "box_settings", "settings_form", "combo_operation_mode",
@@ -417,25 +417,21 @@ class ValetudoPanel(QgsDockWidget):
 
         # -- Status tab: robot, Raspberry Pi, Home Assistant -----------------------------
         self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
-        self.btn_pi_refresh.setIcon(theme("/mActionRefresh.svg"))
-        self.btn_pi_refresh.clicked.connect(self._refresh_pi)
         self.pi_runner = RobotSurvey(self)   # one-shot SSH runner
         # NUC: a server read over SSH (ssh_host_block), shown only when set
         self.lbl_nuc_logo.setPixmap(icon(NUC_ICON).pixmap(20, 20))
-        self.btn_nuc_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.nuc = SshHostBlock(
             {"header": self.nuc_header, "connection": self.lbl_nuc_connection,
-             "refresh": self.btn_nuc_refresh, "name": self.lbl_nuc_name,
+             "name": self.lbl_nuc_name,
              "info": self.lbl_nuc_info, "resources": self.lbl_nuc_resources},
             self._nuc_target, lambda epoch: self._local_time(epoch),
             lambda wrong: self._set_problem(
                 "nuc_clock", tr("The NUC's clock is wrong.") if wrong else None), self)
         # Kodi: read over its JSON-RPC (kodi_block), shown only when set
         self.lbl_kodi_logo.setPixmap(icon(KODI_ICON).pixmap(20, 20))
-        self.btn_kodi_refresh.setIcon(theme("/mActionRefresh.svg"))
         self.kodi = KodiBlock(
             {"header": self.kodi_header, "connection": self.lbl_kodi_connection,
-             "refresh": self.btn_kodi_refresh, "name": self.lbl_kodi_name,
+             "name": self.lbl_kodi_name,
              "info": self.lbl_kodi_info, "play_row": self.kodi_play_row,
              "playing": self.lbl_kodi_playing, "progress": self.bar_kodi_progress,
              "play": self.btn_kodi_play, "stop": self.btn_kodi_stop},
@@ -458,8 +454,6 @@ class ValetudoPanel(QgsDockWidget):
             getattr(self, name).setVisible(False)
         self.lbl_details_logo.setPixmap(icon(LOGO).pixmap(20, 20))
         self.lbl_ha_logo.setPixmap(icon(HA_LOGO).pixmap(20, 20))
-        self.btn_ha_refresh.setIcon(theme("/mActionRefresh.svg"))
-        self.btn_ha_refresh.clicked.connect(self._refresh_ha)
         self.ha_header.setVisible(False)
         self._ha_client = None
         self._ha_token = None        # read (decrypted) once, when first needed
@@ -470,8 +464,8 @@ class ValetudoPanel(QgsDockWidget):
         self._ha_timer = QTimer(self)
         self._ha_timer.setInterval(HA_INTERVAL_MS)
         self._ha_timer.timeout.connect(self._refresh_ha)
-        self.btn_refresh.setIcon(theme("/mActionRefresh.svg"))
-        self.btn_refresh.clicked.connect(self.refresh)
+        self.btn_refresh_all.setIcon(theme("/mActionRefresh.svg"))
+        self.btn_refresh_all.clicked.connect(self.refresh_all)
         self._set_badge(None)
         self.lbl_error.setVisible(False)
 
@@ -709,7 +703,7 @@ class ValetudoPanel(QgsDockWidget):
             live_details = QToolButton()
             live_details.setDefaultAction(act["live"])
             live_details.setAutoRaise(True)
-            self.header_layout.insertWidget(self.header_layout.indexOf(self.btn_refresh),
+            self.header_layout.insertWidget(self.header_layout.indexOf(self.btn_robot_web),
                                             live_details)
         # ⋮ menu: occasional commands
         for key in ("locate", None, "watch_boot", "reboot", None, "settings"):
@@ -1720,6 +1714,16 @@ class ValetudoPanel(QgsDockWidget):
         else:
             self.refresh()
             self._timer.start()
+
+    def refresh_all(self, *_):
+        """Status tab: read every server again now."""
+        self.refresh()
+        if self._pi_target() is not None:
+            self._refresh_pi()
+        self.nuc.refresh()
+        self.kodi.refresh()
+        if self._ha_state is not None:
+            self._refresh_ha()
 
     def refresh(self, *_):
         client = self.client

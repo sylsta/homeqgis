@@ -2575,5 +2575,13 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Web address</source>
         <translation>Adresse web</translation>
     </message>
+    <message>
+        <source>Refresh all</source>
+        <translation>Tout actualiser</translation>
+    </message>
+    <message>
+        <source>Read every server again now (each one also refreshes by itself)</source>
+        <translation>Relire tous les serveurs maintenant (chacun s’actualise aussi tout seul)</translation>
+    </message>
 </context>
 </TS>
