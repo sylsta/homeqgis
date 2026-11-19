@@ -408,6 +408,7 @@ class ValetudoPanel(QgsDockWidget):
     def _build_ui(self):
         load_ui("status_panel.ui", self, UI_WIDGETS)
         self.setObjectName("ValetudoStatusPanel")   # QGIS restores the dock by this name
+        self._tab_titles = {}   # tab key -> (title label, title row): filled with the side tabs
         theme = QgsApplication.getThemeIcon
 
         # -- status strip: click it for the Status tab ---------------------------------
@@ -633,7 +634,6 @@ class ValetudoPanel(QgsDockWidget):
         self._tab_keys = [self.tabs.widget(i).objectName().removeprefix("tab_")
                           for i in range(self.tabs.count())]
         self._tab_icons = {}
-        self._tab_titles = {}
         for i, key in enumerate(self._tab_keys):
             self._tab_icons[key] = icon(f"tab_{key}")
             title = self.tabs.tabText(i)
@@ -653,6 +653,7 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_refresh_all.clicked.connect(self.refresh_all)
         if "status" in self._tab_titles:
             self._tab_titles["status"][1].addWidget(self.btn_refresh_all)
+        self._show_terminal_page()   # its title names the server
         self._set_tab_shown("terminal", False)   # see open_terminal
         last = QgsSettings().value(KEY_TAB, "clean", type=str)
         last = {"care": "maintenance", "system": "maintenance", "terminal": "status"}.get(last, last)
@@ -979,7 +980,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_console()
 
     def _show_terminal_page(self):
-        if "terminal" in self._tab_titles:
+        if "terminal" in self._tab_titles:   # (empty on the first call, see _build_ui)
             self._tab_titles["terminal"][0].setText(
                 tr("Terminal · {server}").format(server=_device_name(self._term_device)))
         pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
