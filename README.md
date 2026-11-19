@@ -40,43 +40,43 @@ The panel (titled *Connection*), from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  Wi-Fi -55  12 min · 18 m²  ⚠ │ (Pi) ● Online │ (HA) ● Online  [🗺] [⋮] │  status strip
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  12 min · 18 m²  ⚠ │ (Pi)● (HA)●  [🗺] [⋮] │  status strip
 ├──┬───────────────────────────────────────────────────┤
 │📈│ Status    robot, Pi, Home Assistant, NUC, Kodi    │
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
 │📅│ Schedule  week view + list                        │
 │📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
 │📷│ Camera                                            │
-│🧰│ Care      consumables, dock station, statistics   │
-│⌨ │ Terminal  [Robot | Pi | HA | NUC] [Console | Log] │
-│⚙ │ System    robot and Pi cards, boot log, events    │
+│🔧│ Maintenance  robot, consumables, dock, statistics,│
+│  │           boot log, events                        │
+│⌨ │ Terminal  only while open, from a server's >_ menu│
 ├──┴───────────────────────────────────────────────────┤
 │ [ Start cleaning all rooms ] [Dock]                  │  big button, at the bottom
 └──────────────────────────────────────────────────────┘
 ```
 
-- **Status strip**, always visible: the state, battery, Wi-Fi signal (coloured with
-  the thresholds of the Wi-Fi tab), the job in progress (time and area), a ⚠ when
-  something needs you (dock tank empty or full, worn consumable, robot error,
-  wrong clock: hover it for the list, click it to open the right tab), the
-  Raspberry Pi's status (when one is set: checked over SSH every 30 s), Home
-  Assistant's status (checked every minute: *Online*, *No token* when it answers
-  but no access token is set, *Offline*; hidden when there is neither a token nor
-  an answer; hover it for the server's name and version), *Show on map*
-  and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact
-  mode). **Click the strip** for the *Status* tab.
+- **Status strip**, always visible: the state, battery, the job in progress (time
+  and area, only while the robot works), a ⚠ when something needs you (dock tank
+  empty or full, worn consumable, robot error, wrong clock: hover it for the list,
+  click it to open the right tab), the Raspberry Pi and Home Assistant as their logo
+  and a coloured dot (hover them for their status: the Pi is checked over SSH every
+  30 s; Home Assistant every minute, *No token* when it answers but no access token
+  is set, hidden when there is neither a token nor an answer), *Show on map* and the
+  ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
+  Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
+  strip** for the *Status* tab.
 - **Status** tab, the detailed status of the servers: connection, robot model,
   Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with
   how far off, when it differs from the computer's by more than 2 minutes) and
-  uptime, the state and battery, with *Show on map* and *Refresh now* on the first
-  line; with a Raspberry Pi set in the settings, the same for the Pi (read over
+  uptime, the state and battery, with *Show on map* on the first line; **Refresh
+  all** at the top reads every server again (each also refreshes by itself); with a Raspberry Pi set in the settings, the same for the Pi (read over
   SSH every 30 s while the panel is visible); then Home Assistant: version, home
   name and time zone, its address, its own clock and its uptime (from the *Uptime*
   integration's `sensor.uptime`, if you have it); then the NUC, when its address
-  is set (*Settings > Options > DomotiQGIS*, tab *NUC*, with a *Test connection*
+  is set (*Settings > Options > DomotiQGIS*, tab *Servers*, *NUC*, with a *Test connection*
   button): its name and system, address, clock and uptime, and a line with its
   load, memory, disk and temperature, read over SSH (key only) every 30 s while
-  the panel is visible; then Kodi, when its address is set (tab *Kodi* of the
+  the panel is visible; then Kodi, when its address is set (*Servers* tab, *Kodi*, of the
   settings: address such as `http://192.168.50.2:8080/`, username, password kept
   encrypted, *Test connection*): its version and system, address, uptime and CPU
   temperature, and what is playing with its progress, **⏸ / ▶** and **⏹**. Read
@@ -91,7 +91,7 @@ The panel (titled *Connection*), from top to bottom:
     interface (same address as its remote control; enable *Settings > Services >
     Control > Allow remote control via HTTP* and a web interface in Kodi). The Pi and
     the NUC have no standard web interface: set a *Web address* in their settings
-    tabs if they run one, for example Cockpit on the NUC (`https://<NUC>:9090`), or,
+    (tab *Servers*) if they run one, for example Cockpit on the NUC (`https://<NUC>:9090`), or,
     on the Pi, Uptime Kuma (port 3001, a dashboard watching all these servers),
     Glances (`glances -w`, port 61208) or Cockpit.
   - SSH: with each server's SSH settings; Kodi's uses the NUC's user and port. The
@@ -99,7 +99,9 @@ The panel (titled *Connection*), from top to bottom:
     `x-terminal-emulator` (Debian, MX Linux…), else the first known terminal found;
     Terminal on macOS, Windows Terminal (or a console) on Windows. The window stays
     open when the session ends, to read any error. Password logins type the password
-    there.
+    there. The small arrow beside >_ (robot, Pi, Home Assistant, NUC) also offers
+    *Console in QGIS* and *Log in QGIS*: the **Terminal** tab then appears, on that
+    server, with a [Console | Log] switch; its ✕ hides it again.
 - **Big button**, at the bottom of the panel, after the robot's state: *Start
   cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
   paused; *Dock* next to it while away from the dock.
@@ -108,6 +110,13 @@ The panel (titled *Connection*), from top to bottom:
 - **Compact mode** (⋮ menu, off by default): only the strip and the big button;
   click the strip to unfold or fold the rest. The panel never folds by itself (when
   QGIS loses the focus or the mouse goes elsewhere).
+- **Advanced tools** (⋮ menu, or a box in the settings' *Robot* tab): the Terminal
+  (consoles and logs in QGIS), the Wi-Fi recorder on the robot, the boot watch and
+  the editing of no-go zones. Off for a new installation, so that a first look is
+  simpler; on if a robot was already set when this switch appeared.
+- **Setup assistant** (*Plugins > DomotiQGIS*, and offered when QGIS starts without
+  a robot): the robot's address with a test, then the other servers you have
+  (Raspberry Pi, NUC, Home Assistant, Kodi); their logins are set in the settings.
 
 **Clean** tab
 - Rooms are a checkable tree: *All rooms*, then your own **room groups**. Ticking
@@ -307,7 +316,7 @@ crontab -e    # then add:
 ```
 
 In QGIS, *Load Wi-Fi map from the Pi* (Advanced tab) fetches over SSH the newest
-run, or the full map when **Full map (all runs)** (just under the button) is ticked, (the Pi as set in *Settings > Options > DomotiQGIS*, tab *Raspberry Pi*) and
+run, or the full map when **Full map (all runs)** (just under the button) is ticked, (the Pi as set in *Settings > Options > DomotiQGIS*, tab *Servers*) and
 adds it to a "Wi-Fi maps (Pi)" group: the map, styled with the plugin's thresholds,
 and its readings as points (one per map cell for the full map). The files are kept in the QGIS profile folder
 (`valetudo_wifi_maps/`), so a saved project finds them again; loading the same run
@@ -333,16 +342,21 @@ finish (e.g. `tail -f`) by opening a new session.
 
 **Terminal** tab, *Raspberry Pi*: the same console and log on a Raspberry Pi (or any Linux machine
 of your network, e.g. the one that builds the Wi-Fi maps). Set its address, SSH
-user (`pi` by default) and port in *Settings > Options > DomotiQGIS*, tab *Raspberry
-Pi*; the *Raspberry Pi* switch of the Terminal tab, the Pi's details under the
-strip and its card in the System tab appear once an address is set. Its *Log*
+user (`pi` by default) and port in *Settings > Options > DomotiQGIS*, tab *Servers*,
+*Raspberry Pi*; the Pi's frame in the Status tab (with its >_ menu) and its dot in
+the strip appear once an address is set. Its *Log*
 follows `~/valetudo/collect.log`, the log of the Pi's Wi-Fi collector (see its cron
 line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`.
 
-**Raspberry Pi** tab: **Test connection** logs in over SSH with the values being
-edited and shows the Pi's name and system, and how many Wi-Fi maps its folder holds.
+**Servers** tab of the settings: the list on the left (Raspberry Pi, Home Assistant,
+NUC, Kodi), the selected server's settings on the right, each with a **Test
+connection**. For the Raspberry Pi, it logs in over SSH with the values being edited
+and shows the Pi's name and system, and how many Wi-Fi maps its folder holds. Home
+Assistant and Kodi have an **On the NUC** box: their address then takes the NUC's
+(with their own port), so that it is entered once. Leave it unticked for Home
+Assistant OS in a virtual machine, which has its own address.
 
-**Home Assistant** (*Settings > Options > DomotiQGIS*, tab *Home Assistant*): the
+**Home Assistant** (*Settings > Options > DomotiQGIS*, tab *Servers*, *Home Assistant*): the
 address of your Home Assistant server (`http://localhost:8123/` by default) and a
 long-lived access token (optional: without it the plugin can only check that Home
 Assistant answers), created in Home Assistant on your profile page
@@ -352,8 +366,8 @@ connection** reads the server's name and version.
 
 **Terminal** tab, *Home Assistant*: a console and a log on your Home Assistant
 server. Set its SSH address, user (`root` by default) and port in *Settings >
-Options > DomotiQGIS*, tab *Home Assistant*; the switch is greyed out without an
-address. On Home Assistant OS, install the *Terminal & SSH* add-on and set its SSH
+Options > DomotiQGIS*, tab *Servers*, *Home Assistant*; without an address, its >_
+button has no console or log. On Home Assistant OS, install the *Terminal & SSH* add-on and set its SSH
 port in the add-on's *Network* settings, then either paste your public key
 (`~/.ssh/id_ed25519.pub`) in its `authorized_keys` option, or set a password in
 its options and in the plugin's *SSH password* field. The password is stored
@@ -378,7 +392,7 @@ made readable by you only). **Reset config** goes back to the default settings
 can be undone with *Load selected…*.
 
 **Terminal** tab, *NUC*: a console and a log on the NUC, with its SSH settings
-(tab *NUC*). The log follows the system log: the journal (`journalctl`) where
+(tab *Servers*, *NUC*). The log follows the system log: the journal (`journalctl`) where
 systemd runs, else `/var/log/syslog` (sysvinit, as MX Linux by default); set
 another *Log command* in the settings if needed. Reading the system log may need
 `root` or a user in the `adm` group.
