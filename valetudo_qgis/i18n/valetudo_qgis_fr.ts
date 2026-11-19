@@ -2879,5 +2879,57 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Week {n} · {year}</source>
         <translation>Semaine {n} · {year}</translation>
     </message>
+    <message>
+        <source>From the robot</source>
+        <translation>Depuis le robot</translation>
+    </message>
+    <message>
+        <source>Recorded by QGIS</source>
+        <translation>Enregistrée par QGIS</translation>
+    </message>
+    <message>
+        <source>Recorded by QGIS, its line from Valetudo's path</source>
+        <translation>Enregistrée par QGIS, tracé repris du chemin de Valetudo</translation>
+    </message>
+    <message>
+        <source>Recorded on the robot while QGIS was not recording</source>
+        <translation>Enregistrée sur le robot pendant que QGIS n'enregistrait pas</translation>
+    </message>
+    <message>
+        <source>Add the outings recorded on the robot while QGIS was not recording (done by itself each time the plugin connects)</source>
+        <translation>Ajoute les sorties enregistrées sur le robot pendant que QGIS n'enregistrait pas (fait tout seul à chaque connexion du plugin)</translation>
+    </message>
+    <message>
+        <source>Install the Wi-Fi recorder on the robot (Wi-Fi tab): it also records the outings made while QGIS is closed.</source>
+        <translation>Installez l'enregistreur Wi-Fi sur le robot (onglet Wi-Fi) : il enregistre aussi les sorties faites pendant que QGIS est fermé.</translation>
+    </message>
+    <message>
+        <source>Reading the robot's recorder…</source>
+        <translation>Lecture de l'enregistreur du robot…</translation>
+    </message>
+    <message>
+        <source>Nothing new on the robot: its outings are already in the history.</source>
+        <translation>Rien de nouveau sur le robot : ses sorties sont déjà dans l'historique.</translation>
+    </message>
+    <message>
+        <source>Install the Wi-Fi recorder on the robot first (Wi-Fi tab): it also records the outings made while QGIS is closed.</source>
+        <translation>Installez d'abord l'enregistreur Wi-Fi sur le robot (onglet Wi-Fi) : il enregistre aussi les sorties faites pendant que QGIS est fermé.</translation>
+    </message>
+    <message>
+        <source>Save the project first, and turn on Record the robot's outings in the settings.</source>
+        <translation>Enregistrez d'abord le projet, et activez Enregistrer les sorties du robot dans les paramètres.</translation>
+    </message>
+    <message>
+        <source>{n} outing(s) recorded by the robot added to the history.</source>
+        <translation>{n} sortie(s) enregistrée(s) par le robot ajoutée(s) à l'historique.</translation>
+    </message>
+    <message>
+        <source>(Robot clock off by {s} s: corrected.)</source>
+        <translation>(Horloge du robot décalée de {s} s : corrigé.)</translation>
+    </message>
+    <message>
+        <source>Could not read the robot's recorder: {detail}</source>
+        <translation>Impossible de lire l'enregistreur du robot : {detail}</translation>
+    </message>
 </context>
 </TS>

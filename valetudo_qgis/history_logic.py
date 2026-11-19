@@ -314,3 +314,84 @@ def format_duration(seconds):
     if minutes < 60:
         return f"{minutes} min"
     return f"{minutes // 60} h {minutes % 60:02d}"
+
+
+# -- other sources: the Valetudo path, the recorder on the robot ---------------------
+
+ROBOT_RUN_GAP_S = 5 * 60     # robot readings further apart than this: separate outings
+OVERLAP_MARGIN_S = 60        # a robot run this close to a recorded outing is the same one
+RECENT_S = 2 * 60            # a robot run that ended this recently may still be going on
+CLOCK_TOLERANCE_S = 3        # robot clock difference ignored below this (SSH delay)
+PATH_LONGER = 1.2            # the Valetudo path replaces a live line this much shorter
+
+
+def map_path(map_json):
+    """The robot's path of its current or last job ("path" entity of the map), as
+    [(x, y), …] in Valetudo coordinates; empty if none."""
+    pairs = []
+    for entity in (map_json or {}).get("entities", []):
+        if entity.get("type") == "path":
+            points = entity.get("points") or []
+            pairs += [(points[i], points[i + 1]) for i in range(0, len(points) - 1, 2)]
+    return pairs
+
+
+def path_length_m(path):
+    return sum(_distance_m(a, b) for a, b in zip(path, path[1:]))
+
+
+def clock_offset(local_now, robot_now):
+    """Seconds to add to the robot's times (0 when its clock is close enough)."""
+    if robot_now is None:
+        return 0
+    offset = local_now - robot_now
+    return 0 if abs(offset) < CLOCK_TOLERANCE_S else round(offset)
+
+
+def _overlaps(start, end, intervals):
+    return any(start <= b + OVERLAP_MARGIN_S and end >= a - OVERLAP_MARGIN_S
+               for a, b in intervals)
+
+
+def robot_runs(rows, offset_s=0, recorded=(), now=None, timers=(), convert=None):
+    """Outings from the readings of the recorder on the robot (robot_survey.parse_rows:
+    time, x, y, signal, state), for the times QGIS was not recording.
+
+    Readings are grouped into runs (gap over ROBOT_RUN_GAP_S between two); a run that
+    overlaps a recorded outing (recorded: [(start, end)]) or ended less than RECENT_S
+    before now is skipped. Times are corrected by offset_s (see clock_offset);
+    convert(x, y) -> (x, y) turns the robot's coordinates into the layers' frame.
+    Returns (points, segments, outings, skipped), all marked source "robot"."""
+    convert = convert or (lambda x, y: (x, y))
+    now = time.time() if now is None else now
+    rows = sorted(rows, key=lambda r: r["time"])
+    runs, run = [], []
+    for row in rows:
+        if run and row["time"] - run[-1]["time"] > ROBOT_RUN_GAP_S:
+            runs.append(run)
+            run = []
+        run.append(row)
+    if run:
+        runs.append(run)
+    points, segments, outings, skipped = [], [], [], 0
+    for run in runs:
+        start, end = run[0]["time"] + offset_s, run[-1]["time"] + offset_s
+        if _overlaps(start, end, recorded) or now - end < RECENT_S:
+            skipped += 1
+            continue
+        tracker = OutingTracker()
+        tracker.timers = list(timers)
+        for row in run:
+            tracker.update(row["time"] + offset_s, row.get("state") or "moving", None,
+                           convert(row["x"], row["y"]), None, row.get("signal"))
+        tracker.update(end, "docked")   # the run is over (back on its dock or paused)
+        run_points, run_segments = tracker.pop_points(), tracker.pop_segments()
+        run_outings = tracker.pop_outings()
+        for record in run_points + run_segments + run_outings:
+            record["source"] = "robot"
+        for outing in run_outings:
+            outing["result"] = ""   # not known: the recorder only sees it move
+        points += run_points
+        segments += run_segments
+        outings += run_outings
+    return points, segments, outings, skipped

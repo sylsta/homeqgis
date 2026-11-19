@@ -11,7 +11,7 @@ written to the file of the day it started.
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from qgis.PyQt.QtCore import QDateTime, QMetaType
 from qgis.core import (Qgis, QgsCoordinateReferenceSystem, QgsFeature, QgsField, QgsFields,
@@ -32,7 +32,8 @@ SEGMENT_FIELDS = [("outing", _T.QString), ("activity", _T.QString), ("detail", _
 OUTING_FIELDS = [("outing", _T.QString), ("start", _T.QDateTime), ("end", _T.QDateTime),
                  ("duration_s", _T.Int), ("distance_m", _T.Double), ("activities", _T.QString),
                  ("job_type", _T.QString), ("scheduled", _T.Bool), ("rooms", _T.QString),
-                 ("area_m2", _T.Double), ("result", _T.QString), ("map_id", _T.QString)]
+                 ("area_m2", _T.Double), ("result", _T.QString), ("map_id", _T.QString),
+                 ("source", _T.QString)]
 LAYERS = {"outings": (OUTING_FIELDS, Qgis.WkbType.LineString),
           "segments": (SEGMENT_FIELDS, Qgis.WkbType.LineString),
           "points": (POINT_FIELDS, Qgis.WkbType.Point)}
@@ -101,16 +102,33 @@ class HistoryStore:
             layer = QgsVectorLayer(f"{path}|layername={name}", name, "ogr")
             if not layer.isValid():
                 raise OSError(f"cannot open {path} ({name})")
+            # Files written by an older version: add the fields they lack
+            spec = LAYERS[name][0]
+            missing = [QgsField(n, kind) for n, kind in spec if layer.fields().indexOf(n) < 0]
+            if missing:
+                layer.dataProvider().addAttributes(missing)
+                layer.updateFields()
             self._layers[key] = layer
         return layer
 
     def close(self):
         self._layers.clear()
 
-    def _add(self, path, name, features):
-        if not features:
+    def _add(self, path, name, records):
+        """records: (geometry, {field: value}). Set by name: the file's layers also
+        have their "fid" column."""
+        if not records:
             return
         layer = self._layer(path, name)
+        fields = layer.fields()
+        features = []
+        for geometry, values in records:
+            feature = QgsFeature(fields)
+            feature.setGeometry(geometry)
+            for field, value in values.items():
+                if fields.indexOf(field) >= 0:
+                    feature.setAttribute(field, value)
+            features.append(feature)
         ok, _added = layer.dataProvider().addFeatures(features)
         if not ok:
             raise OSError(f"cannot write to {path} ({name})")
@@ -126,34 +144,69 @@ class HistoryStore:
                                                     or record.get("time")))
         by_path = {}
         for point in points:
-            f = QgsFeature(_fields(POINT_FIELDS))
-            f.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(*point["pos"])))
-            f.setAttributes([_qdatetime(point["time"]), point["activity"], point["detail"],
-                             point["job_type"], point["state"], point["battery"],
-                             point["wifi_dbm"], point["outing"], point["source"]])
-            by_path.setdefault((path_of(point), "points"), []).append(f)
+            values = {name: point.get(name) for name, _kind in POINT_FIELDS}
+            values["time"] = _qdatetime(point["time"])
+            values["source"] = point.get("source") or "live"
+            by_path.setdefault((path_of(point), "points"), []).append(
+                (QgsGeometry.fromPointXY(QgsPointXY(*point["pos"])), values))
         for segment in segments:
-            f = QgsFeature(_fields(SEGMENT_FIELDS))
-            f.setGeometry(_line(segment["geometry"]))
-            f.setAttributes([segment["outing"], segment["activity"], segment["detail"],
-                             segment["job_type"], segment["scheduled"],
-                             _qdatetime(segment["start"]), _qdatetime(segment["end"]),
-                             segment["duration_s"], segment["distance_m"],
-                             segment.get("source", "live")])
-            by_path.setdefault((path_of(segment), "segments"), []).append(f)
+            values = {name: segment.get(name) for name, _kind in SEGMENT_FIELDS}
+            values.update(start=_qdatetime(segment["start"]), end=_qdatetime(segment["end"]),
+                          source=segment.get("source") or "live")
+            by_path.setdefault((path_of(segment), "segments"), []).append(
+                (_line(segment.get("geometry")), values))
         for outing in outings:
-            f = QgsFeature(_fields(OUTING_FIELDS))
-            f.setGeometry(_line(outing.get("geometry")))
-            f.setAttributes([outing["outing"], _qdatetime(outing["start"]),
-                             _qdatetime(outing["end"]), outing["duration_s"],
-                             outing["distance_m"], ",".join(outing["activities"]),
-                             outing["job_type"], outing["scheduled"],
-                             ", ".join(outing["rooms"]), outing.get("area_m2"),
-                             outing["result"], outing["map_id"]])
-            by_path.setdefault((day_path(folder, outing["start"]), "outings"), []).append(f)
+            values = {name: outing.get(name) for name, _kind in OUTING_FIELDS}
+            values.update(start=_qdatetime(outing["start"]), end=_qdatetime(outing["end"]),
+                          activities=",".join(outing.get("activities") or []),
+                          rooms=", ".join(outing.get("rooms") or []),
+                          source=outing.get("source") or "live")
+            by_path.setdefault((day_path(folder, outing["start"]), "outings"), []).append(
+                (_line(outing.get("geometry")), values))
         written = []
         for (path, name), features in by_path.items():
             self._add(path, name, features)
             if path not in written:
                 written.append(path)
         return written
+
+
+def _plain(value):
+    """A feature attribute as plain Python (None for NULL, Unix time for a date)."""
+    if value is None or (hasattr(value, "isNull") and value.isNull()):
+        return None
+    if isinstance(value, QDateTime):
+        return value.toMSecsSinceEpoch() / 1000
+    return value
+
+
+def read_outings(path):
+    """The outings of one day file, oldest first (empty if there is none). Each also
+    has "extent" (QgsRectangle or None)."""
+    if not os.path.exists(path):
+        return []
+    layer = QgsVectorLayer(f"{path}|layername=outings", "outings", "ogr")
+    if not layer.isValid():
+        return []
+    names = layer.fields().names()
+    outings = []
+    for feature in layer.getFeatures():
+        record = {name: _plain(feature[name]) for name in names}
+        record["extent"] = feature.geometry().boundingBox() if feature.hasGeometry() else None
+        outings.append(record)
+    del layer
+    return sorted(outings, key=lambda o: o.get("start") or 0)
+
+
+def recorded_intervals(folder, start, end):
+    """(start, end) of the outings recorded in the day files from Unix time start to end
+    (one day of margin on each side)."""
+    intervals = []
+    day = datetime.fromtimestamp(start).date() - timedelta(days=1)
+    last = datetime.fromtimestamp(end).date() + timedelta(days=1)
+    while day <= last:
+        path = day_path(folder, datetime(day.year, day.month, day.day, 12).timestamp())
+        intervals += [(o["start"], o["end"]) for o in read_outings(path)
+                      if o.get("start") and o.get("end")]
+        day += timedelta(days=1)
+    return intervals

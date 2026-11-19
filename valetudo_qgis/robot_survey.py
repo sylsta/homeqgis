@@ -62,6 +62,11 @@ def ensure_command(directory, interval_s, min_step_cm):
             f"then echo running=1; else {_start(directory, interval_s, min_step_cm)}; fi")
 
 
+def history_command(directory):
+    """The readings, after the robot's clock (now=…), for the robot's history."""
+    return f'echo now=$(date +%s); cat "{directory}/{DATA_NAME}" 2>/dev/null; true'
+
+
 def import_command(directory):
     return f'cat "{directory}/{DATA_NAME}" 2>/dev/null; true'
 

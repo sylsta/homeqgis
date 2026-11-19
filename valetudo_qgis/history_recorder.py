@@ -17,8 +17,9 @@ from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 from qgis.core import Qgis, QgsMessageLog
 
 from .coords import v2q
-from .history_logic import OutingTracker, active_rooms, job_type, map_fingerprint
-from .history_store import HistoryStore, history_folder
+from .history_logic import (PATH_LONGER, OutingTracker, active_rooms, clock_offset, job_type,
+                            map_fingerprint, map_path, path_length_m, robot_runs)
+from .history_store import HistoryStore, history_folder, recorded_intervals
 
 IDLE_POLL_MS = 15_000
 ACTIVE_POLL_MS = 2_000
@@ -56,6 +57,9 @@ class HistoryRecorder(QObject):
         self._outing_days = {}   # outing id -> start (Unix time): its file's day
         self._unsaved_told = False
         self._capabilities = set()
+        self._path = []          # Valetudo's path of the current job (Valetudo frame)
+        self._first_reading = True   # the next reading is the first since start()
+        self._partial = False    # the outing under way began before we were watching
 
     # -- life cycle ----------------------------------------------------------------
 
@@ -63,6 +67,7 @@ class HistoryRecorder(QObject):
         self.stop()
         self.client = client
         self._capabilities = set(capabilities or [])
+        self._first_reading = True
         for signal, slot in self._connections():
             signal.connect(slot)
         client.fetch_timers(quiet=True)
@@ -132,6 +137,7 @@ class HistoryRecorder(QObject):
                 self._pos = (point.x(), point.y())
                 break
         self._rooms = active_rooms(map_json)
+        self._path = map_path(map_json)
         self._map_id = map_fingerprint(map_json) or self._map_id
 
     def _on_wifi(self, wifi):
@@ -158,6 +164,9 @@ class HistoryRecorder(QObject):
                 self._presets[attr["type"]] = attr.get("value")
         was_out = self.tracker.outing is not None
         now = time.time()
+        first, self._first_reading = self._first_reading, state is None and self._first_reading
+        if not was_out and state not in (None, "docked"):
+            self._partial = first   # out already when we started watching
         if not was_out and state not in (None, "docked"):
             self._area_m2 = None
             if self.client is not None:
@@ -176,7 +185,53 @@ class HistoryRecorder(QObject):
                 self._pos = None   # a fresh position for the new outing
                 self.client and self.client.peek_map()
         if was_out and not out:
+            self._complete_from_path()
             self._write(force=True)   # the outing just ended
+
+    def _complete_from_path(self):
+        """The outing that just ended: when we saw only part of it (QGIS started while
+        the robot was out, readings missed), take its line from Valetudo's own path
+        of the job, which has no times but all the way."""
+        path = [(p.x(), p.y()) for p in (v2q(x, y) for x, y in self._path)]
+        if len(path) < 2:
+            return
+        length = round(path_length_m(path), 2)
+        for outing in self.tracker._outings:
+            if self._partial or length > (outing.get("distance_m") or 0) * PATH_LONGER:
+                outing.update(geometry=path, distance_m=length, source="live+path")
+        self._partial = False
+
+    # -- the recorder on the robot ---------------------------------------------------
+
+    def import_robot(self, rows, robot_now):
+        """Readings of the recorder on the robot (robot_survey.parse_rows): add the
+        outings QGIS did not record. Returns {"outings", "skipped", "offset_s"}, or
+        None while the project has never been saved."""
+        folder = history_folder()
+        if folder is None or not rows:
+            return None if folder is None else {"outings": 0, "skipped": 0, "offset_s": 0}
+        now = time.time()
+        offset = clock_offset(now, robot_now)
+        times = [r["time"] + offset for r in rows]
+        recorded = recorded_intervals(folder, min(times), max(times))
+        if self.tracker.outing is not None:
+            recorded.append((self.tracker.outing["start"], now))
+
+        def convert(x, y):
+            point = v2q(x, y)
+            return point.x(), point.y()
+
+        points, segments, outings, skipped = robot_runs(rows, offset, recorded, now,
+                                                        self.tracker.timers, convert)
+        days = {o["outing"]: o["start"] for o in outings}
+        if outings:
+            try:
+                written = self.store.write(folder, points, segments, outings, days)
+            except OSError as exc:
+                return {"error": str(exc)}
+            for path in written:
+                self.statusChanged.emit("written", path)
+        return {"outings": len(outings), "skipped": skipped, "offset_s": offset}
 
     # -- writing -------------------------------------------------------------------
 

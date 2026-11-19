@@ -219,7 +219,7 @@ crosses midnight stays in the file of the day it started). Each file has three l
 |------------|-------------------------------------------|----------------------------------------------------------------------------------|
 | `outings`  | outing (line)                             | start, end, duration, distance, activities, `job_type`, `scheduled`, rooms, area, result |
 | `segments` | continuous activity within an outing (line) | `activity`, detail (rooms, zone, spot, whole home), `job_type`, `scheduled`    |
-| `points`   | reading, about every 2 s while moving     | time, `activity`, state, battery, Wi-Fi signal                                   |
+| `points`   | reading, about every 2 s while moving     | time, `activity`, state, battery, Wi-Fi signal, `source`                             |
 
 `activity` is `cleaning`, `go_to`, `returning`, `manual`, `mapping` or `other`; `job_type`
 is `vacuum`, `mop` or `both`; `scheduled` is true when the outing started within two
@@ -236,6 +236,16 @@ halo of each outing, and the points, hidden at first. **Replay** shows the selec
 (or the day) in QGIS's Temporal Controller in about 30 seconds: the points appear as the
 robot went, the day's other layers are hidden meanwhile. Layers already on the map are
 refreshed as new readings are written.
+
+**Outings made while QGIS was closed**: the history takes them from two other sources.
+When the Wi-Fi recorder is installed on the robot (Wi-Fi tab), it records the robot's
+position and state on the robot itself whenever it moves; each time the plugin connects
+(or with **From the robot** in the History tab), its readings are added for the times
+QGIS was not recording (`source` = `robot`). Runs already in the history are skipped,
+and the times are corrected when the robot's clock is off. These outings have no job
+type, rooms or result: the recorder only sees the robot move. And when QGIS starts
+while the robot is out, or misses part of an outing, the outing's line is taken from
+Valetudo's own path of the job when it is longer (`source` = `live+path`).
 
 **Wi-Fi tab**: the signal now, with a graph of the last 10 minutes, and the three
 colour thresholds (green, yellow, red from), used by the strip, the graph and the

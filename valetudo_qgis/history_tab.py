@@ -8,7 +8,7 @@ The files are written by history_recorder.py (see history_store.py).
 import os
 from datetime import date, datetime
 
-from qgis.PyQt.QtCore import QDate, QDateTime, QLocale, Qt, QUrl
+from qgis.PyQt.QtCore import QDate, QDateTime, QLocale, Qt, QUrl, pyqtSignal
 from qgis.PyQt.QtGui import QColor, QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QAction, QComboBox, QDateEdit, QHBoxLayout, QLabel, QSizePolicy, QToolButton,
@@ -21,7 +21,7 @@ from qgis.core import (
 )
 
 from .history_logic import format_duration, summarize, week_days, week_key
-from .history_store import day_path, history_folder
+from .history_store import day_path, history_folder, read_outings
 from .i18n import tr
 
 ROOT_GROUP_KEY = "domotiqgis/history"      # custom property of our layer groups
@@ -44,33 +44,7 @@ def job_labels():
 
 
 def result_labels():
-    return {"docked": tr("Back on dock"), "stopped": tr("Stopped away"), "error": tr("Error")}
-
-
-def _value(v):
-    """A feature attribute as plain Python (None for NULL, Unix time for a date)."""
-    if v is None or (hasattr(v, "isNull") and v.isNull()):
-        return None
-    if isinstance(v, QDateTime):
-        return v.toMSecsSinceEpoch() / 1000
-    return v
-
-
-def read_outings(path):
-    """The outings of one day file, oldest first (empty if there is none)."""
-    if not os.path.exists(path):
-        return []
-    layer = QgsVectorLayer(f"{path}|layername=outings", "outings", "ogr")
-    if not layer.isValid():
-        return []
-    names = layer.fields().names()
-    outings = []
-    for feature in layer.getFeatures():
-        record = {name: _value(feature[name]) for name in names}
-        record["extent"] = feature.geometry().boundingBox() if feature.hasGeometry() else None
-        outings.append(record)
-    del layer
-    return sorted(outings, key=lambda o: o.get("start") or 0)
+    return {"finished": tr("Back on dock"), "stopped": tr("Stopped away"), "error": tr("Error")}
 
 
 def _short_day(day):
@@ -97,6 +71,8 @@ def _summary_text(outings):
 
 
 class HistoryTab(QWidget):
+    importRequested = pyqtSignal()   # "From the robot": the plugin reads its recorder
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._outings = {}      # outing id -> (record, day)
@@ -149,7 +125,10 @@ class HistoryTab(QWidget):
                                      self.replay, "/mIndicatorTemporal.svg")
         self.btn_folder = self._tool(tr("Open folder"), tr("Open the history folder"),
                                      self._open_folder, "/mActionFileOpen.svg")
-        for button in (self.btn_load, self.btn_replay, self.btn_folder):
+        self.btn_robot = self._tool(tr("From the robot"), "", self.importRequested.emit,
+                                    "/mActionRefresh.svg")
+        self.set_robot_import(False, False)
+        for button in (self.btn_load, self.btn_replay, self.btn_robot, self.btn_folder):
             buttons.addWidget(button)
         buttons.addStretch(1)
         layout.addLayout(buttons)
@@ -194,6 +173,18 @@ class HistoryTab(QWidget):
         if self.isVisible() and path in [day_path(self._folder() or "", self._t(d))
                                          for d in self._days()]:
             self.refresh()
+
+    def set_info(self, text):
+        self.lbl_info.setText(text)
+
+    def set_robot_import(self, installed, busy):
+        """The Wi-Fi recorder on the robot (installed or not, SSH operation under way)."""
+        self.btn_robot.setEnabled(installed and not busy)
+        self.btn_robot.setToolTip(
+            tr("Add the outings recorded on the robot while QGIS was not recording (done "
+               "by itself each time the plugin connects)") if installed else
+            tr("Install the Wi-Fi recorder on the robot (Wi-Fi tab): it also records the "
+               "outings made while QGIS is closed."))
 
     # -- browsing ----------------------------------------------------------------------
 
@@ -276,6 +267,10 @@ class HistoryTab(QWidget):
             tip.append(tr("Area cleaned: {a:g} m²").format(a=area))
         tip.append(tr("Started by a schedule") if outing.get("scheduled")
                    else tr("Started by hand or from QGIS"))
+        sources = {"live": tr("Recorded by QGIS"),
+                   "live+path": tr("Recorded by QGIS, its line from Valetudo's path"),
+                   "robot": tr("Recorded on the robot while QGIS was not recording")}
+        tip.append(sources.get(outing.get("source") or "live", outing.get("source")))
         for column in range(COLUMNS):
             item.setToolTip(column, "\n".join(tip))
         if outing.get("result") == "error":

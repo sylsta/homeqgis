@@ -20,6 +20,7 @@ from .boot_monitor import BootMonitor
 from .client import ValetudoClient
 from .coords import q2v, v2q
 from .history_recorder import HistoryRecorder
+from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
@@ -272,6 +273,9 @@ class ValetudoPlugin:
         # Panels: hidden by default; their toggle actions follow their visibility.
         self.panel = ValetudoPanel(win)
         self.panel.clientRequested.connect(self._on_panel_needs_client)
+        self.panel.history_tab.importRequested.connect(
+            lambda: self._import_robot_history(auto=False))
+        self._update_robot_survey_actions()   # the History tab's "From the robot"
         self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
         self.panel.hide()
         self.act["status_panel"] = self.panel.toggleViewAction()
@@ -1216,6 +1220,8 @@ class ValetudoPlugin:
         for key in ("robot_survey_import", "robot_survey_remove"):
             if key in self.act:
                 self.act[key].setEnabled(installed and not busy)
+        if self.panel is not None:
+            self.panel.history_tab.set_robot_import(installed, busy)
 
     def _robot_survey_run(self, operation, command, stdin=b""):
         target = self._ssh_target()
@@ -1270,6 +1276,56 @@ class ValetudoPlugin:
         if directory and self._robot_survey_run("import", robot_survey.import_command(directory)):
             self._message(tr("Reading the Wi-Fi survey from the robot…"), Qgis.MessageLevel.Info)
 
+    def _import_robot_history(self, auto):
+        """The outings recorded on the robot while QGIS was not recording.
+        auto: at connection, quiet when there is nothing to do."""
+        tab = self.panel.history_tab if self.panel is not None else None
+        directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
+        if not directory:
+            if not auto and tab is not None:
+                tab.set_info(tr("Install the Wi-Fi recorder on the robot first (Wi-Fi tab): it "
+                                "also records the outings made while QGIS is closed."))
+            return
+        if self.history is None or history_folder() is None:
+            if not auto and tab is not None:
+                tab.set_info(tr("Save the project first, and turn on Record the robot's "
+                                "outings in the settings."))
+            return
+        self._history_import_auto = auto
+        if self._robot_survey_run("history", robot_survey.history_command(directory)) \
+                and not auto and tab is not None:
+            tab.set_info(tr("Reading the robot's recorder…"))
+
+    def _on_robot_history(self, ok, output, values, detail):
+        auto = getattr(self, "_history_import_auto", True)
+        tab = self.panel.history_tab if self.panel is not None else None
+        if not ok or self.history is None:
+            if not auto and tab is not None:
+                tab.set_info(tr("Could not read the robot's recorder: {detail}").format(
+                    detail=detail))
+            return
+        try:
+            robot_now = int(values.get("now"))
+        except (TypeError, ValueError):
+            robot_now = None
+        result = self.history.import_robot(robot_survey.parse_rows(output), robot_now)
+        if result is None:
+            return
+        if "error" in result:
+            text = tr("History not written: {error}").format(error=result["error"])
+        elif result["outings"]:
+            text = tr("{n} outing(s) recorded by the robot added to the history.").format(
+                n=result["outings"])
+        else:
+            text = tr("Nothing new on the robot: its outings are already in the history.")
+        if result.get("offset_s"):
+            text += " " + tr("(Robot clock off by {s} s: corrected.)").format(
+                s=result["offset_s"])
+        if tab is not None and (not auto or result.get("outings") or "error" in result):
+            tab.set_info(text)
+        if auto and result.get("outings"):
+            self._message(text, Qgis.MessageLevel.Info)
+
     def remove_robot_survey(self, *_):
         directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
         if not directory:
@@ -1295,7 +1351,12 @@ class ValetudoPlugin:
             if values.get("missing"):   # removed from the robot by other means
                 QgsSettings().remove(KEY_ROBOT_SURVEY_DIR)
                 self._update_robot_survey_actions()
+            elif ok:
+                self._import_robot_history(auto=True)   # what it recorded without QGIS
             return   # quiet: runs at each connection
+        if operation == "history":
+            self._on_robot_history(ok, output, values, detail)
+            return
         if not ok and operation != "import":
             self.iface.messageBar().pushMessage(
                 PLUGIN_NAME, tr("Wi-Fi recorder: SSH failed: {detail}").format(
