@@ -27,7 +27,7 @@ from .restrictions import RestrictionLayers, layer_names as restriction_layer_na
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import PLUGIN_NAME, load_settings
+from .settings import KEY_ADVANCED, PLUGIN_NAME, load_settings
 from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
 from .status_panel import (
@@ -78,6 +78,9 @@ REQUIRED_CAPABILITY = {
 # Simple menu and toolbar: everything else is in the panel's command list.
 TOOLBAR = ["status_panel"]
 MAP_TOOLS = ["pick_rooms", "edit_restrictions", "send_restrictions"]   # shown with "Show on map"
+# Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
+ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
+                    "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
 MENU = ["status_panel", "settings", "setup"]
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
@@ -189,6 +192,11 @@ class ValetudoPlugin:
         labels = command_labels()
         win = self.iface.mainWindow()
 
+        # "Advanced tools": decided once, on for an existing configuration (nothing
+        # disappears for those who use it), off for a new one.
+        stored = QgsSettings()
+        if not stored.contains(KEY_ADVANCED):
+            stored.setValue(KEY_ADVANCED, bool(load_settings()["url"]))
         self._new_action("settings", tr("Settings…"), self.configure)
         self._new_action("setup", tr("Setup assistant…"), self.run_setup)
         # The settings are a page of Settings › Options; "Settings…" opens it.
@@ -273,6 +281,8 @@ class ValetudoPlugin:
                 entry.setIcon(icon(APP_ICON))
         # Frequent commands as icon buttons; the others in the panel's "More" menu.
         self.panel.bind_actions(self.act)
+        self.panel.advancedChanged.connect(lambda *_: self._apply_advanced())
+        self._apply_advanced()
         self.panel.chk_goto_quiet.toggled.connect(lambda *_: self._apply_capabilities())
 
         # Room groups file: loaded now, reloaded whenever it is saved.
@@ -590,6 +600,7 @@ class ValetudoPlugin:
             self.panel.camera.restart_if_running()
             self.panel.settings_changed()   # e.g. Pi address: show or hide its console
         self._update_pi_actions()
+        self._apply_advanced()
 
     def _center_on_robot(self, map_json, force=False):
         """Recentre on the robot when it leaves the middle of the view (no constant jitter)."""
@@ -714,6 +725,14 @@ class ValetudoPlugin:
         button.clicked.connect(open_setup)
         item.layout().addWidget(button)
         bar.pushWidget(item, Qgis.MessageLevel.Info, 0)
+
+    def _apply_advanced(self):
+        """Show or hide the advanced tools (menus, toolbar, panel)."""
+        on = load_settings()["advanced_tools"]
+        for key in ADVANCED_ACTIONS:
+            self.act[key].setVisible(on)
+        if self.panel is not None:
+            self.panel.set_advanced(on)
 
     def run_setup(self, *_):
         """The setup assistant: robot address, other servers; then show the robot."""

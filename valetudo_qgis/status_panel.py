@@ -51,7 +51,7 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (PLUGIN_NAME, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
+from .settings import (PLUGIN_NAME, KEY_ADVANCED, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
                        load_settings, secret)
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
@@ -374,6 +374,7 @@ class ValetudoPanel(QgsDockWidget):
     segmentsChanged = pyqtSignal(list)      # [(room id, name)] known on the robot
     piMapRequested = pyqtSignal(bool)       # Wi-Fi tab: load the Pi's map (True: full map)
     summaryChanged = pyqtSignal(str)        # one-line status (HTML) for the map overlay
+    advancedChanged = pyqtSignal(bool)      # the ⋮ menu's "Advanced tools" was toggled
 
     def __init__(self, parent=None):
         super().__init__(parent)   # title and object name come from the .ui
@@ -444,6 +445,7 @@ class ValetudoPanel(QgsDockWidget):
              "play": self.btn_kodi_play, "stop": self.btn_kodi_stop},
             self._kodi_settings, self)
         # Each server's frame: 🌐 its web interface (system browser), >_ SSH (system terminal)
+        self._terminal_entries = []   # "Console / Log in QGIS": advanced tools
         for prefix in SERVERS:
             web, ssh = getattr(self, f"btn_{prefix}_web"), getattr(self, f"btn_{prefix}_ssh")
             web.setIcon(icon("web"))
@@ -455,10 +457,11 @@ class ValetudoPanel(QgsDockWidget):
                 menu = QMenu(ssh)
                 menu.addAction(icon("tab_terminal"), tr("Terminal window"),
                                lambda p=prefix: self.open_ssh(p))
-                menu.addAction(tr("Console in QGIS"),
-                               lambda p=prefix: self.open_terminal(p, "console"))
-                menu.addAction(tr("Log in QGIS"),
-                               lambda p=prefix: self.open_terminal(p, "log"))
+                self._terminal_entries += [
+                    menu.addAction(tr("Console in QGIS"),
+                                   lambda p=prefix: self.open_terminal(p, "console")),
+                    menu.addAction(tr("Log in QGIS"),
+                                   lambda p=prefix: self.open_terminal(p, "log"))]
                 ssh.setMenu(menu)
                 ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.pi_runner.finished.connect(self._on_pi_info)
@@ -737,6 +740,12 @@ class ValetudoPanel(QgsDockWidget):
         self.act_compact.setCheckable(True)
         self.act_compact.setChecked(QgsSettings().value(KEY_COMPACT, False, type=bool))
         self.act_compact.toggled.connect(self.set_compact)
+        self.act_advanced = self.menu.addAction(tr("Advanced tools"))
+        self.act_advanced.setCheckable(True)
+        self.act_advanced.setToolTip(tr("Terminal (consoles and logs in QGIS), Wi-Fi recorder "
+                                        "on the robot, boot watch, editing of no-go zones"))
+        self.act_advanced.setChecked(load_settings()["advanced_tools"])
+        self.act_advanced.toggled.connect(self._on_advanced_toggled)
         self.menu.addSeparator()
         self.menu.addAction(icon(APP_ICON), tr("About…"), self.show_about)
         # Care: dock station commands (hidden when the robot has none)
@@ -784,6 +793,24 @@ class ValetudoPanel(QgsDockWidget):
     def show_about(self, *_):
         from .about import AboutDialog
         AboutDialog(self).exec()
+
+    def _on_advanced_toggled(self, on):
+        QgsSettings().setValue(KEY_ADVANCED, on)
+        self.advancedChanged.emit(on)
+
+    def set_advanced(self, on):
+        """Advanced tools shown or not: the Terminal (its >_ menu entries), the Wi-Fi
+        recorder on the robot and the boot log (the plugin hides their commands)."""
+        if self.act_advanced.isChecked() != on:
+            self.act_advanced.blockSignals(True)
+            self.act_advanced.setChecked(on)
+            self.act_advanced.blockSignals(False)
+        for entry in self._terminal_entries:
+            entry.setVisible(on)
+        for box in (self.box_wifi_robot, self.box_boot):
+            box.setVisible(on)
+        if not on:
+            self.close_terminal()
 
     def _set_tab_shown(self, key, shown):
         """Show or hide a side tab (Qt 5.15+)."""

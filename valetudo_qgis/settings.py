@@ -33,6 +33,7 @@ KEY_NUC_LOG_COMMAND = "valetudo/nuc_log_command"   # empty = NUC_AUTO_LOG_COMMAN
 # (sysvinit, e.g. MX Linux by default).
 NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl >/dev/null; "
                         "then journalctl -n 200 -f; else tail -n 200 -F /var/log/syslog; fi")
+KEY_ADVANCED = "valetudo/advanced_tools"   # Terminal, robot Wi-Fi recorder, boot watch, restrictions
 KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the NUC's host
 KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
@@ -118,6 +119,7 @@ def _stored_settings():
         "nuc_host": s.value(KEY_NUC_HOST, "", type=str).strip(),
         "kodi_url": s.value(KEY_KODI_URL, "", type=str).strip(),
         "ha_on_nuc": s.value(KEY_HA_ON_NUC, False, type=bool),
+        "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
         "kodi_on_nuc": s.value(KEY_KODI_ON_NUC, False, type=bool),
         "kodi_user": s.value(KEY_KODI_USER, "kodi", type=str).strip(),
         "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip() or "root",

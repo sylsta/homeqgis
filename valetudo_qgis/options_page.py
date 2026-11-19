@@ -25,7 +25,7 @@ from .icons import APP_ICON, HA_LOGO, KODI_ICON, NUC_ICON, RPI_LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
-    KEY_HA_ON_NUC, KEY_HA_URL, KEY_INTERVAL, KEY_KODI_ON_NUC, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
+    KEY_ADVANCED, KEY_HA_ON_NUC, KEY_HA_URL, KEY_INTERVAL, KEY_KODI_ON_NUC, KEY_KODI_URL, KEY_KODI_USER, KEY_NUC_HOST,
     KEY_NUC_LOG_COMMAND, KEY_NUC_PORT, KEY_NUC_USER, KEY_NUC_WEB_URL, KEY_PI_WEB_URL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK,
     KEY_PI_HOST, PLUGIN_NAME,
     KEY_PI_PORT, KEY_PI_USER, KEY_PI_WIFI_DIR, KEY_SSH_PORT, KEY_SSH_USER, KEY_URL,
@@ -43,7 +43,7 @@ UI_WIDGETS = (
     "nuc_host", "nuc_user", "nuc_port", "nuc_log_command", "btn_nuc_test", "lbl_nuc_test",
     "nuc_web_url", "pi_web_url",
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
-    "chk_ha_on_nuc", "chk_kodi_on_nuc", "list_servers", "servers_stack",
+    "chk_ha_on_nuc", "chk_kodi_on_nuc", "list_servers", "servers_stack", "chk_advanced",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
     "btn_backup_reset", "about_layout",
@@ -93,6 +93,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.ha_url.setText(cfg["ha_url"])
         self.nuc_host.setText(cfg["nuc_host"])
         self.kodi_url.setText(cfg["kodi_url"])
+        self.chk_advanced.setChecked(cfg["advanced_tools"])
         self.chk_ha_on_nuc.setChecked(cfg["ha_on_nuc"])
         self.chk_kodi_on_nuc.setChecked(cfg["kodi_on_nuc"])
         self._sync_on_nuc()
@@ -463,6 +464,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_NUC_HOST, self.nuc_host.text().strip())
         s.setValue(KEY_KODI_URL, self.kodi_url.text().strip())
         s.setValue(KEY_HA_ON_NUC, self.chk_ha_on_nuc.isChecked())
+        s.setValue(KEY_ADVANCED, self.chk_advanced.isChecked())
         s.setValue(KEY_KODI_ON_NUC, self.chk_kodi_on_nuc.isChecked())
         s.setValue(KEY_KODI_USER, self.kodi_user.text().strip())
         s.setValue(KEY_NUC_USER, self.nuc_user.text().strip() or "root")

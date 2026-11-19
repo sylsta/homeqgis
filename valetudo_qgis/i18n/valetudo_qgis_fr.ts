@@ -2631,5 +2631,17 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Finish saves these, and the panel shows the robot. Everything can be changed later in Settings › Options › {name}.</source>
         <translation>Terminer enregistre ces valeurs, et le panneau affiche le robot. Tout se modifie ensuite dans Préférences › Options › {name}.</translation>
     </message>
+    <message>
+        <source>Advanced tools</source>
+        <translation>Outils avancés</translation>
+    </message>
+    <message>
+        <source>Terminal (consoles and logs in QGIS), Wi-Fi recorder on the robot, boot watch, editing of no-go zones</source>
+        <translation>Terminal (consoles et journaux dans QGIS), enregistreur Wi-Fi sur le robot, suivi du démarrage, modification des zones interdites</translation>
+    </message>
+    <message>
+        <source>Show the advanced tools: Terminal (consoles and logs in QGIS), Wi-Fi recorder on the robot, boot watch, editing of no-go zones</source>
+        <translation>Afficher les outils avancés : Terminal (consoles et journaux dans QGIS), enregistreur Wi-Fi sur le robot, suivi du démarrage, modification des zones interdites</translation>
+    </message>
 </context>
 </TS>
