@@ -505,496 +505,531 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_pi">
+     <widget class="QWidget" name="tab_servers">
       <attribute name="title">
-       <string>Raspberry Pi</string>
+       <string>Servers</string>
       </attribute>
-      <layout class="QFormLayout" name="pi_form">
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-       </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="lbl_pi_host">
-         <property name="text">
-          <string>Address</string>
+      <layout class="QHBoxLayout" name="servers_layout" stretch="0,1">
+       <item>
+        <widget class="QListWidget" name="list_servers">
+         <property name="maximumSize">
+          <size>
+           <width>170</width>
+           <height>16777215</height>
+          </size>
          </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="pi_host">
-         <property name="placeholderText">
-          <string notr="true">192.168.50.1</string>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
          </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="lbl_pi_user">
-         <property name="text">
-          <string>SSH user</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="pi_user">
-         <property name="placeholderText">
-          <string notr="true">pi</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="lbl_pi_port">
-         <property name="text">
-          <string>SSH port</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="pi_port">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="lbl_pi_wifi_dir">
-         <property name="text">
-          <string>Wi-Fi maps folder</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="pi_wifi_dir">
-         <property name="placeholderText">
-          <string notr="true">valetudo_wifi</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="lbl_pi_web_url">
-         <property name="text">
-          <string>Web address</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="pi_web_url">
-         <property name="placeholderText">
-          <string notr="true">http://192.168.50.1:3001</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="pi_test_layout" stretch="0,1">
          <item>
-          <widget class="QPushButton" name="btn_pi_test">
-           <property name="text">
-            <string>Test connection</string>
-           </property>
-          </widget>
+          <property name="text">
+           <string>Raspberry Pi</string>
+          </property>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_pi_test">
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="6" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_pi_hint">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it, and “Load latest Wi-Fi map from the Pi” reads the maps folder (relative to the user's home, as written by pi/valetudo_wifi_collect.py).</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_ha">
-      <attribute name="title">
-       <string>Home Assistant</string>
-      </attribute>
-      <layout class="QFormLayout" name="ha_form">
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-       </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="lbl_ha_url">
-         <property name="text">
-          <string>Server address</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="ha_url">
-         <property name="placeholderText">
-          <string notr="true">http://localhost:8123/</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QCheckBox" name="chk_ha_on_nuc">
-         <property name="text">
-          <string>On the NUC (use its address)</string>
-         </property>
-         <property name="toolTip">
-          <string>Home Assistant runs on the NUC itself (e.g. in Docker): its address is the NUC's, with the port above. Not for Home Assistant OS in a virtual machine, which has its own address.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="lbl_ha_token">
-         <property name="text">
-          <string>Access token</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="ha_token">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-         <property name="placeholderText">
-          <string>Optional: long-lived access token</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="ha_test_layout" stretch="0,1">
-         <item>
-          <widget class="QPushButton" name="btn_ha_test">
-           <property name="text">
-            <string>Test connection</string>
-           </property>
-          </widget>
+          <property name="text">
+           <string>Home Assistant</string>
+          </property>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_ha_test">
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_ha_hint">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Optional: your Home Assistant server. The token is optional too, but without it the plugin can only check that Home Assistant is there. Create it in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_ha_ssh_title">
-         <property name="text">
-          <string>SSH (Terminal tab)</string>
-         </property>
-         <property name="font">
-          <font>
-           <bold>true</bold>
-          </font>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="lbl_ha_ssh_host">
-         <property name="text">
-          <string>SSH address</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLineEdit" name="ha_ssh_host">
-         <property name="placeholderText">
-          <string notr="true">192.168.50.1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="lbl_ha_ssh_user">
-         <property name="text">
-          <string>SSH user</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
-        <widget class="QLineEdit" name="ha_ssh_user">
-         <property name="placeholderText">
-          <string notr="true">root</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="lbl_ha_ssh_password">
-         <property name="text">
-          <string>SSH password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1">
-        <widget class="QLineEdit" name="ha_ssh_password">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-         <property name="placeholderText">
-          <string>Optional: else your SSH key</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0">
-        <widget class="QLabel" name="lbl_ha_ssh_port">
-         <property name="text">
-          <string>SSH port</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="1">
-        <widget class="QSpinBox" name="ha_ssh_port">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="0">
-        <widget class="QLabel" name="lbl_ha_log_command">
-         <property name="text">
-          <string>Log command</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="1">
-        <widget class="QLineEdit" name="ha_log_command">
-         <property name="placeholderText">
-          <string notr="true">ha core logs -n 200 -f</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_ha_ssh_hint">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Optional: with an address, the Terminal tab gets a Home Assistant console and log. On Home Assistant OS, install the Terminal &amp; SSH add-on and set its SSH port in the add-on's Network settings, then either paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option, or set a password in its options and here (kept encrypted, like the token; needs OpenSSH 8.4 or newer). The log command runs there: Home Assistant OS keeps its log in the system journal, read with ha core logs.</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_nuc">
-      <attribute name="title">
-       <string>NUC</string>
-      </attribute>
-      <layout class="QFormLayout" name="nuc_form">
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-       </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="lbl_nuc_host">
-         <property name="text">
-          <string>Address</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="nuc_host">
-         <property name="placeholderText">
-          <string notr="true">192.168.50.2</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="lbl_nuc_user">
-         <property name="text">
-          <string>SSH user</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="nuc_user">
-         <property name="placeholderText">
-          <string notr="true">root</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="lbl_nuc_port">
-         <property name="text">
-          <string>SSH port</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="nuc_port">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="lbl_nuc_log_command">
-         <property name="text">
-          <string>Log command</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="nuc_log_command"/>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="lbl_nuc_web_url">
-         <property name="text">
-          <string>Web address</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="nuc_web_url">
-         <property name="placeholderText">
-          <string notr="true">https://192.168.50.2:9090</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="nuc_test_layout" stretch="0,1">
-         <item>
-          <widget class="QPushButton" name="btn_nuc_test">
-           <property name="text">
-            <string>Test connection</string>
-           </property>
-          </widget>
+          <property name="text">
+           <string>NUC</string>
+          </property>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_nuc_test">
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <property name="text">
+           <string>Kodi</string>
+          </property>
          </item>
-        </layout>
-       </item>
-       <item row="6" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_nuc_hint">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key, as for the Raspberry Pi. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog (sysvinit, as MX Linux by default); reading them may need root or the adm group.</string>
-         </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_kodi">
-      <attribute name="title">
-       <string>Kodi</string>
-      </attribute>
-      <layout class="QFormLayout" name="kodi_form">
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-       </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="lbl_kodi_url">
-         <property name="text">
-          <string>Address</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="kodi_url">
-         <property name="placeholderText">
-          <string notr="true">http://192.168.50.2:8080/</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QCheckBox" name="chk_kodi_on_nuc">
-         <property name="text">
-          <string>On the NUC (use its address)</string>
-         </property>
-         <property name="toolTip">
-          <string>Kodi runs on the NUC: its address is the NUC's, with the port above.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="lbl_kodi_user">
-         <property name="text">
-          <string>Username</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="kodi_user">
-         <property name="placeholderText">
-          <string notr="true">kodi</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="lbl_kodi_password">
-         <property name="text">
-          <string>Password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="kodi_password">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="kodi_test_layout" stretch="0,1">
-         <item>
-          <widget class="QPushButton" name="btn_kodi_test">
-           <property name="text">
-            <string>Test connection</string>
+       <item>
+        <widget class="QStackedWidget" name="servers_stack">
+         <widget class="QWidget" name="page_pi">
+          <layout class="QFormLayout" name="pi_form">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
            </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="lbl_kodi_test">
-           <property name="wordWrap">
-            <bool>true</bool>
+           <item row="0" column="0">
+            <widget class="QLabel" name="lbl_pi_host">
+             <property name="text">
+              <string>Address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="pi_host">
+             <property name="placeholderText">
+              <string notr="true">192.168.50.1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="lbl_pi_user">
+             <property name="text">
+              <string>SSH user</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="pi_user">
+             <property name="placeholderText">
+              <string notr="true">pi</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="lbl_pi_port">
+             <property name="text">
+              <string>SSH port</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="pi_port">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+             <property name="singleStep">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="lbl_pi_wifi_dir">
+             <property name="text">
+              <string>Wi-Fi maps folder</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="pi_wifi_dir">
+             <property name="placeholderText">
+              <string notr="true">valetudo_wifi</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="lbl_pi_web_url">
+             <property name="text">
+              <string>Web address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="pi_web_url">
+             <property name="placeholderText">
+              <string notr="true">http://192.168.50.1:3001</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="pi_test_layout" stretch="0,1">
+             <item>
+              <widget class="QPushButton" name="btn_pi_test">
+               <property name="text">
+                <string>Test connection</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_pi_test">
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="6" column="0" colspan="2">
+            <widget class="QLabel" name="lbl_pi_hint">
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Optional: a Raspberry Pi or other Linux machine on your network, reached with your SSH key. With an address, the panel shows a console for it, and “Load latest Wi-Fi map from the Pi” reads the maps folder (relative to the user's home, as written by pi/valetudo_wifi_collect.py).</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_ha">
+          <layout class="QFormLayout" name="ha_form">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
            </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_kodi_hint">
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Optional: with an address, the Status tab shows Kodi: its version, uptime and CPU temperature, what is playing, with Play/Pause and Stop. In Kodi: Settings › Services › Control, turn on Allow remote control via HTTP and set a username and password (port 8080 by default). The password is kept encrypted in the QGIS authentication database.</string>
-         </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="lbl_ha_url">
+             <property name="text">
+              <string>Server address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="ha_url">
+             <property name="placeholderText">
+              <string notr="true">http://localhost:8123/</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QCheckBox" name="chk_ha_on_nuc">
+             <property name="text">
+              <string>On the NUC (use its address)</string>
+             </property>
+             <property name="toolTip">
+              <string>Home Assistant runs on the NUC itself (e.g. in Docker): its address is the NUC's, with the port above. Not for Home Assistant OS in a virtual machine, which has its own address.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="lbl_ha_token">
+             <property name="text">
+              <string>Access token</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="ha_token">
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>Optional: long-lived access token</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="ha_test_layout" stretch="0,1">
+             <item>
+              <widget class="QPushButton" name="btn_ha_test">
+               <property name="text">
+                <string>Test connection</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_ha_test">
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <widget class="QLabel" name="lbl_ha_hint">
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Optional: your Home Assistant server. The token is optional too, but without it the plugin can only check that Home Assistant is there. Create it in Home Assistant, on your profile page (Security › Long-lived access tokens). It is kept encrypted in the QGIS authentication database, which may ask for your master password.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <widget class="QLabel" name="lbl_ha_ssh_title">
+             <property name="text">
+              <string>SSH (Terminal tab)</string>
+             </property>
+             <property name="font">
+              <font>
+               <bold>true</bold>
+              </font>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="lbl_ha_ssh_host">
+             <property name="text">
+              <string>SSH address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QLineEdit" name="ha_ssh_host">
+             <property name="placeholderText">
+              <string notr="true">192.168.50.1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="lbl_ha_ssh_user">
+             <property name="text">
+              <string>SSH user</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
+            <widget class="QLineEdit" name="ha_ssh_user">
+             <property name="placeholderText">
+              <string notr="true">root</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="lbl_ha_ssh_password">
+             <property name="text">
+              <string>SSH password</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QLineEdit" name="ha_ssh_password">
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>Optional: else your SSH key</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QLabel" name="lbl_ha_ssh_port">
+             <property name="text">
+              <string>SSH port</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QSpinBox" name="ha_ssh_port">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+             <property name="singleStep">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="0">
+            <widget class="QLabel" name="lbl_ha_log_command">
+             <property name="text">
+              <string>Log command</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLineEdit" name="ha_log_command">
+             <property name="placeholderText">
+              <string notr="true">ha core logs -n 200 -f</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="0" colspan="2">
+            <widget class="QLabel" name="lbl_ha_ssh_hint">
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Optional: with an address, the Terminal tab gets a Home Assistant console and log. On Home Assistant OS, install the Terminal &amp; SSH add-on and set its SSH port in the add-on's Network settings, then either paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option, or set a password in its options and here (kept encrypted, like the token; needs OpenSSH 8.4 or newer). The log command runs there: Home Assistant OS keeps its log in the system journal, read with ha core logs.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_nuc">
+          <layout class="QFormLayout" name="nuc_form">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="lbl_nuc_host">
+             <property name="text">
+              <string>Address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="nuc_host">
+             <property name="placeholderText">
+              <string notr="true">192.168.50.2</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="lbl_nuc_user">
+             <property name="text">
+              <string>SSH user</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="nuc_user">
+             <property name="placeholderText">
+              <string notr="true">root</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="lbl_nuc_port">
+             <property name="text">
+              <string>SSH port</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="nuc_port">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+             <property name="singleStep">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="lbl_nuc_log_command">
+             <property name="text">
+              <string>Log command</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="nuc_log_command"/>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="lbl_nuc_web_url">
+             <property name="text">
+              <string>Web address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="nuc_web_url">
+             <property name="placeholderText">
+              <string notr="true">https://192.168.50.2:9090</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="nuc_test_layout" stretch="0,1">
+             <item>
+              <widget class="QPushButton" name="btn_nuc_test">
+               <property name="text">
+                <string>Test connection</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_nuc_test">
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="6" column="0" colspan="2">
+            <widget class="QLabel" name="lbl_nuc_hint">
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key, as for the Raspberry Pi. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog (sysvinit, as MX Linux by default); reading them may need root or the adm group.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_kodi">
+          <layout class="QFormLayout" name="kodi_form">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="lbl_kodi_url">
+             <property name="text">
+              <string>Address</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="kodi_url">
+             <property name="placeholderText">
+              <string notr="true">http://192.168.50.2:8080/</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QCheckBox" name="chk_kodi_on_nuc">
+             <property name="text">
+              <string>On the NUC (use its address)</string>
+             </property>
+             <property name="toolTip">
+              <string>Kodi runs on the NUC: its address is the NUC's, with the port above.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="lbl_kodi_user">
+             <property name="text">
+              <string>Username</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="kodi_user">
+             <property name="placeholderText">
+              <string notr="true">kodi</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="lbl_kodi_password">
+             <property name="text">
+              <string>Password</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="kodi_password">
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="kodi_test_layout" stretch="0,1">
+             <item>
+              <widget class="QPushButton" name="btn_kodi_test">
+               <property name="text">
+                <string>Test connection</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_kodi_test">
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <widget class="QLabel" name="lbl_kodi_hint">
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Optional: with an address, the Status tab shows Kodi: its version, uptime and CPU temperature, what is playing, with Play/Pause and Stop. In Kodi: Settings › Services › Control, turn on Allow remote control via HTTP and set a username and password (port 8080 by default). The password is kept encrypted in the QGIS authentication database.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>

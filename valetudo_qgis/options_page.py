@@ -21,7 +21,7 @@ from .ha_client import UNAUTHORISED, HomeAssistantClient
 from .kodi_client import KodiClient
 from .i18n import tr
 from .robot_survey import RobotSurvey
-from .icons import APP_ICON, icon
+from .icons import APP_ICON, HA_LOGO, KODI_ICON, NUC_ICON, RPI_LOGO, icon
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_AUTH, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HA_LOG_COMMAND, KEY_HA_SSH_HOST, KEY_HA_SSH_PORT, KEY_HA_SSH_USER,
@@ -43,7 +43,7 @@ UI_WIDGETS = (
     "nuc_host", "nuc_user", "nuc_port", "nuc_log_command", "btn_nuc_test", "lbl_nuc_test",
     "nuc_web_url", "pi_web_url",
     "kodi_url", "kodi_user", "kodi_password", "btn_kodi_test", "lbl_kodi_test",
-    "chk_ha_on_nuc", "chk_kodi_on_nuc",
+    "chk_ha_on_nuc", "chk_kodi_on_nuc", "list_servers", "servers_stack",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
     "btn_backup_reset", "about_layout",
@@ -64,6 +64,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._ha_client = None
         self._on_nuc_tips = None   # the "On the NUC" boxes' own tooltips, see _sync_on_nuc
         self._fill()
+        self._setup_servers()
         self._setup_backup()
         self.about_layout.addWidget(AboutWidget(self))
         self._connect_tests()
@@ -145,6 +146,14 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.btn_room_groups.setToolTip(room_groups.file_path())
         self.btn_room_groups.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(room_groups.ensure_file())))
+
+    # -- Servers tab: a list on the left, the selected server's page on the right ------
+
+    def _setup_servers(self):
+        for row, name in enumerate((RPI_LOGO, HA_LOGO, NUC_ICON, KODI_ICON)):
+            self.list_servers.item(row).setIcon(icon(name))
+        self.list_servers.currentRowChanged.connect(self.servers_stack.setCurrentIndex)
+        self.list_servers.setCurrentRow(0)
 
     # -- Backup tab -----------------------------------------------------------------
 

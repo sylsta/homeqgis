@@ -2595,5 +2595,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Kodi runs on the NUC: its address is the NUC's, with the port above.</source>
         <translation>Kodi tourne sur le NUC : son adresse est celle du NUC, avec le port ci-dessus.</translation>
     </message>
+    <message>
+        <source>Servers</source>
+        <translation>Serveurs</translation>
+    </message>
 </context>
 </TS>
