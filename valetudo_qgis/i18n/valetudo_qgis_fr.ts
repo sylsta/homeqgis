@@ -2643,5 +2643,81 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Show the advanced tools: Terminal (consoles and logs in QGIS), Wi-Fi recorder on the robot, boot watch, editing of no-go zones</source>
         <translation>Afficher les outils avancés : Terminal (consoles et journaux dans QGIS), enregistreur Wi-Fi sur le robot, suivi du démarrage, modification des zones interdites</translation>
     </message>
+    <message>
+        <source>Valetudo - sensors</source>
+        <translation>Valetudo - capteurs</translation>
+    </message>
+    <message>
+        <source>Sensor</source>
+        <translation>Capteur</translation>
+    </message>
+    <message>
+        <source>Sensor (offline)</source>
+        <translation>Capteur (hors ligne)</translation>
+    </message>
+    <message>
+        <source>Place a sensor on the map</source>
+        <translation>Placer un capteur sur la carte</translation>
+    </message>
+    <message>
+        <source>Click a point on the map to place a Home Assistant sensor; right-click a sensor to remove it.</source>
+        <translation>Cliquez un point de la carte pour placer un capteur Home Assistant ; clic droit sur un capteur pour le retirer.</translation>
+    </message>
+    <message>
+        <source>Click the map to place a Home Assistant sensor; right-click a sensor to remove it.</source>
+        <translation>Cliquez sur la carte pour placer un capteur Home Assistant ; clic droit sur un capteur pour le retirer.</translation>
+    </message>
+    <message>
+        <source>Set the Home Assistant address and token first, in the settings.</source>
+        <translation>Renseignez d’abord l’adresse et le jeton Home Assistant, dans les réglages.</translation>
+    </message>
+    <message>
+        <source>Loading the sensor list from Home Assistant…</source>
+        <translation>Chargement de la liste des capteurs depuis Home Assistant…</translation>
+    </message>
+    <message>
+        <source>No sensor found in Home Assistant.</source>
+        <translation>Aucun capteur trouvé dans Home Assistant.</translation>
+    </message>
+    <message>
+        <source>{name}  ({entity})</source>
+        <translation>{name}  ({entity})</translation>
+    </message>
+    <message>
+        <source>Place a sensor</source>
+        <translation>Placer un capteur</translation>
+    </message>
+    <message>
+        <source>Sensor to show at this point:</source>
+        <translation>Capteur à afficher à cet endroit :</translation>
+    </message>
+    <message>
+        <source>Sensor “{name}” placed.</source>
+        <translation>Capteur « {name} » placé.</translation>
+    </message>
+    <message>
+        <source>Could not reach Home Assistant: {error}</source>
+        <translation>Impossible de joindre Home Assistant : {error}</translation>
+    </message>
+    <message>
+        <source>No sensor here to remove.</source>
+        <translation>Aucun capteur à retirer ici.</translation>
+    </message>
+    <message>
+        <source>Remove sensor</source>
+        <translation>Retirer le capteur</translation>
+    </message>
+    <message>
+        <source>Remove “{entity}” from the map?</source>
+        <translation>Retirer « {entity} » de la carte ?</translation>
+    </message>
+    <message>
+        <source>Sensor removed.</source>
+        <translation>Capteur retiré.</translation>
+    </message>
+    <message>
+        <source>—</source>
+        <translation>—</translation>
+    </message>
 </context>
 </TS>

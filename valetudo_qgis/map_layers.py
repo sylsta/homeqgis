@@ -49,6 +49,7 @@ def layer_names():
         "areas": tr("Valetudo - zones"),
         "lines": tr("Valetudo - lines"),
         "robot": tr("Valetudo - robot"),
+        "sensors": tr("Valetudo - sensors"),
     }
 
 
@@ -156,6 +157,48 @@ def _room_labeling():
     return QgsVectorLayerSimpleLabeling(settings)
 
 
+SENSOR_COLOR = "#6a3d9a"          # a Home Assistant sensor, placed by the user
+SENSOR_OFFLINE_COLOR = "#9e9e9e"  # unavailable / unknown state
+
+
+def _sensors_renderer():
+    """Home Assistant sensors: a filled circle, greyed out when unavailable."""
+    def dot(color):
+        return QgsMarkerSymbol.createSimple({
+            "name": "circle", "color": color,
+            "outline_color": "white", "outline_width": "0.4", "size": "3.5"})
+
+    return QgsCategorizedSymbolRenderer("available", [
+        QgsRendererCategory("yes", dot(SENSOR_COLOR), tr("Sensor")),
+        QgsRendererCategory("no", dot(SENSOR_OFFLINE_COLOR), tr("Sensor (offline)")),
+    ])
+
+
+def _sensor_labeling():
+    """Label each sensor "Name: value unit" (unit omitted when empty)."""
+    settings = QgsPalLayerSettings()
+    settings.isExpression = True
+    settings.fieldName = (
+        "\"label\" || ': ' || \"value\" || "
+        "CASE WHEN \"unit\" <> '' THEN ' ' || \"unit\" ELSE '' END"
+    )
+    buffer = QgsTextBufferSettings()
+    buffer.setEnabled(True)
+    buffer.setSize(0.8)
+    buffer.setColor(QColor("white"))
+    buffer.setOpacity(0.9)
+    fmt = QgsTextFormat()
+    fmt.setSize(8)
+    fmt.setColor(QColor(SENSOR_COLOR))
+    font = fmt.font()
+    font.setBold(True)
+    fmt.setFont(font)
+    fmt.setBuffer(buffer)
+    settings.setFormat(fmt)
+    # Default "around point" placement keeps the text clear of the dot.
+    return QgsVectorLayerSimpleLabeling(settings)
+
+
 # ---------------------------------------------------------------------------
 # Reading the Valetudo JSON
 # ---------------------------------------------------------------------------
@@ -243,16 +286,23 @@ class ValetudoLayers:
             "lines": _memory_layer("LineString", names["lines"], [QgsField("type", STR)]),
             "robot": _memory_layer("Point", names["robot"], [
                 QgsField("type", STR), QgsField("angle", DBL)]),
+            "sensors": _memory_layer("Point", names["sensors"], [
+                QgsField("entity_id", STR), QgsField("label", STR),
+                QgsField("value", STR), QgsField("unit", STR),
+                QgsField("available", STR)]),
         }
         self.project.addMapLayers(list(layers.values()), False)
 
         root = self.project.layerTreeRoot()
         group = root.findGroup(GROUP_NAME) or root.insertGroup(0, GROUP_NAME)
-        for role in ("robot", "lines", "areas", "rooms"):  # top to bottom
+        for role in ("sensors", "robot", "lines", "areas", "rooms"):  # top to bottom
             lyr = layers[role]
             lyr.setCrs(QgsCoordinateReferenceSystem())     # undo any default CRS
             group.addLayer(lyr)
 
+        layers["sensors"].setRenderer(_sensors_renderer())
+        layers["sensors"].setLabeling(_sensor_labeling())
+        layers["sensors"].setLabelsEnabled(True)
         layers["robot"].setRenderer(_points_renderer())
         layers["rooms"].setLabeling(_room_labeling())
         layers["rooms"].setLabelsEnabled(True)
@@ -333,6 +383,23 @@ class ValetudoLayers:
         _replace_features(areas, area_f)
         _replace_features(lines, line_f)
         _replace_features(robot, point_f)
+
+    def update_sensors(self, items):
+        """Refresh the sensors layer from items (each: x, y in cm, entity_id,
+        label, value, unit, available). Does nothing if the layers are gone."""
+        sensors = self.layer("sensors")
+        if sensors is None:
+            return
+        feats = []
+        for it in items:
+            geom = QgsGeometry.fromPointXY(v2q(it["x"], it["y"]))
+            feats.append(_feature(sensors, geom, [
+                it.get("entity_id", ""), it.get("label", ""),
+                "" if it.get("value") is None else str(it.get("value")),
+                it.get("unit", "") or "",
+                "yes" if it.get("available") else "no",
+            ]))
+        _replace_features(sensors, feats)
 
     # -- selection --------------------------------------------------------------
 

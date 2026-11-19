@@ -8,7 +8,9 @@ enabled/checked state can never disagree.
 import os
 
 from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
-from qgis.PyQt.QtWidgets import QAction, QCheckBox, QMessageBox, QPushButton, QToolButton
+from qgis.PyQt.QtWidgets import (
+    QAction, QCheckBox, QInputDialog, QMessageBox, QPushButton, QToolButton,
+)
 from qgis.core import (
     Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsProject, QgsSettings,
 )
@@ -16,18 +18,19 @@ from qgis.core import (
 from . import room_groups
 from .boot_monitor import BootMonitor
 from .client import ValetudoClient
-from .coords import v2q
+from .coords import q2v, v2q
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
 from .map_layers import ValetudoLayers, layer_names
 from .map_overlay import MapOverlay
-from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, ZoneMapTool
+from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import KEY_ADVANCED, PLUGIN_NAME, load_settings
+from .settings import KEY_ADVANCED, PLUGIN_NAME, has_ha_token, load_settings
+from .sensors import SensorManager
 from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
 from .status_panel import (
@@ -49,6 +52,8 @@ MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
 WATCH_INTERVAL_MS = 60_000  # background check of the dock station, panel open or not
 LIVE_AT_START_DELAY_MS = 3_000   # after QGIS has opened a project given at launch
 LIVE_AT_START_WINDOW_MS = 60_000  # robot answering later than that: no automatic start
+SENSOR_POLL_MS = 15_000           # how often Home Assistant sensor values are refreshed
+SENSOR_REMOVE_TOLERANCE_CM = 40   # right-click this close to a sensor removes it
 
 # Valetudo capability required by each action (absent: always available).
 # Alternatives: an action is also available with any of these capabilities.
@@ -77,7 +82,8 @@ REQUIRED_CAPABILITY = {
 # Layout, None = separator. The panel shows the robot and map rows.
 # Simple menu and toolbar: everything else is in the panel's command list.
 TOOLBAR = ["status_panel"]
-MAP_TOOLS = ["pick_rooms", "edit_restrictions", "send_restrictions"]   # shown with "Show on map"
+MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
+             "send_restrictions"]   # shown with "Show on map"
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
 ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
                     "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
@@ -97,6 +103,8 @@ def command_hints():
         "live": tr("Show the robot's map in QGIS and follow the robot live."),
         "edit_restrictions": tr("Load no-go zones and walls as layers you can edit."),
         "send_restrictions": tr("Send the edited no-go zones and walls to the robot."),
+        "place_sensor": tr("Click a point on the map to place a Home Assistant sensor; "
+                           "right-click a sensor to remove it."),
         "empty_dock": tr("Empty the robot's dust bin into the dock."),
         "mop_wash": tr("Wash the mops in the dock."),
         "mop_dry": tr("Dry the mops in the dock."),
@@ -165,6 +173,7 @@ class ValetudoPlugin:
         self._reload_quietly = False    # next restrictions reload: no editing, no bar
         self.zone_tool = self.goto_tool = None
         self.pick_tool = self.overlay = None
+        self.sensor_tool = self.sensors = None
         self._map_tool_entries = []
         self.panel = None
         self.options_factory = None   # our page in Settings › Options
@@ -235,6 +244,8 @@ class ValetudoPlugin:
                          lambda *_: self.load_pi_wifi_map())
         self._new_action("pick_rooms", tr("Pick rooms on the map"), self.activate_pick_tool,
                          checkable=True)
+        self._new_action("place_sensor", tr("Place a sensor on the map"),
+                         self.activate_sensor_tool, checkable=True)
         self.pi_ssh = RobotSurvey()   # the same one-shot SSH runner, towards the Pi
         self.pi_ssh.finished.connect(self._on_pi_wifi_map)
         self._update_pi_actions()
@@ -312,6 +323,12 @@ class ValetudoPlugin:
             canvas, lambda: self.layers.layer("rooms") if self.layers.exists() else None)
         self.pick_tool.setAction(self.act["pick_rooms"])
         self.pick_tool.roomClicked.connect(self._on_room_clicked)
+        self.sensor_tool = SensorMapTool(canvas)
+        self.sensor_tool.setAction(self.act["place_sensor"])
+        self.sensor_tool.placeRequested.connect(self._on_place_sensor)
+        self.sensor_tool.removeRequested.connect(self._on_remove_sensor)
+        self.sensors = SensorManager(self.iface.mainWindow())
+        self.sensors.sensorsUpdated.connect(self._on_sensors_updated)
         self.panel.piMapRequested.connect(lambda full: self.load_pi_wifi_map(full=full))
 
         # While "Show on map" is on: the map tools at the end of the toolbar (as
@@ -378,6 +395,8 @@ class ValetudoPlugin:
             self.pi_ssh.stop()
         if getattr(self, "goto_emulator", None) is not None:
             self.goto_emulator.stop()
+        if self.sensors is not None:
+            self.sensors.close()
         if self.survey is not None:
             self.survey.stop()
             self.survey = None
@@ -391,10 +410,11 @@ class ValetudoPlugin:
         canvas = self.iface.mapCanvas()
         split_tool = getattr(self, "split_tool", None)
         for tool in (self.zone_tool, self.goto_tool, split_tool,
-                     getattr(self, "pick_tool", None)):
+                     getattr(self, "pick_tool", None), getattr(self, "sensor_tool", None)):
             if tool is not None and canvas.mapTool() is tool:
                 canvas.unsetMapTool(tool)
         self.pick_tool = None
+        self.sensor_tool = self.sensors = None
         if getattr(self, "overlay", None) is not None:
             self.overlay.remove()
             self.overlay = None
@@ -849,6 +869,69 @@ class ValetudoPlugin:
                             tr("Click rooms on the map to tick them in the Clean tab; "
                                "right-click a room for its menu."))
 
+    def activate_sensor_tool(self, checked):
+        self._activate_tool(self.sensor_tool, "place_sensor", checked,
+                            tr("Click the map to place a Home Assistant sensor; "
+                               "right-click a sensor to remove it."))
+
+    def _on_place_sensor(self, point):
+        self.iface.actionPan().trigger()   # one placement per click, like "Go to"
+        if self.sensors is None:
+            return
+        if not has_ha_token():
+            self._message(tr("Set the Home Assistant address and token first, in the "
+                             "settings."), Qgis.MessageLevel.Warning)
+            return
+        x, y = q2v(point)
+        self._message(tr("Loading the sensor list from Home Assistant…"),
+                      Qgis.MessageLevel.Info)
+
+        def ready(entities):
+            if not entities:
+                self._message(tr("No sensor found in Home Assistant."),
+                              Qgis.MessageLevel.Warning)
+                return
+            choices = [tr("{name}  ({entity})").format(name=name, entity=eid)
+                       for eid, name in entities]
+            choice, accepted = QInputDialog.getItem(
+                self.iface.mainWindow(), tr("Place a sensor"),
+                tr("Sensor to show at this point:"), choices, 0, False)
+            if not accepted:
+                return
+            entity_id, name = entities[choices.index(choice)]
+            self.sensors.add_sensor(entity_id, x, y)
+            self._message(tr("Sensor “{name}” placed.").format(name=name),
+                          Qgis.MessageLevel.Success)
+
+        def failed(message):
+            self._message(tr("Could not reach Home Assistant: {error}").format(error=message),
+                          Qgis.MessageLevel.Warning)
+
+        self.sensors.fetch_entities(ready, failed)
+
+    def _on_remove_sensor(self, point):
+        if self.sensors is None:
+            return
+        x, y = q2v(point)
+        entity_id = self.sensors.nearest(x, y, SENSOR_REMOVE_TOLERANCE_CM)
+        if not entity_id:
+            self._message(tr("No sensor here to remove."), Qgis.MessageLevel.Info)
+            return
+        answer = QMessageBox.question(
+            self.iface.mainWindow(), tr("Remove sensor"),
+            tr("Remove “{entity}” from the map?").format(entity=entity_id),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+        if answer == QMessageBox.StandardButton.Yes:
+            self.sensors.remove_sensor(entity_id)
+            self._message(tr("Sensor removed."), Qgis.MessageLevel.Success)
+
+    def _on_sensors_updated(self, items):
+        if getattr(self, "_unloaded", False):
+            return
+        if self.layers.exists():
+            self.layers.update_sensors(items)
+
     def _on_room_clicked(self, seg_id, name, right_button, global_pos):
         if self.panel is None:
             return
@@ -863,6 +946,9 @@ class ValetudoPlugin:
             entry.setVisible(checked)
         if self.overlay is not None:
             self.overlay.set_visible(checked)
+        if self.sensors is not None:
+            # Poll Home Assistant for sensor values only while the map is shown.
+            self.sensors.start(SENSOR_POLL_MS) if checked else self.sensors.stop()
 
     def activate_goto_tool(self, checked):
         self._activate_tool(self.goto_tool, "goto", checked,
@@ -1350,6 +1436,8 @@ class ValetudoPlugin:
             canvas = self.iface.mapCanvas()
             canvas.setExtent(self.layers.layer("rooms").extent())
             canvas.refresh()
+        if self.sensors is not None:   # draw the sensors with their latest known values
+            self.layers.update_sensors(self.sensors.items())
         if self.act.get("live") is not None and self.act["live"].isChecked():
             self._center_on_robot(map_json)   # keep the robot in view while tracking
 

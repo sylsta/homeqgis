@@ -80,6 +80,24 @@ class GoToMapTool(QgsMapToolEmitPoint):
             self.pointPicked.emit(QgsPointXY(point))
 
 
+class SensorMapTool(QgsMapTool):
+    """Left-click to place a Home Assistant sensor, right-click to remove one."""
+
+    placeRequested = pyqtSignal(QgsPointXY)
+    removeRequested = pyqtSignal(QgsPointXY)
+
+    def __init__(self, canvas):
+        super().__init__(canvas)
+        self.setCursor(Qt.CursorShape.CrossCursor)
+
+    def canvasReleaseEvent(self, event):
+        point = QgsPointXY(self.toMapCoordinates(event.pos()))
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.placeRequested.emit(point)
+        elif event.button() == Qt.MouseButton.RightButton:
+            self.removeRequested.emit(point)
+
+
 class LineMapTool(QgsMapTool):
     """Click a first point, then a second one: emits the line (split a room).
 

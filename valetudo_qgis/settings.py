@@ -50,6 +50,9 @@ DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
 HA_TOKEN_SETTING = "valetudo/ha_token"
 HA_SSH_PASSWORD_SETTING = "valetudo/ha_ssh_password"   # same: encrypted, optional
 KODI_PASSWORD_SETTING = "valetudo/kodi_password"         # same
+# Home Assistant sensors shown on the map: a JSON list of {entity_id, x, y},
+# x and y in the robot's frame (cm, Valetudo convention). Values come live from HA.
+KEY_HA_SENSORS = "valetudo/ha_sensors"
 
 # Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
 WIFI_DEFAULTS = {
@@ -193,3 +196,40 @@ def ha_token():
 
 def set_ha_token(token):
     return set_secret(HA_TOKEN_SETTING, (token or "").strip())
+
+
+# -- Home Assistant sensors on the map ------------------------------------------
+
+def ha_sensors():
+    """The sensors placed on the map: a list of {"entity_id", "x", "y"}.
+
+    Positions are integers in the robot's frame (cm). A malformed or missing
+    setting yields an empty list rather than an error.
+    """
+    import json
+    raw = QgsSettings().value(KEY_HA_SENSORS, "", type=str)
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return []
+    sensors = []
+    for item in data if isinstance(data, list) else []:
+        try:
+            entity_id = str(item["entity_id"]).strip()
+            x, y = int(round(item["x"])), int(round(item["y"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if entity_id:
+            sensors.append({"entity_id": entity_id, "x": x, "y": y})
+    return sensors
+
+
+def set_ha_sensors(sensors):
+    """Store the list of sensors (replacing the previous one)."""
+    import json
+    cleaned = [{"entity_id": str(s["entity_id"]).strip(),
+                "x": int(round(s["x"])), "y": int(round(s["y"]))}
+               for s in sensors if str(s.get("entity_id", "")).strip()]
+    QgsSettings().setValue(KEY_HA_SENSORS, json.dumps(cleaned))
