@@ -40,7 +40,7 @@ The panel (titled *Connection*), from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  12 min · 18 m²  ⚠ │ (Pi)● (HA)●  [🗺] [⋮] │  status strip
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  12 min · 18 m²  ⚠ │ (Pi)● (HA)●  [🗺] [⚙] [⋮] │  status strip
 ├──┬───────────────────────────────────────────────────┤
 │📈│ Status    robot, Pi, Home Assistant, NUC, Kodi    │
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
@@ -61,8 +61,8 @@ The panel (titled *Connection*), from top to bottom:
   click it to open the right tab), the Raspberry Pi and Home Assistant as their logo
   and a coloured dot (hover them for their status: the Pi is checked over SSH every
   30 s; Home Assistant every minute, *No token* when it answers but no access token
-  is set, hidden when there is neither a token nor an answer), *Show on map* and the
-  ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
+  is set, hidden when there is neither a token nor an answer), *Show on map*, **⚙**
+  (the settings) and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
   Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
   strip** for the *Status* tab.
 - **Status** tab, the detailed status of the servers: connection, robot model,

@@ -716,7 +716,7 @@ class ValetudoPanel(QgsDockWidget):
         for key in ("start", "pause"):
             if key in act:
                 act[key].changed.connect(self._update_primary)
-        # Strip: [Show on map] (icon only) before the ⋮ menu
+        # Strip: [Show on map] then [⚙] Settings (icons only), before the ⋮ menu
         if "live" in act:
             live = QToolButton()
             live.setDefaultAction(act["live"])
@@ -728,6 +728,11 @@ class ValetudoPanel(QgsDockWidget):
             live_details.setAutoRaise(True)
             self.header_layout.insertWidget(self.header_layout.indexOf(self.btn_robot_web),
                                             live_details)
+        if "settings" in act:
+            settings = QToolButton()
+            settings.setDefaultAction(act["settings"])
+            settings.setAutoRaise(True)
+            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_menu), settings)
         # ⋮ menu: occasional commands
         for key in ("locate", None, "watch_boot", "reboot", None, "settings"):
             if key is None:
