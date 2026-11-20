@@ -8,7 +8,7 @@ import os
 
 from qgis.PyQt.QtCore import QDateTime, QLocale, QSize, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import (QAbstractItemView, QHBoxLayout, QLabel, QListWidget,
+from qgis.PyQt.QtWidgets import (QAbstractItemView, QCheckBox, QGridLayout, QHBoxLayout, QLabel, QListWidget,
                                  QPushButton, QToolButton, QVBoxLayout, QWidget,
                                  QFileDialog, QListWidgetItem, QMessageBox,
                                  QStackedWidget)
@@ -24,7 +24,8 @@ from .servers_editor import ServersEditor
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_ADVANCED, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_RDP_COMMAND,
-    KEY_TAB_ORDER, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, WIFI_DEFAULTS, tab_order,
+    KEY_TAB_ORDER, KEY_TOOLBAR, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, TOOLBAR_CHOICES,
+    WIFI_DEFAULTS, tab_order, toolbar_keys,
     active_robot_id, default_camera_url, load_settings, save_servers, set_secret,
 )
 from .ui_loader import load_ui
@@ -77,6 +78,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.record_history.setChecked(cfg["history"])
         self.chk_advanced.setChecked(cfg["advanced_tools"])
         self._fill_tab_order(tab_order())
+        chosen = toolbar_keys()
+        for key, box in self.toolbar_boxes.items():
+            box.setChecked(key in chosen)
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             if kind is bool:
@@ -84,7 +88,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             else:
                 widget.setValue(cfg[key])
 
-    # -- Panel tab: the order of the panel's side tabs -------------------------------
+    # -- UI configuration tab: the panel's side tabs, the toolbar ----------------------
 
     def _build_panel_tab(self):
         page = QWidget()
@@ -115,8 +119,33 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
                          "Terminal tab only shows while a console or log is open."))
         hint.setWordWrap(True)
         layout.addWidget(hint)
+        # The plugin's toolbar: which commands it shows
+        layout.addSpacing(8)
+        layout.addWidget(QLabel("<b>" + tr("Toolbar") + "</b>"))
+        labels = {"status_panel": tr("{name} panel").format(name=PLUGIN_NAME),
+                  "live": tr("Show on map"), "start": tr("Clean everything"),
+                  "home": tr("Dock"), "zone": tr("Clean a zone…"), "goto": tr("Go to…"),
+                  "settings": tr("Settings…"), "pick_rooms": tr("Pick rooms on the map"),
+                  "place_sensor": tr("Place a sensor on the map"),
+                  "edit_restrictions": tr("Edit no-go zones and walls"),
+                  "send_restrictions": tr("Send no-go zones and walls to robot…")}
+        map_tools = ("pick_rooms", "place_sensor", "edit_restrictions", "send_restrictions")
+        self.toolbar_boxes = {}
+        grid = QGridLayout()
+        for index, key in enumerate(TOOLBAR_CHOICES):
+            box = QCheckBox(labels[key])
+            box.setIcon(icon(APP_ICON if key == "status_panel" else key))
+            if key in map_tools:
+                box.setToolTip(tr("Shown in the toolbar while Show on map is on."))
+            grid.addWidget(box, index % 7, index // 7)   # the map tools: right column
+            self.toolbar_boxes[key] = box
+        layout.addLayout(grid)
+        note = QLabel(tr("The map tools (right column) appear while Show on map is on; the "
+                         "advanced ones only with Advanced tools."))
+        note.setWordWrap(True)
+        layout.addWidget(note)
         layout.addStretch(1)
-        self.tabs.insertTab(self.tabs.count() - 2, page, tr("Panel"))
+        self.tabs.insertTab(self.tabs.count() - 2, page, tr("UI configuration"))
 
     def _fill_tab_order(self, order):
         labels = {"status": tr("Status"), "clean": tr("Clean"), "schedule": tr("Schedule"),
@@ -279,6 +308,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_HISTORY, self.record_history.isChecked())
         s.setValue(KEY_ADVANCED, self.chk_advanced.isChecked())
         s.setValue(KEY_TAB_ORDER, ",".join(self._tab_order_on_screen()))
+        s.setValue(KEY_TOOLBAR, ",".join(key for key, box in self.toolbar_boxes.items()
+                                         if box.isChecked()))
         secrets_changed, failed = False, False
         for key, value in editor.secret_changes():
             if set_secret(key, value):

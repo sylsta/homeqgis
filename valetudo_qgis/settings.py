@@ -44,6 +44,13 @@ KEY_RDP_COMMAND = "valetudo/rdp_command"
 KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the panel's side tabs, comma-separated keys
 PANEL_TABS = ("clean", "schedule", "history", "camera", "wifi", "status", "maintenance",
               "terminal")   # their default order
+KEY_TOOLBAR = "valetudo/toolbar"   # the commands in the plugin's toolbar, comma-separated
+# The commands the toolbar can show, in its order; the map tools (last four) only
+# while "Show on map" is on.
+TOOLBAR_CHOICES = ("status_panel", "live", "start", "home", "zone", "goto", "settings",
+                   "pick_rooms", "place_sensor", "edit_restrictions", "send_restrictions")
+DEFAULT_TOOLBAR = ("status_panel", "pick_rooms", "place_sensor", "edit_restrictions",
+                   "send_restrictions")
 KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
 KEY_KODI_USER = "valetudo/kodi_user"
@@ -103,6 +110,15 @@ def save_servers(servers):
 
 def active_robot_id():
     return QgsSettings().value(servers_model.KEY_ACTIVE_ROBOT, "", type=str)
+
+
+def toolbar_keys():
+    """The commands chosen for the plugin's toolbar (the defaults until chosen)."""
+    s = QgsSettings()
+    if not s.contains(KEY_TOOLBAR):
+        return list(DEFAULT_TOOLBAR)
+    stored = str(s.value(KEY_TOOLBAR, "", type=str))
+    return [key for key in stored.split(",") if key in TOOLBAR_CHOICES]
 
 
 def tab_order():

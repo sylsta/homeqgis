@@ -3084,16 +3084,28 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Faites glisser les onglets, ou déplacez celui sélectionné avec ▲ ▼ : les onglets latéraux du panneau suivent cet ordre de haut en bas (appliqué avec OK). L'onglet Terminal n'apparaît que lorsqu'une console ou un journal est ouvert.</translation>
     </message>
     <message>
-        <source>Panel</source>
-        <translation>Panneau</translation>
-    </message>
-    <message>
         <source>Move up</source>
         <translation>Monter</translation>
     </message>
     <message>
         <source>Order of the panel's tabs</source>
         <translation>Ordre des onglets du panneau</translation>
+    </message>
+    <message>
+        <source>The map tools (right column) appear while Show on map is on; the advanced ones only with Advanced tools.</source>
+        <translation>Les outils de carte (colonne de droite) apparaissent quand Afficher sur la carte est actif ; les outils avancés seulement avec Outils avancés.</translation>
+    </message>
+    <message>
+        <source>UI configuration</source>
+        <translation>Configuration de l'interface</translation>
+    </message>
+    <message>
+        <source>Shown in the toolbar while Show on map is on.</source>
+        <translation>Affiché dans la barre d'outils quand Afficher sur la carte est actif.</translation>
+    </message>
+    <message>
+        <source>Toolbar</source>
+        <translation>Barre d'outils</translation>
     </message>
 </context>
 </TS>

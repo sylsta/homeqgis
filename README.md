@@ -59,7 +59,11 @@ without restarting QGIS.
    use the robot in use, Home Assistant's sensors the first Home Assistant, the Pi's
    Wi-Fi maps the first Pi.
 2. Open the **DomotiQGIS panel** (the only toolbar button, or *Plugins > DomotiQGIS*).
-   The menu and the toolbar stay minimal: everything happens in the panel.
+   The menu and the toolbar stay minimal: everything happens in the panel. The
+   toolbar's commands are chosen in *Settings > Options > DomotiQGIS*, tab **UI
+   configuration**, *Toolbar*: the panel, *Show on map*, *Clean everything*, *Dock*,
+   *Clean a zone…*, *Go to…*, *Settings…*, and the map tools (shown while *Show on map*
+   is on; the advanced ones only with *Advanced tools*).
 
 The panel (titled *Connection*), from top to bottom:
 
@@ -137,7 +141,7 @@ The panel (titled *Connection*), from top to bottom:
   cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
   paused; *Dock* next to it while away from the dock.
 - **Side tabs**: icons, their names as tooltips, in the order set in *Settings > Options >
-  DomotiQGIS*, tab **Panel** (drag them, or ▲ ▼; *Default order*); a tab gets an orange dot when one
+  DomotiQGIS*, tab **UI configuration** (drag them, or ▲ ▼; *Default order*); a tab gets an orange dot when one
   of the problems of the ⚠ belongs to it. Each tab's page starts with its title (its
   icon and name), which stays in place while the page scrolls; the Terminal's also
   names the server it is on.

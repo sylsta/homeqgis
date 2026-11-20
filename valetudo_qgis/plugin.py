@@ -31,7 +31,8 @@ from .restrictions import RestrictionLayers, layer_names as restriction_layer_na
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import KEY_ADVANCED, PLUGIN_NAME, has_ha_token, load_settings
+from .settings import (KEY_ADVANCED, PLUGIN_NAME, TOOLBAR_CHOICES, has_ha_token,
+                       load_settings, toolbar_keys)
 from .sensors import SensorManager
 from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
@@ -83,7 +84,6 @@ REQUIRED_CAPABILITY = {
 
 # Layout, None = separator. The panel shows the robot and map rows.
 # Simple menu and toolbar: everything else is in the panel's command list.
-TOOLBAR = ["status_panel"]
 MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
              "send_restrictions"]   # shown with "Show on map"
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
@@ -284,12 +284,7 @@ class ValetudoPlugin:
         self.panel.setWindowIcon(icon(APP_ICON))   # shown when the panel floats
 
         self.toolbar = self.iface.addToolBar(PLUGIN_NAME)
-        self.toolbar.setObjectName("ValetudoToolbar")
-        for key in TOOLBAR:
-            if key is None:
-                self.toolbar.addSeparator()
-            else:
-                self.toolbar.addAction(self.act[key])
+        self.toolbar.setObjectName("ValetudoToolbar")   # filled by _build_toolbar()
         for key in MENU:
             if key is not None:
                 self.iface.addPluginToMenu(self.menu, self.act[key])
@@ -338,17 +333,9 @@ class ValetudoPlugin:
         self.sensors.sensorsUpdated.connect(self._on_sensors_updated)
         self.panel.piMapRequested.connect(lambda full: self.load_pi_wifi_map(full=full))
 
-        # While "Show on map" is on: the map tools at the end of the toolbar (as
-        # buttons, so that hiding them there leaves the menus alone), and a status
-        # card over the canvas.
-        self._map_tool_entries = [self.toolbar.addSeparator()]
-        for key in MAP_TOOLS:
-            button = QToolButton(self.toolbar)
-            button.setDefaultAction(self.act[key])
-            button.setAutoRaise(True)
-            self._map_tool_entries.append(self.toolbar.addWidget(button))
-        for entry in self._map_tool_entries:
-            entry.setVisible(False)
+        # While "Show on map" is on: a status card over the canvas (and the map tools
+        # chosen for the toolbar, see _build_toolbar)
+        self._build_toolbar()
         self.overlay = MapOverlay(canvas)
         self.panel.summaryChanged.connect(self.overlay.set_html)
         self.act["live"].toggled.connect(self._on_live_toggled)
@@ -671,6 +658,7 @@ class ValetudoPlugin:
             self.panel.settings_changed()   # e.g. Pi address: show or hide its console
         self._update_pi_actions()
         self._apply_advanced()
+        self._build_toolbar()
 
     # -- history ---------------------------------------------------------------------
 
@@ -845,6 +833,7 @@ class ValetudoPlugin:
         on = load_settings()["advanced_tools"]
         for key in ADVANCED_ACTIONS:
             self.act[key].setVisible(on)
+        self._update_map_tool_entries()
         if self.panel is not None:
             self.panel.set_advanced(on)
 
@@ -1034,10 +1023,41 @@ class ValetudoPlugin:
         else:
             self.panel.toggle_room(seg_id)
 
+    def _build_toolbar(self):
+        """The commands chosen in the settings (UI configuration tab). The map tools
+        come last, as buttons (hiding them there leaves the menus alone), shown while
+        "Show on map" is on."""
+        if self.toolbar is None:
+            return
+        for _entry, button in self._map_tool_entries:
+            if button is not None:
+                button.deleteLater()
+        self.toolbar.clear()
+        chosen = toolbar_keys()
+        for key in TOOLBAR_CHOICES:
+            if key in chosen and key not in MAP_TOOLS and key in self.act:
+                self.toolbar.addAction(self.act[key])
+        tools = [key for key in MAP_TOOLS if key in chosen and key in self.act]
+        # [(toolbar entry, its button or None for the separator)]
+        self._map_tool_entries = [(self.toolbar.addSeparator(), None)] if tools else []
+        for key in tools:
+            button = QToolButton(self.toolbar)
+            button.setDefaultAction(self.act[key])
+            button.setAutoRaise(True)
+            self._map_tool_entries.append((self.toolbar.addWidget(button), button))
+        self._update_map_tool_entries()
+
+    def _update_map_tool_entries(self):
+        """The map tools in the toolbar: while "Show on map" is on, and only those whose
+        command is available (e.g. the advanced ones while Advanced tools is on)."""
+        live = self.act.get("live")
+        shown = live is not None and live.isChecked()
+        for entry, button in getattr(self, "_map_tool_entries", []):
+            entry.setVisible(shown and (button is None or button.defaultAction().isVisible()))
+
     def _on_live_toggled(self, checked):
         """The map tools and the status card come with "Show on map"."""
-        for entry in getattr(self, "_map_tool_entries", []):
-            entry.setVisible(checked)
+        self._update_map_tool_entries()
         if self.overlay is not None:
             self.overlay.set_visible(checked)
         if self.sensors is not None:
