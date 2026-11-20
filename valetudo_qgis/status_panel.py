@@ -56,7 +56,8 @@ from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
 from .settings import (PLUGIN_NAME, KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
-                       load_settings, secret)
+                       active_robot_id, load_settings, secret)
+from . import servers as servers_model
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
 from .console_tab import ConsoleTab
@@ -515,6 +516,7 @@ class ValetudoPanel(QgsDockWidget):
                 self.strip_layout.insertWidget(index, widget)
                 index += 1
             self._strip_servers[key] = (logo, pill)
+        self._order_servers()
         self.lbl_details_logo.setPixmap(icon(LOGO).pixmap(20, 20))
         self.lbl_ha_logo.setPixmap(icon(HA_LOGO).pixmap(20, 20))
         self.ha_header.setVisible(False)
@@ -1853,11 +1855,52 @@ class ValetudoPanel(QgsDockWidget):
 
     def settings_changed(self):
         """Called by the plugin after the Options page saved changes."""
+        self._order_servers()
         self._ha_ssh_password_for = None   # the SSH password may have changed
         self._update_console()
         self._ha_token = None   # the token may have changed
         if self.isVisible():
             self._refresh_ha()
+
+    def _server_order(self):
+        """Panel keys (robot, pi, ha, nuc, kodi) in the order of the settings' Servers tab:
+        each is the first server of its type (the robot in use for robots)."""
+        cfg = load_settings()
+        types = {"valetudo": "robot", "rpi": "pi", "ha": "ha", "linux": "nuc", "kodi": "kodi"}
+        servers = cfg.get("servers") or []
+        robot = servers_model.active_robot(servers, active_robot_id())
+        order = []
+        for server in servers:
+            key = types.get(server.get("type"))
+            if key is None or key in order:
+                continue
+            if key == "robot" and robot is not None and server is not robot:
+                continue
+            order.append(key)
+        return order + [key for key in types.values() if key not in order]
+
+    def _order_servers(self):
+        """The Status tab's frames and the strip's servers, in the settings' order."""
+        order = self._server_order()
+        frames = {"robot": self.robot_header, "pi": self.pi_header, "ha": self.ha_header,
+                  "nuc": self.nuc_header, "kodi": self.kodi_header}
+        layout = self.robot_header.parentWidget().layout()
+        indices = [layout.indexOf(frame) for frame in frames.values()]
+        if all(isinstance(i, int) and i >= 0 for i in indices):
+            base = min(indices)
+            for frame in frames.values():
+                layout.removeWidget(frame)
+            for offset, key in enumerate(order):
+                layout.insertWidget(base + offset, frames[key])
+        strip = [key for key in order if key in self._strip_servers]
+        index = self.strip_layout.indexOf(self.lbl_ha_strip) + 1
+        for key in strip:
+            for widget in self._strip_servers[key]:
+                self.strip_layout.removeWidget(widget)
+        for key in strip:
+            for widget in self._strip_servers[key]:
+                self.strip_layout.insertWidget(index, widget)
+                index += 1
 
     def _update_console(self):
         """Consoles and logs run only while their page of the Terminal tab is shown."""

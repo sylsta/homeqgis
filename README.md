@@ -46,8 +46,8 @@ without restarting QGIS.
    its own port, and SSH goes there. With several robots, *Robot in use* picks the one
    the panel and the map work with. Tokens and passwords are kept encrypted in the QGIS
    authentication database. The settings of earlier versions are turned into servers
-   the first time. For now the panel uses the first server of each type (the robot in
-   use for robots).
+   the first time. The panel shows them in this order (Status tab and status strip);
+   for now it uses the first server of each type (the robot in use for robots).
 2. Open the **DomotiQGIS panel** (the only toolbar button, or *Plugins > DomotiQGIS*).
    The menu and the toolbar stay minimal: everything happens in the panel.
 
