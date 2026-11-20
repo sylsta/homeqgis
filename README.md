@@ -72,8 +72,9 @@ The panel (titled *Connection*), from top to bottom:
   how far off, when it differs from the computer's by more than 2 minutes) and
   uptime, the state and battery, with *Show on map* on the first line; **Refresh
   all**, at the right of the tab's title, reads every server again (each also
-  refreshes by itself); with a Raspberry Pi set in the settings, the same for the Pi (read over
-  SSH every 30 s while the panel is visible); then Home Assistant: version, home
+  refreshes by itself); with a Raspberry Pi set in the settings, the same for the Pi, plus
+  a line with its load, memory, disk and temperature (read over SSH every 30 s while
+  the panel is visible); then Home Assistant: version, home
   name and time zone, its address, its own clock and its uptime (from the *Uptime*
   integration's `sensor.uptime`, if you have it); then the NUC, when its address
   is set (*Settings > Options > DomotiQGIS*, tab *Servers*, *NUC*, with a *Test connection*

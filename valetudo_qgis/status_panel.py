@@ -439,6 +439,12 @@ class ValetudoPanel(QgsDockWidget):
 
         # -- Status tab: robot, Raspberry Pi, Home Assistant -----------------------------
         self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
+        # Pi resources (load, RAM, disk, temperature), as the NUC's, under its info line
+        self.lbl_pi_resources = QLabel()
+        self.lbl_pi_resources.setWordWrap(True)
+        self.lbl_pi_resources.setVisible(False)
+        pi_layout = self.lbl_pi_info.parentWidget().layout()
+        pi_layout.insertWidget(pi_layout.indexOf(self.lbl_pi_info) + 1, self.lbl_pi_resources)
         self.pi_runner = RobotSurvey(self)   # one-shot SSH runner
         # NUC: a server read over SSH (ssh_host_block), shown only when set
         self.lbl_nuc_logo.setPixmap(icon(NUC_ICON).pixmap(20, 20))
@@ -1618,7 +1624,7 @@ class ValetudoPanel(QgsDockWidget):
         target = self._pi_target()
         if target is None or self.pi_runner.is_busy():
             return
-        self.pi_runner.run("pi_info", *target, host_info.PI_COMMAND)
+        self.pi_runner.run("pi_info", *target, host_info.SERVER_COMMAND)
         if self._pi_ok is None:
             self.lbl_pi_connection.setText(
                 f"<span style='color:#9e9e9e'>●</span> {tr('Connecting…')}")
@@ -1627,6 +1633,7 @@ class ValetudoPanel(QgsDockWidget):
     def _on_pi_info(self, _operation, ok, output, detail):
         if ok:
             self._pi = host_info.parse_pi(output, time.time())
+            self._pi.update(host_info.parse_resources(output))
             self._pi_ok, self._pi_last_ok = True, time.monotonic()
         else:
             self._pi_ok = False
@@ -1658,6 +1665,9 @@ class ValetudoPanel(QgsDockWidget):
                                           self._local_time)
         self.lbl_pi_info.setText(line)
         self.lbl_pi_info.setStyleSheet("color: #ef6c00;" if wrong else "")
+        resources = host_info.resources_line(pi) if online else ""   # stale once offline
+        self.lbl_pi_resources.setText(resources)
+        self.lbl_pi_resources.setVisible(bool(resources))
         self._set_problem("pi_clock", tr("The Raspberry Pi's clock is wrong.") if wrong else None,
                           "maintenance")
 
