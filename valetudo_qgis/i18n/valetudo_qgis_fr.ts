@@ -3459,5 +3459,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>{n} Home Assistant battery(ies) to change within two weeks.</source>
         <translation>{n} pile(s) Home Assistant à changer d'ici deux semaines.</translation>
     </message>
+    <message>
+        <source>User manual</source>
+        <translation>Manuel d'utilisation</translation>
+    </message>
 </context>
 </TS>

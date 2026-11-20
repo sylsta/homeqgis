@@ -12,6 +12,7 @@ from qgis.PyQt.QtWidgets import (
     QAction, QCheckBox, QInputDialog, QMessageBox, QPushButton, QToolButton,
 )
 from qgis.core import (
+    QgsApplication,
     Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsProject, QgsSettings,
 )
 
@@ -30,6 +31,7 @@ from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool,
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
+from .manual import open_manual
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
 from .settings import (KEY_ADVANCED, PLUGIN_NAME, TOOLBAR_CHOICES, has_ha_token,
                        load_settings, toolbar_keys)
@@ -89,7 +91,7 @@ MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
 ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
                     "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
-MENU = ["status_panel", "settings", "setup"]
+MENU = ["status_panel", "settings", "setup", "manual"]
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
 
@@ -212,6 +214,8 @@ class ValetudoPlugin:
             stored.setValue(KEY_ADVANCED, bool(load_settings()["url"]))
         self._new_action("settings", tr("Settings…"), self.configure)
         self._new_action("setup", tr("Setup assistant…"), self.run_setup)
+        self._new_action("manual", tr("User manual"), lambda *_: open_manual())
+        self.act["manual"].setIcon(QgsApplication.getThemeIcon("/mActionHelpContents.svg"))
         # The settings are a page of Settings › Options; "Settings…" opens it.
         self.options_factory = ValetudoOptionsFactory(self._on_settings_applied)
         self.iface.registerOptionsWidgetFactory(self.options_factory)

@@ -1,0 +1,73 @@
+site_name: DomotiQGIS — user manual
+site_description: A home control centre in QGIS — Valetudo robot, Home Assistant, servers
+site_url: https://sylsta.github.io/qgis-valetudo/
+repo_url: https://github.com/sylsta/qgis-valetudo
+repo_name: sylsta/qgis-valetudo
+edit_uri: edit/main/docs/
+copyright: Sylvain THÉRY — GPL-2.0-or-later
+
+theme:
+  name: material
+  logo: images/logo.png
+  favicon: images/logo.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: deep orange
+      toggle: {icon: material/weather-night, name: Dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: deep orange
+      toggle: {icon: material/weather-sunny, name: Light mode}
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+# Also built into the plugin, opened from a local folder: relative links only
+use_directory_urls: false
+
+exclude_docs: |
+  images/SCREENSHOTS.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc: {permalink: true}
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+
+plugins:
+  - search
+
+nav:
+  - Introduction: index.md
+  - Getting started:
+      - Installation: install.md
+      - First steps: first-steps.md
+      - The panel: panel.md
+  - The robot:
+      - Clean: robot/clean.md
+      - Schedule: robot/schedule.md
+      - History: robot/history.md
+      - Camera: robot/camera.md
+      - Wi-Fi: robot/wifi.md
+      - Maintenance: robot/maintenance.md
+      - On the map: map.md
+  - The home: home.md
+  - The servers: servers.md
+  - Settings: settings.md
+  - Files: files.md
+  - Extras:
+      - Wi-Fi recorder on the robot: extras/robot-recorder.md
+      - Wi-Fi maps on a Raspberry Pi: extras/pi-wifi-maps.md
+      - Uptime Kuma on the Pi: extras/uptime-kuma.md
+  - Troubleshooting: troubleshooting.md

@@ -9,3 +9,7 @@ __pycache__/
 dist/
 *.autosave
 
+
+# the user manual, built by mkdocs (CI copies it into the plugin)
+site/
+valetudo_qgis/doc/

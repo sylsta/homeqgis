@@ -63,6 +63,7 @@ from . import servers as servers_model
 from .remote_desktop import RemoteDesktop
 from .ha_block import HaBlock
 from .home_tab import HomeTab
+from .manual import open_manual
 from .server_frames import (PortBlock, ServerFrame, WebBlock, build_console_page,
                             build_log_page)
 from .servers_editor import TYPE_ICONS as SERVER_ICONS, display_name as server_display_name
@@ -753,6 +754,8 @@ class ValetudoPanel(QgsDockWidget):
         self.act_advanced.setChecked(load_settings()["advanced_tools"])
         self.act_advanced.toggled.connect(self._on_advanced_toggled)
         self.menu.addSeparator()
+        self.menu.addAction(QgsApplication.getThemeIcon("/mActionHelpContents.svg"),
+                            tr("User manual"), lambda: open_manual())
         self.menu.addAction(icon(APP_ICON), tr("About…"), self.show_about)
         # Care: dock station commands (hidden when the robot has none)
         put(self.dock_grid, ["empty_dock", "mop_wash", "mop_dry"], columns=3, hide=True)
