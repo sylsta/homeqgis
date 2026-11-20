@@ -33,7 +33,7 @@ While it is on:
 
 | Tool | What it does |
 |---|---|
-| ![](images/icon-pick-rooms.png){ width=20 } **Pick rooms on the map** | Click a room to tick or untick it in the Clean tab; right-click it for its menu (rename, join, split). |
+| ![](images/icon-pick-rooms.png){ width=20 } **Pick rooms on the map** | Click a room to tick or untick it in the Clean tab, which the panel then shows; right-click it for its menu (rename, join, split). |
 | ![](images/icon-place-sensor.png){ width=20 } **Place a sensor on the map** | Click a point, choose a Home Assistant sensor: it shows there with its live value. Right-click a sensor to remove it. |
 | ![](images/icon-edit-restrictions.png){ width=20 } **Edit no-go zones and walls** | Advanced tool, see below. |
 | ![](images/icon-send-restrictions.png){ width=20 } **Send no-go zones and walls to robot…** | Advanced tool, see below. |

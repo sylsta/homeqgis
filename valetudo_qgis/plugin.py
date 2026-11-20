@@ -1026,6 +1026,9 @@ class ValetudoPlugin:
             self.panel.room_menu(seg_id, name, global_pos)
         else:
             self.panel.toggle_room(seg_id)
+            if not self.panel.isVisible():
+                self.panel.show()
+            self.panel.show_tab("clean")   # see the room ticked, and clean it
 
     def _build_toolbar(self):
         """The commands chosen in the settings (UI configuration tab). The map tools
