@@ -3192,10 +3192,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Problèmes seulement</translation>
     </message>
     <message>
-        <source>Unavailable devices and low batteries</source>
-        <translation>Appareils indisponibles et piles faibles</translation>
-    </message>
-    <message>
         <source>Other entities</source>
         <translation>Autres entités</translation>
     </message>
@@ -3286,6 +3282,182 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>{n} Home Assistant device(s) with a low battery.</source>
         <translation>{n} appareil(s) Home Assistant avec une pile faible.</translation>
+    </message>
+    <message>
+        <source>Temperature</source>
+        <translation>Température</translation>
+    </message>
+    <message>
+        <source>Humidity</source>
+        <translation>Humidité</translation>
+    </message>
+    <message>
+        <source>Light level</source>
+        <translation>Luminosité</translation>
+    </message>
+    <message>
+        <source>Power</source>
+        <translation>Puissance</translation>
+    </message>
+    <message>
+        <source>Pressure</source>
+        <translation>Pression</translation>
+    </message>
+    <message>
+        <source>Compare</source>
+        <translation>Comparer</translation>
+    </message>
+    <message>
+        <source>The rooms side by side: one curve per room</source>
+        <translation>Les pièces côte à côte : une courbe par pièce</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation>Exporter</translation>
+    </message>
+    <message>
+        <source>CSV file…</source>
+        <translation>Fichier CSV…</translation>
+    </message>
+    <message>
+        <source>GeoPackage next to the project</source>
+        <translation>GeoPackage à côté du projet</translation>
+    </message>
+    <message>
+        <source>▶ Map</source>
+        <translation>▶ Carte</translation>
+    </message>
+    <message>
+        <source>The rooms coloured by this value over the period, with the robot's outings, in the Temporal Controller</source>
+        <translation>Les pièces colorées selon cette valeur sur la période, avec les sorties du robot, dans le contrôleur temporel</translation>
+    </message>
+    <message>
+        <source>Select a device, an area or Compare.</source>
+        <translation>Sélectionnez un appareil, une pièce, ou Comparer.</translation>
+    </message>
+    <message>
+        <source>Reading the history…</source>
+        <translation>Lecture de l'historique…</translation>
+    </message>
+    <message>
+        <source>Export the history</source>
+        <translation>Exporter l'historique</translation>
+    </message>
+    <message>
+        <source>CSV (*.csv)</source>
+        <translation>CSV (*.csv)</translation>
+    </message>
+    <message>
+        <source>6 h</source>
+        <translation>6 h</translation>
+    </message>
+    <message>
+        <source>24 h</source>
+        <translation>24 h</translation>
+    </message>
+    <message>
+        <source>7 d</source>
+        <translation>7 j</translation>
+    </message>
+    <message>
+        <source>10 d</source>
+        <translation>10 j</translation>
+    </message>
+    <message>
+        <source>Nothing to draw.</source>
+        <translation>Rien à tracer.</translation>
+    </message>
+    <message>
+        <source>🤖 the robot cleaned here</source>
+        <translation>🤖 le robot a nettoyé ici</translation>
+    </message>
+    <message>
+        <source>No history for this period.</source>
+        <translation>Pas d'historique pour cette période.</translation>
+    </message>
+    <message>
+        <source>Save the project first: the GeoPackage goes in its history folder.</source>
+        <translation>Enregistrez d'abord le projet : le GeoPackage va dans son dossier history.</translation>
+    </message>
+    <message>
+        <source>Show the robot's map first (Show on map): the rooms come from it.</source>
+        <translation>Affichez d'abord la carte du robot (Afficher sur la carte) : les pièces en viennent.</translation>
+    </message>
+    <message>
+        <source>No room of the map is named like a Home Assistant area.</source>
+        <translation>Aucune pièce de la carte ne porte le nom d'une pièce de Home Assistant.</translation>
+    </message>
+    <message>
+        <source>Home replay</source>
+        <translation>Relecture maison</translation>
+    </message>
+    <message>
+        <source>{kind} by room</source>
+        <translation>{kind} par pièce</translation>
+    </message>
+    <message>
+        <source>Exported to {path}</source>
+        <translation>Exporté dans {path}</translation>
+    </message>
+    <message>
+        <source>Exported to {path} (table {table})</source>
+        <translation>Exporté dans {path} (table {table})</translation>
+    </message>
+    <message>
+        <source>{n} room(s) on the map, from {low} to {high}.</source>
+        <translation>{n} pièce(s) sur la carte, de {low} à {high}.</translation>
+    </message>
+    <message>
+        <source>🤖 The robot cleaned here {n} time(s).</source>
+        <translation>🤖 Le robot a nettoyé ici {n} fois.</translation>
+    </message>
+    <message>
+        <source>No {kind} sensor in an area.</source>
+        <translation>Aucun capteur de {kind} dans une pièce.</translation>
+    </message>
+    <message>
+        <source>History not available: {error}</source>
+        <translation>Historique indisponible : {error}</translation>
+    </message>
+    <message>
+        <source>unavailable {n} time(s)</source>
+        <translation>indisponible {n} fois</translation>
+    </message>
+    <message>
+        <source>Not exported: {error}</source>
+        <translation>Non exporté : {error}</translation>
+    </message>
+    <message>
+        <source>{name}: on {count} time(s), {duration} in all</source>
+        <translation>{name} : actif {count} fois, {duration} au total</translation>
+    </message>
+    <message>
+        <source>{name}: min {min} · max {max} · mean {mean} {unit}</source>
+        <translation>{name} : min {min} · max {max} · moyenne {mean} {unit}</translation>
+    </message>
+    <message>
+        <source>about {n} week(s) left</source>
+        <translation>environ {n} semaine(s) restante(s)</translation>
+    </message>
+    <message>
+        <source>about {n} day(s) left</source>
+        <translation>environ {n} jour(s) restant(s)</translation>
+    </message>
+    <message>
+        <source>📶 mean {mean} (min {min})</source>
+        <translation>📶 moyenne {mean} (min {min})</translation>
+    </message>
+    <message>
+        <source>Unavailable devices, low batteries and batteries to change within two weeks</source>
+        <translation>Appareils indisponibles, piles faibles et piles à changer d'ici deux semaines</translation>
+    </message>
+    <message>
+        <source>About {n} day(s) left, from the last 10 days</source>
+        <translation>Environ {n} jour(s) restant(s), d'après les 10 derniers jours</translation>
+    </message>
+    <message>
+        <source>{n} Home Assistant battery(ies) to change within two weeks.</source>
+        <translation>{n} pile(s) Home Assistant à changer d'ici deux semaines.</translation>
     </message>
 </context>
 </TS>

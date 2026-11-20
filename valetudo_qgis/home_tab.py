@@ -12,15 +12,19 @@ Read with one template request (ha_home.TEMPLATE) every 15 s while the tab is
 shown; lights, plugs and switches toggle with ⏻ (services/<domain>/toggle).
 """
 
-from qgis.PyQt.QtCore import QTimer, Qt, pyqtSignal
+import time
+
+from qgis.PyQt.QtCore import QSize, QTimer, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QColor, QFont
 from qgis.PyQt.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QHeaderView, QLabel,
-                                 QLineEdit, QToolButton, QTreeWidget, QTreeWidgetItem,
-                                 QVBoxLayout, QWidget)
+                                 QLineEdit, QSplitter, QToolButton, QTreeWidget,
+                                 QTreeWidgetItem, QVBoxLayout, QWidget)
 from qgis.core import QgsApplication, QgsSettings
 
-from . import ha_home
+from . import ha_history, ha_home
+from .charts import color, sparkline_pixmap
 from .ha_client import UNAUTHORISED, HomeAssistantClient
+from .home_detail import ON_STATES, DetailPane
 from .i18n import tr
 from .settings import load_settings, secret
 
@@ -28,8 +32,12 @@ REFRESH_MS = 15_000
 KEY_GROUP_BY = "valetudo/home_group_by"
 KEY_PROBLEMS_ONLY = "valetudo/home_problems_only"
 KEY_VIRTUAL = "valetudo/home_virtual"
+KEY_SPLITTER = "valetudo/home_splitter"
+SPARK_EVERY_S = 300      # the list's 24 h graphs: read again every 5 min
+BATTERY_EVERY_S = 3600   # the batteries' 10 days (their trend): every hour
+SOON_DAYS = 14           # a battery to change within this: listed by the ⚠
 ROLE_KEY = Qt.ItemDataRole.UserRole
-COL_NAME, COL_STATE, COL_BATTERY, COL_LQI, COL_ACTION = range(5)
+COL_NAME, COL_STATE, COL_SPARK, COL_BATTERY, COL_LQI, COL_ACTION = range(6)
 FADED, WARN = QColor("#9e9e9e"), QColor("#ef6c00")
 
 
@@ -42,7 +50,8 @@ def _state_words():
 
 
 class HomeTab(QWidget):
-    problemsChanged = pyqtSignal(int, int)   # unavailable devices, low batteries
+    problemsChanged = pyqtSignal(int, int, int)   # unavailable, low batteries, soon empty
+    robotDaysRequested = pyqtSignal(list)         # see DetailPane
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -51,6 +60,9 @@ class HomeTab(QWidget):
         self._token = None
         self._data = None         # the last answer of the template
         self._busy = False
+        self._model = None
+        self._spark, self._spark_at = {}, 0.0        # entity id -> 24 h of points
+        self._batteries, self._battery_at = {}, 0.0  # battery entity id -> 10 days
         self._timer = QTimer(self)
         self._timer.setInterval(REFRESH_MS)
         self._timer.timeout.connect(self.refresh)
@@ -84,7 +96,8 @@ class HomeTab(QWidget):
         layout.addLayout(row)
         options = QHBoxLayout()
         self.chk_problems = QCheckBox(tr("Problems only"))
-        self.chk_problems.setToolTip(tr("Unavailable devices and low batteries"))
+        self.chk_problems.setToolTip(tr("Unavailable devices, low batteries and batteries to "
+                                        "change within two weeks"))
         self.chk_problems.setChecked(s.value(KEY_PROBLEMS_ONLY, False, type=bool))
         self.chk_virtual = QCheckBox(tr("Other entities"))
         self.chk_virtual.setToolTip(tr("Also Home Assistant's own entities, without a device: "
@@ -96,16 +109,31 @@ class HomeTab(QWidget):
         options.addStretch(1)
         layout.addLayout(options)
         self.tree = QTreeWidget()
-        self.tree.setColumnCount(5)
-        self.tree.setHeaderLabels([tr("Device"), tr("State"), "🔋", "📶", ""])
+        self.tree.setColumnCount(6)
+        self.tree.setHeaderLabels([tr("Device"), tr("State"), tr("24 h"), "🔋", "📶", ""])
         self.tree.setUniformRowHeights(True)
         self.tree.setAlternatingRowColors(True)
+        self.tree.setIconSize(QSize(80, 16))   # the 24 h graphs
         header = self.tree.header()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(COL_NAME, QHeaderView.ResizeMode.Stretch)
-        for column in (COL_STATE, COL_BATTERY, COL_LQI, COL_ACTION):
+        for column in (COL_STATE, COL_SPARK, COL_BATTERY, COL_LQI, COL_ACTION):
             header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
-        layout.addWidget(self.tree, 1)
+        self.tree.itemSelectionChanged.connect(self._on_selection)
+        # The list above, the selected device's graphs below
+        self.splitter = QSplitter(Qt.Orientation.Vertical)
+        self.splitter.addWidget(self.tree)
+        self.detail = DetailPane(self._ha, lambda: self._model, self)
+        self.detail.robotDaysRequested.connect(self.robotDaysRequested)
+        self.splitter.addWidget(self.detail)
+        self.splitter.setStretchFactor(0, 3)
+        self.splitter.setStretchFactor(1, 2)
+        state = QgsSettings().value(KEY_SPLITTER)
+        if state is not None:
+            self.splitter.restoreState(state)
+        self.splitter.splitterMoved.connect(
+            lambda *_: QgsSettings().setValue(KEY_SPLITTER, self.splitter.saveState()))
+        layout.addWidget(self.splitter, 1)
         self.lbl_status = QLabel()
         self.lbl_status.setWordWrap(True)
         layout.addWidget(self.lbl_status)
@@ -129,8 +157,10 @@ class HomeTab(QWidget):
             self._timer.stop()
 
     def settings_changed(self):
-        self._token, self._for, self._data = None, None, None
+        self._token, self._for, self._data, self._model = None, None, None, None
+        self._spark, self._spark_at, self._batteries, self._battery_at = {}, 0.0, {}, 0.0
         self.tree.clear()
+        self.detail.clear()
         if self._timer.isActive():
             self.refresh()
 
@@ -180,6 +210,7 @@ class HomeTab(QWidget):
                 return
             self._data = data
             self._render()
+            self._read_histories()
 
         def failed(error):
             self._busy = False
@@ -188,12 +219,92 @@ class HomeTab(QWidget):
 
         client.post("/template", {"template": ha_home.TEMPLATE}, ok, failed, timeout_ms=15000)
 
+    def _read_histories(self):
+        """The 24 h graphs of the list (every 5 min) and the batteries' 10 days (every
+        hour, for their trend), each with one history request."""
+        client, model, now = self._client, self._model, time.time()
+        if client is None or model is None:
+            return
+        if now - self._spark_at >= SPARK_EVERY_S:
+            ids = [d["main"][0]["id"] for d in model["devices"] if d["main"]]
+            if ids:
+                self._spark_at = now
+
+                def sparks(answer):
+                    self._spark = ha_history.parse(answer)
+                    self._render()
+                client.get(ha_history.history_path(ids, now - 86400, now), sparks,
+                           timeout_ms=30000)
+        if now - self._battery_at >= BATTERY_EVERY_S:
+            ids = [e["id"] for d in model["devices"] for e in d["entities"]
+                   if ha_home.is_battery(e)]
+            if ids:
+                self._battery_at = now
+
+                def batteries(answer):
+                    self._batteries = {k: ha_history.numeric(v)
+                                       for k, v in ha_history.parse(answer).items()}
+                    self._render()
+                client.get(ha_history.history_path(ids, now - 10 * 86400, now), batteries,
+                           timeout_ms=30000)
+
+    def _battery_days_left(self, device):
+        entity = next((e for e in device["entities"] if ha_home.is_battery(e)), None)
+        series = self._batteries.get(entity["id"]) if entity else None
+        return ha_history.battery_days_left(series) if series else None
+
+    def _spark_for(self, entity):
+        points = self._spark.get(entity["id"])
+        if not points:
+            return None
+        now = time.time()
+        if ha_history.is_numeric(points):
+            values = ha_history.sample(ha_history.numeric(points), now - 86400, now, 40)
+            return sparkline_pixmap(values, line_color=color(0).name())
+        buckets = 48
+        on = ha_history.periods(points, now - 86400, now, ON_STATES)
+        width = 86400 / buckets
+        values = [any(a < now - 86400 + (i + 1) * width and b > now - 86400 + i * width
+                      for a, b in on) for i in range(buckets)]
+        return sparkline_pixmap(values, line_color=color(2).name(), binary=True)
+
+    def _on_selection(self):
+        items = self.tree.selectedItems()
+        key = items[0].data(COL_NAME, ROLE_KEY) if items else None
+        model = self._model
+        if not key or model is None:
+            return
+        kind, _, ident = str(key).partition(":")
+        if kind == "device":
+            device = next((d for d in model["devices"] if d["id"] == ident), None)
+            if device is not None:
+                title = " · ".join(p for p in (device["name"], device["area_name"]) if p)
+                self.detail.show_devices(title, [device], device["area_name"])
+        elif kind == "entity":
+            for device in model["devices"]:
+                entity = next((e for e in device["entities"] if e.get("id") == ident), None)
+                if entity is not None:
+                    single = dict(device, main=[entity])
+                    self.detail.show_devices(entity.get("name") or ident, [single],
+                                             device["area_name"])
+                    return
+        elif kind == "group" and self.cmb_group.currentData() == "area" and ident != "None":
+            devices = [d for d in model["devices"] if d["area"] == ident]
+            name = model["areas"].get(ident, ident)
+            self.detail.show_devices(name, devices, name)
+
     # -- display ----------------------------------------------------------------------
 
     def _render(self):
         if self._data is None:
             return
         model = ha_home.build(self._data, self.chk_virtual.isChecked())
+        for device in model["devices"]:   # battery to change soon: a problem too
+            left = self._battery_days_left(device)
+            device["days_left"] = left
+            if left is not None and left < SOON_DAYS and "low_battery" not in device["problems"]:
+                device["problems"].append("battery_soon")
+        self._model = model
         words = _state_words()
         expanded = self._expanded()
         first_time = not expanded and self.tree.topLevelItemCount() == 0
@@ -232,7 +343,8 @@ class HomeTab(QWidget):
                 group.setExpanded("group:loose" in expanded)
         unavailable = sum(1 for d in model["devices"] if "unavailable" in d["problems"])
         low = sum(1 for d in model["devices"] if "low_battery" in d["problems"])
-        self.problemsChanged.emit(unavailable, low)
+        soon = sum(1 for d in model["devices"] if "battery_soon" in d["problems"])
+        self.problemsChanged.emit(unavailable, low, soon)
         parts = [tr("{n} device(s)").format(n=len(model["devices"]))]
         if unavailable:
             parts.append(tr("{n} unavailable").format(n=unavailable))
@@ -258,20 +370,30 @@ class HomeTab(QWidget):
         main = device["main"]
         symbol = ha_home.icon_for(main[0]) if main else "•"
         values = " · ".join(ha_home.value_text(e, words) for e in main)
+        battery = f"{device['battery']:.0f} %" if device["battery"] is not None else ""
+        left = device.get("days_left")
+        if battery and left is not None:
+            battery += f" (~{round(left / 7)} w)" if left >= 14 else f" (~{round(left)} d)"
         item = QTreeWidgetItem(parent, [
-            f"{symbol} {device['name']}", values,
-            f"{device['battery']:.0f} %" if device["battery"] is not None else "",
+            f"{symbol} {device['name']}", values, "", battery,
             f"{device['lqi']:.0f}" if device["lqi"] is not None else ""])
+        if main:
+            spark = self._spark_for(main[0])
+            if spark is not None:
+                item.setData(COL_SPARK, Qt.ItemDataRole.DecorationRole, spark)
+        if left is not None:
+            item.setToolTip(COL_BATTERY, tr("About {n} day(s) left, from the last 10 days")
+                            .format(n=round(left)))
         item.setData(COL_NAME, ROLE_KEY, f"device:{device['id']}")
         tip = " · ".join(p for p in (device["maker"], device["model"],
                                      ha_home.integration_name(device["integration"])) if p)
         item.setToolTip(COL_NAME, tip)
         item.setToolTip(COL_LQI, tr("Zigbee link quality (0–255)"))
         if not device["available"]:
-            for column in range(4):
+            for column in range(5):
                 item.setForeground(column, FADED)
             item.setToolTip(COL_STATE, tr("Unavailable"))
-        if "low_battery" in device["problems"]:
+        if "low_battery" in device["problems"] or "battery_soon" in device["problems"]:
             item.setForeground(COL_BATTERY, WARN)
         if device["toggles"]:
             self._toggle_button(item, device["toggles"][0])

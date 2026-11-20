@@ -455,24 +455,7 @@ class HistoryTab(QWidget):
                                  "hidden meanwhile."))
 
     def _start_animation(self, start, end):
-        from qgis.utils import iface
-        if iface is None:
-            return
-        action = iface.mainWindow().findChild(QAction, "mActionTemporalController")
-        if action is not None and not action.isChecked():
-            action.trigger()   # shows the Temporal Controller panel
-        navigation = iface.mapCanvas().temporalController()
-        if not hasattr(navigation, "setTemporalExtents"):
-            return
-        step_s = max(2, round((end - start) / (REPLAY_SECONDS * REPLAY_FPS)))
-        navigation.setNavigationMode(Qgis.TemporalNavigationMode.Animated)
-        navigation.setTemporalExtents(QgsDateTimeRange(
-            QDateTime.fromMSecsSinceEpoch(int(start * 1000)),
-            QDateTime.fromMSecsSinceEpoch(int((end + step_s) * 1000))))
-        navigation.setFrameDuration(QgsInterval(step_s))
-        navigation.setFramesPerSecond(REPLAY_FPS)
-        navigation.setCurrentFrameNumber(0)
-        navigation.playForward()
+        animate(start, end)
 
     def _open_folder(self):
         folder = self._folder()
@@ -500,3 +483,26 @@ def _style(layer, name):
                                                    "outline_style": "no", "size": "1.4"})
         categories.append(QgsRendererCategory(activity, symbol, labels[activity]))
     layer.setRenderer(QgsCategorizedSymbolRenderer("activity", categories))
+
+
+def animate(start, end, seconds=REPLAY_SECONDS):
+    """Play [start, end] (Unix times) in QGIS's Temporal Controller, in about
+    seconds (its panel is opened if needed)."""
+    from qgis.utils import iface
+    if iface is None:
+        return
+    action = iface.mainWindow().findChild(QAction, "mActionTemporalController")
+    if action is not None and not action.isChecked():
+        action.trigger()   # shows the Temporal Controller panel
+    navigation = iface.mapCanvas().temporalController()
+    if not hasattr(navigation, "setTemporalExtents"):
+        return
+    step_s = max(2, round((end - start) / (seconds * REPLAY_FPS)))
+    navigation.setNavigationMode(Qgis.TemporalNavigationMode.Animated)
+    navigation.setTemporalExtents(QgsDateTimeRange(
+        QDateTime.fromMSecsSinceEpoch(int(start * 1000)),
+        QDateTime.fromMSecsSinceEpoch(int((end + step_s) * 1000))))
+    navigation.setFrameDuration(QgsInterval(step_s))
+    navigation.setFramesPerSecond(REPLAY_FPS)
+    navigation.setCurrentFrameNumber(0)
+    navigation.playForward()

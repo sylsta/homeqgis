@@ -98,6 +98,23 @@ The panel (titled *Connection*), from top to bottom:
   plugs and switches on or off. A filter, *Problems only* (unavailable devices, low
   batteries, also listed by the ⚠) and *Other entities* (Home Assistant's own: sun,
   weather, automations, helpers…). Needs the Home Assistant server's access token.
+  **Graphs**, from Home Assistant's history (10 days by default):
+  - a **24 h** graph on each device's line (a curve, or on/off bars for doors and
+    motion), read every 5 minutes;
+  - the **detail pane** under the list (drag the bar between them): select a device,
+    one of its entities or an area for its curves over **6 h, 24 h, 7 d or 10 d**, the
+    door, motion and light timelines under them, the robot's cleanings of that room
+    shaded (from the robot's history), min, max and mean, and its health: battery and
+    about how long it will last (from the slope of its last 10 days; within two
+    weeks, also listed by the ⚠), Zigbee link quality, how many times it became
+    unavailable. Hover the chart for the values at a time;
+  - **Compare**: one curve per room for temperature, humidity, CO₂, light level, power
+    or pressure (the first such sensor of each area);
+  - **▶ Map** (with Compare): the robot's rooms named like the Home Assistant areas
+    coloured by that value hour by hour (*Home replay* group), with the robot's
+    outings of those days, played in the Temporal Controller;
+  - **Export**: what the pane shows, as a CSV file or as a table of
+    `history/home_<date>.gpkg` next to the project.
 - **Status strip**, always visible: the state, battery, the job in progress (time
   and area, only while the robot works), a ⚠ when something needs you (dock tank
   empty or full, worn consumable, robot error, wrong clock: hover it for the list,
@@ -597,6 +614,9 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `ha_block.py`                | Home Assistant's frame                                  |
 | `ha_home.py`                 | Home Assistant's devices: template, grouping, summaries |
 | `home_tab.py`                | The panel's Home section                                |
+| `ha_history.py`              | Home Assistant's history: series, stats, battery trend  |
+| `charts.py`                  | Curves, timelines and small graphs (QPainter)           |
+| `home_detail.py`             | Home section's detail pane: graphs, compare, export     |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings.py`                | Setting keys, defaults and `load_settings()`            |
 | `options_page.py`            | The Valetudo page of *Settings > Options*               |

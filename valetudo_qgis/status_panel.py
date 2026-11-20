@@ -890,6 +890,8 @@ class ValetudoPanel(QgsDockWidget):
             pages[key] = page
         self.home_tab = HomeTab()
         self.home_tab.problemsChanged.connect(self._on_home_problems)
+        self.home_tab.robotDaysRequested.connect(
+            lambda days: [self.history_tab._load_day(day) for day in days])
         pages["home"] = self.home_tab
         self._top_pages = pages
         self._top_icons = {"robot": icon(LOGO), "home": icon("tab_home"),
@@ -929,11 +931,14 @@ class ValetudoPanel(QgsDockWidget):
         self.home_tab.set_active(self.isVisible()
                                  and self.top_tabs.currentWidget() is self.home_tab)
 
-    def _on_home_problems(self, unavailable, low):
+    def _on_home_problems(self, unavailable, low, soon=0):
         self._set_problem("home_unavailable", tr("{n} Home Assistant device(s) unavailable.")
                           .format(n=unavailable) if unavailable else None, "home")
         self._set_problem("home_battery", tr("{n} Home Assistant device(s) with a low "
                                              "battery.").format(n=low) if low else None, "home")
+        self._set_problem("home_battery_soon", tr(
+            "{n} Home Assistant battery(ies) to change within two weeks.").format(n=soon)
+            if soon else None, "home")
 
     def _set_tab_shown(self, key, shown):
         """Show or hide a side tab (Qt 5.15+)."""
