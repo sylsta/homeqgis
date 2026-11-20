@@ -864,6 +864,9 @@ class ValetudoPanel(QgsDockWidget):
             self.server_tabs.setTabToolTip(
                 self.server_tabs.addTab(page, self._tab_icons[key], ""), tip)
         self._tab_keys = [key for key in self._tab_keys if key not in SERVER_TABS]
+        # No side bar there: Status is the page, the Terminal comes from a server's >_
+        # menu and goes with its ✕ (each page has its own title)
+        self.server_tabs.tabBar().setVisible(False)
         self.top_tabs = QTabWidget()
         self.top_tabs.setDocumentMode(True)
         root = self.tabs.parentWidget().layout()
