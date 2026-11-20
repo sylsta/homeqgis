@@ -792,8 +792,11 @@ class ValetudoPanel(QgsDockWidget):
             self.act_advanced.blockSignals(True)
             self.act_advanced.setChecked(on)
             self.act_advanced.blockSignals(False)
-        for entry in self._terminal_entries:
-            entry.setVisible(on)
+        for entry in list(self._terminal_entries):
+            try:
+                entry.setVisible(on)
+            except RuntimeError:   # deleted with its menu: forget it
+                self._terminal_entries.remove(entry)
         for box in (self.box_wifi_robot, self.box_boot):
             box.setVisible(on)
         if not on:
@@ -1487,6 +1490,9 @@ class ValetudoPanel(QgsDockWidget):
 
     def _drop_server_frames(self):
         for entry in self._server_entries:
+            for action in entry["actions"]:   # their menu goes with the frame
+                if action in self._terminal_entries:
+                    self._terminal_entries.remove(action)
             entry["block"].stop()
             for view in entry["views"]:
                 view.shutdown()
@@ -1537,7 +1543,7 @@ class ValetudoPanel(QgsDockWidget):
         logo_label, pill = QLabel(), QLabel()
         logo_label.setPixmap(icon(logo).pixmap(16, 16))
         entry = {"id": sid, "server": server, "name": name, "frame": frame, "block": block,
-                 "strip": (logo_label, pill), "views": [], "pages": {}}
+                 "strip": (logo_label, pill), "views": [], "pages": {}, "actions": []}
         frame.btn_web.setIcon(icon("web"))
         frame.btn_web.clicked.connect(lambda _=False: self.open_web(sid))
         if kind == "ha":
@@ -1563,6 +1569,7 @@ class ValetudoPanel(QgsDockWidget):
                     action.setVisible(advanced.isChecked() if advanced is not None
                                       else load_settings()["advanced_tools"])
                     self._terminal_entries.append(action)
+                    entry["actions"].append(action)
             frame.btn_ssh.setMenu(menu)
             frame.btn_ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         return entry
