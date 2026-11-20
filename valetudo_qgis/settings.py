@@ -137,6 +137,10 @@ def load_settings():
     servers = server_list()
     cfg.update(servers_model.legacy_config(servers, active_robot_id()))
     cfg["servers"] = servers
+    # The panel's tab order and the toolbar: here too, so that a change of them alone
+    # counts as a change of the settings (the plugin applies them when OK is pressed)
+    cfg["tab_order"] = tab_order()
+    cfg["toolbar"] = toolbar_keys()
     url = cfg["url"]
     cfg["camera_url"] = cfg["camera_url"] or default_camera_url(url)
     return cfg
