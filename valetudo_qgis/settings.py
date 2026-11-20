@@ -42,7 +42,7 @@ KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
 KEY_VNC_COMMAND = "valetudo/vnc_command"   # remote desktop programs: empty = found
 KEY_RDP_COMMAND = "valetudo/rdp_command"
 KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the panel's side tabs, comma-separated keys
-PANEL_TABS = ("status", "clean", "schedule", "history", "wifi", "camera", "maintenance",
+PANEL_TABS = ("clean", "schedule", "history", "camera", "wifi", "status", "maintenance",
               "terminal")   # their default order
 KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
