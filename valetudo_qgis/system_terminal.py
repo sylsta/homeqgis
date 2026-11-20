@@ -33,12 +33,14 @@ DEBIAN = ("x-terminal-emulator", "sensible-terminal")
 
 
 def ssh_command(host, user, port):
-    """["ssh", "-p", "22", "root@host"]"""
-    return ["ssh", "-p", str(int(port)), f"{user}@{host}" if user else host]
+    """["ssh", "root@host"]; ["ssh", "-p", "2222", "root@host"] on another port."""
+    port = int(port or 22)
+    return ["ssh"] + (["-p", str(port)] if port != 22 else []) + \
+        [f"{user}@{host}" if user else host]
 
 
 def describe(host, user, port):
-    """The command as text, for tooltips: ssh -p 22 root@192.168.50.20"""
+    """The command as text, for tooltips: ssh root@192.168.50.20"""
     return " ".join(ssh_command(host, user, port))
 
 

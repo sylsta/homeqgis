@@ -88,10 +88,37 @@ def on_host(url, host, default_port):
                        parts.query, parts.fragment))
 
 
+def ssh_address(text, user, port):
+    """An SSH address as typed, tidied: "ssh://root@ha.lan:2222" -> ("ha.lan", "root",
+    2222). A user or port written in it wins over the separate fields."""
+    text = (text or "").strip()
+    if "://" in text:
+        text = text.split("://", 1)[1]
+    text = text.split("/", 1)[0]
+    if "@" in text:
+        typed_user, text = text.rsplit("@", 1)
+        user = typed_user or user
+    if text.startswith("["):   # [IPv6]:port
+        host, _, rest = text[1:].partition("]")
+        if rest.startswith(":") and rest[1:].isdigit():
+            port = int(rest[1:])
+        return host, user, port
+    if text.count(":") == 1:
+        host, typed_port = text.split(":")
+        if typed_port.isdigit():
+            return host, user, int(typed_port)
+        return host, user, port
+    return text, user, port
+
+
 def load_settings():
     """The settings; with "on the NUC", Home Assistant's and Kodi's addresses use the
-    NUC's host (their stored address still gives the port)."""
+    NUC's host (their stored address still gives the port). SSH addresses typed with
+    a user or port (root@host:22) are split into their fields."""
     cfg = _stored_settings()
+    for prefix in ("pi", "nuc", "ha_ssh"):
+        cfg[f"{prefix}_host"], cfg[f"{prefix}_user"], cfg[f"{prefix}_port"] = ssh_address(
+            cfg[f"{prefix}_host"], cfg[f"{prefix}_user"], cfg[f"{prefix}_port"])
     nuc = cfg["nuc_host"]
     if nuc and cfg["ha_on_nuc"]:
         cfg["ha_url"] = on_host(cfg["ha_url"], nuc, 8123)
