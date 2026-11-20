@@ -600,14 +600,6 @@ Un nettoyage en cours sera interrompu. Le robot sera injoignable pendant une ou 
         <translation>Échec du redémarrage SSH : {detail}</translation>
     </message>
     <message>
-        <source>SSH user (reboot)</source>
-        <translation>Utilisateur SSH (redémarrage)</translation>
-    </message>
-    <message>
-        <source>SSH port (reboot)</source>
-        <translation>Port SSH (redémarrage)</translation>
-    </message>
-    <message>
         <source>Camera light</source>
         <translation>Éclairage de la caméra</translation>
     </message>
@@ -894,16 +886,8 @@ Ils remplacent toutes les restrictions actuellement sur le robot.</translation>
         <translation>Connexion</translation>
     </message>
     <message>
-        <source>SSH</source>
-        <translation>SSH</translation>
-    </message>
-    <message>
         <source>Used only by “Reboot robot (SSH)…”, with your SSH key (no password is stored).</source>
         <translation>Utilisé seulement par « Redémarrer le robot (SSH)… », avec votre clé SSH (aucun mot de passe n'est enregistré).</translation>
-    </message>
-    <message>
-        <source>Enter the robot address first.</source>
-        <translation>Saisissez d'abord l'adresse du robot.</translation>
     </message>
     <message>
         <source>Testing…</source>
@@ -1956,10 +1940,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Home Assistant</translation>
     </message>
     <message>
-        <source>Server address</source>
-        <translation>Adresse du serveur</translation>
-    </message>
-    <message>
         <source>Access token</source>
         <translation>Jeton d’accès</translation>
     </message>
@@ -2000,10 +1980,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Aucune adresse SSH Home Assistant dans les paramètres.</translation>
     </message>
     <message>
-        <source>SSH (Terminal tab)</source>
-        <translation>SSH (onglet Terminal)</translation>
-    </message>
-    <message>
         <source>SSH address</source>
         <translation>Adresse SSH</translation>
     </message>
@@ -2022,10 +1998,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Optional: else your SSH key</source>
         <translation>Facultatif : sinon votre clé SSH</translation>
-    </message>
-    <message>
-        <source>Optional: with an address, the Terminal tab gets a Home Assistant console and log. On Home Assistant OS, install the Terminal &amp; SSH add-on and set its SSH port in the add-on's Network settings, then either paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option, or set a password in its options and here (kept encrypted, like the token; needs OpenSSH 8.4 or newer). The log command runs there: Home Assistant OS keeps its log in the system journal, read with ha core logs.</source>
-        <translation>Facultatif : avec une adresse, l’onglet Terminal propose une console et un journal Home Assistant. Sur Home Assistant OS, installez le module complémentaire Terminal &amp; SSH et choisissez son port SSH dans ses réglages Réseau, puis collez votre clé publique (~/.ssh/id_ed25519.pub) dans son option authorized_keys, ou définissez un mot de passe dans ses options et ici (conservé chiffré, comme le jeton ; nécessite OpenSSH 8.4 ou plus récent). La commande du journal s’exécute là-bas : Home Assistant OS garde son journal dans le journal système, lu avec ha core logs.</translation>
     </message>
     <message>
         <source>Unreachable</source>
@@ -2280,10 +2252,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>S’exécute sur le NUC, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
     </message>
     <message>
-        <source>Optional: with an address, the Status tab shows the NUC: its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key, as for the Raspberry Pi. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog (sysvinit, as MX Linux by default); reading them may need root or the adm group.</source>
-        <translation>Facultatif : avec une adresse, l’onglet État affiche le NUC : son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus en SSH toutes les 30 s tant que le panneau est visible, et l’onglet Terminal propose une console et un journal sur lui. La connexion se fait par clé SSH, comme pour le Raspberry Pi. Commande du journal : vide, elle suit le journal système (journalctl) là où systemd tourne, sinon /var/log/syslog (sysvinit, comme MX Linux par défaut) ; les lire peut demander root ou le groupe adm.</translation>
-    </message>
-    <message>
         <source>Robot: map</source>
         <translation>Robot : carte</translation>
     </message>
@@ -2504,14 +2472,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › {name} pour l’utiliser.</translation>
     </message>
     <message>
-        <source>Optional: a web interface of the NUC, opened by the web button of the Status tab, e.g. Cockpit (https://&lt;NUC&gt;:9090).</source>
-        <translation>Facultatif : une interface web du NUC, ouverte par le bouton web de l’onglet État, par exemple Cockpit (https://&lt;NUC&gt;:9090).</translation>
-    </message>
-    <message>
-        <source>Optional: a web interface running on the Raspberry Pi, opened by the web button of the Status tab, e.g. Uptime Kuma (port 3001), Glances (glances -w, port 61208) or Cockpit (port 9090).</source>
-        <translation>Facultatif : une interface web qui tourne sur le Raspberry Pi, ouverte par le bouton web de l’onglet État, par exemple Uptime Kuma (port 3001), Glances (glances -w, port 61208) ou Cockpit (port 9090).</translation>
-    </message>
-    <message>
         <source>Press Enter to close.</source>
         <translation>Appuyez sur Entrée pour fermer.</translation>
     </message>
@@ -2570,22 +2530,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>System</source>
         <translation>Système</translation>
-    </message>
-    <message>
-        <source>Set the NUC's address first.</source>
-        <translation>Définissez d’abord l’adresse du NUC.</translation>
-    </message>
-    <message>
-        <source>On the NUC (use its address)</source>
-        <translation>Sur le NUC (utiliser son adresse)</translation>
-    </message>
-    <message>
-        <source>Home Assistant runs on the NUC itself (e.g. in Docker): its address is the NUC's, with the port above. Not for Home Assistant OS in a virtual machine, which has its own address.</source>
-        <translation>Home Assistant tourne sur le NUC lui-même (par exemple dans Docker) : son adresse est celle du NUC, avec le port ci-dessus. Pas pour Home Assistant OS dans une machine virtuelle, qui a sa propre adresse.</translation>
-    </message>
-    <message>
-        <source>Kodi runs on the NUC: its address is the NUC's, with the port above.</source>
-        <translation>Kodi tourne sur le NUC : son adresse est celle du NUC, avec le port ci-dessus.</translation>
     </message>
     <message>
         <source>Servers</source>
@@ -2962,6 +2906,98 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Home Assistant's host ({host})</source>
         <translation>hôte de Home Assistant ({host})</translation>
+    </message>
+    <message>
+        <source>Valetudo robot</source>
+        <translation>Robot Valetudo</translation>
+    </message>
+    <message>
+        <source>Linux computer</source>
+        <translation>Ordinateur Linux</translation>
+    </message>
+    <message>
+        <source>Web service</source>
+        <translation>Service web</translation>
+    </message>
+    <message>
+        <source>Runs on</source>
+        <translation>Tourne sur</translation>
+    </message>
+    <message>
+        <source>The Status tab shows its name and system, its clock and uptime, its load, memory, disk and temperature, read over SSH every 30 s while the panel is visible, and the Terminal tab gets a console and a log on it. Login is by SSH key. Log command: empty follows the system journal (journalctl) where systemd runs, else /var/log/syslog; reading them may need root or the adm group.</source>
+        <translation>L'onglet État affiche son nom et son système, son horloge et sa durée de fonctionnement, sa charge, sa mémoire, son disque et sa température, lus par SSH toutes les 30 s quand le panneau est visible, et l'onglet Terminal propose une console et un journal dessus. Connexion par clé SSH. Commande du journal : vide, suit le journal système (journalctl) là où systemd tourne, sinon /var/log/syslog ; les lire peut demander root ou le groupe adm.</translation>
+    </message>
+    <message>
+        <source>Any web interface (Uptime Kuma, Mosquitto's, a router…): the panel shows whether it answers, and its web button opens it in the browser.</source>
+        <translation>Toute interface web (Uptime Kuma, celle de Mosquitto, un routeur…) : le panneau indique si elle répond, et son bouton web l'ouvre dans le navigateur.</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Ajouter</translation>
+    </message>
+    <message>
+        <source>Add a server</source>
+        <translation>Ajouter un serveur</translation>
+    </message>
+    <message>
+        <source>Duplicate the selected server</source>
+        <translation>Dupliquer le serveur sélectionné</translation>
+    </message>
+    <message>
+        <source>Remove the selected server</source>
+        <translation>Supprimer le serveur sélectionné</translation>
+    </message>
+    <message>
+        <source>Move up (order of the panel)</source>
+        <translation>Monter (ordre du panneau)</translation>
+    </message>
+    <message>
+        <source>Move down</source>
+        <translation>Descendre</translation>
+    </message>
+    <message>
+        <source>Robot in use</source>
+        <translation>Robot utilisé</translation>
+    </message>
+    <message>
+        <source>No server yet: add one with Add (a Valetudo robot first).</source>
+        <translation>Aucun serveur pour l'instant : ajoutez-en un avec Ajouter (un robot Valetudo d'abord).</translation>
+    </message>
+    <message>
+        <source>Remove a server</source>
+        <translation>Supprimer un serveur</translation>
+    </message>
+    <message>
+        <source>Show in the status strip</source>
+        <translation>Afficher dans la barre d'état</translation>
+    </message>
+    <message>
+        <source>SSH: on Home Assistant OS, install the Terminal &amp; SSH add-on and set its SSH port in the add-on's Network settings, then either paste your public key (~/.ssh/id_ed25519.pub) in its authorized_keys option, or set a password here (kept encrypted). Without an SSH address, Home Assistant's own host is used.</source>
+        <translation>SSH : sur Home Assistant OS, installez le module Terminal &amp; SSH et réglez son port SSH dans ses paramètres Réseau, puis collez votre clé publique (~/.ssh/id_ed25519.pub) dans son option authorized_keys, ou définissez un mot de passe ici (conservé chiffré). Sans adresse SSH, l'hôte de Home Assistant est utilisé.</translation>
+    </message>
+    <message>
+        <source>{name} (copy)</source>
+        <translation>{name} (copie)</translation>
+    </message>
+    <message>
+        <source>(its own address)</source>
+        <translation>(sa propre adresse)</translation>
+    </message>
+    <message>
+        <source>It runs on this computer: its address takes the computer's, with its own port, and SSH goes there.</source>
+        <translation>Il tourne sur cet ordinateur : son adresse prend celle de l'ordinateur, avec son propre port, et SSH y va.</translation>
+    </message>
+    <message>
+        <source>Remove {name} from the servers?</source>
+        <translation>Supprimer {name} des serveurs ?</translation>
+    </message>
+    <message>
+        <source>It answers (HTTP {status}).</source>
+        <translation>Il répond (HTTP {status}).</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>Général</translation>
     </message>
 </context>
 </TS>

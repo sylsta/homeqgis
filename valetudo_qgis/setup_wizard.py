@@ -12,13 +12,13 @@ three short pages. Everything can be changed later in Settings › Options.
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import (QCheckBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
                                  QLineEdit, QPushButton, QVBoxLayout, QWizard, QWizardPage)
-from qgis.core import QgsSettings
 
 from .client import ValetudoClient
 from .i18n import tr
 from .icons import APP_ICON, HA_LOGO, KODI_ICON, NUC_ICON, RPI_LOGO, icon
-from .settings import (KEY_HA_URL, KEY_KODI_URL, KEY_NUC_HOST, KEY_NUC_USER, KEY_PI_HOST,
-                       KEY_PI_USER, KEY_URL, PLUGIN_NAME, load_settings)
+from . import servers as servers_model
+from .settings import (PLUGIN_NAME, active_robot_id, load_settings, save_servers,
+                       server_list)
 
 
 def _normalised(url):
@@ -116,8 +116,8 @@ class ServersPage(QWizardPage):
 
     @staticmethod
     def _ha_set():
-        """Home Assistant has a default address: only show one the user set."""
-        return bool(QgsSettings().value(KEY_HA_URL, "", type=str))
+        """Only an address of a Home Assistant server of the settings."""
+        return bool(load_settings()["ha_url"])
 
     def values(self):
         """{key: (address, user)} of the ticked servers with an address."""
@@ -171,18 +171,24 @@ class SetupWizard(QWizard):
 
     def save(self):
         """Write what was entered (only the fields this wizard asks)."""
-        s = QgsSettings()
-        s.setValue(KEY_URL, self.robot.address())
-        servers = self.servers.values()
-        if "pi" in servers:
-            s.setValue(KEY_PI_HOST, servers["pi"][0])
-            if servers["pi"][1]:
-                s.setValue(KEY_PI_USER, servers["pi"][1])
-        if "nuc" in servers:
-            s.setValue(KEY_NUC_HOST, servers["nuc"][0])
-            if servers["nuc"][1]:
-                s.setValue(KEY_NUC_USER, servers["nuc"][1])
-        if "ha" in servers:
-            s.setValue(KEY_HA_URL, _normalised(servers["ha"][0]) + "/")
-        if "kodi" in servers:
-            s.setValue(KEY_KODI_URL, _normalised(servers["kodi"][0]) + "/")
+        servers = server_list()
+        robot = servers_model.active_robot(servers, active_robot_id())
+        if robot is None:
+            servers.append(servers_model.new_server("valetudo", url=self.robot.address()))
+        else:
+            robot["url"] = self.robot.address()
+        entered = self.servers.values()
+        names = {"pi": ("rpi", "Raspberry Pi"), "nuc": ("linux", "NUC"),
+                 "ha": ("ha", "Home Assistant"), "kodi": ("kodi", "Kodi")}
+        for key, (kind, name) in names.items():
+            if key not in entered:
+                continue
+            address, user = entered[key]
+            fields = ({"host": address, **({"user": user} if user else {})}
+                      if kind in ("rpi", "linux") else {"url": _normalised(address) + "/"})
+            server = servers_model.first(servers, kind)
+            if server is None:
+                servers.append(servers_model.new_server(kind, name, **fields))
+            else:
+                server.update(fields)
+        save_servers(servers)

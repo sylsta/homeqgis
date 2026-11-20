@@ -55,7 +55,7 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (PLUGIN_NAME, DEFAULT_HA_URL, KEY_ADVANCED, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
+from .settings import (PLUGIN_NAME, KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
                        load_settings, secret)
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
@@ -1522,8 +1522,8 @@ class ValetudoPanel(QgsDockWidget):
             return None
         target = (host, cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
         if getattr(self, "_ha_ssh_password_for", None) != target:
-            password = (secret(HA_SSH_PASSWORD_SETTING)
-                        if has_secret(HA_SSH_PASSWORD_SETTING) else "")
+            key = cfg["ha_ssh_password_key"]
+            password = secret(key) if has_secret(key) else ""
             ssh_auth.set_password(*target, password)
             self._ha_ssh_password_for = target
         return target
@@ -1534,7 +1534,8 @@ class ValetudoPanel(QgsDockWidget):
         cfg = load_settings()
         if not cfg["kodi_url"]:
             return None
-        password = secret(KODI_PASSWORD_SETTING) if has_secret(KODI_PASSWORD_SETTING) else ""
+        key = cfg["kodi_password_key"]
+        password = secret(key) if has_secret(key) else ""
         return (cfg["kodi_url"], cfg["kodi_user"], password)
 
     @staticmethod
@@ -1558,12 +1559,10 @@ class ValetudoPanel(QgsDockWidget):
         return url
 
     def _server_ssh(self, prefix):
-        """(host, user, port) for an SSH session on a server, or None. Kodi runs on
-        the NUC: its host, with the NUC's SSH user and port."""
+        """(host, user, port) for an SSH session on a server, or None. Kodi: the
+        computer it runs on (see servers.ssh_target)."""
         if prefix == "kodi":
-            cfg = load_settings()
-            host = QUrl(kodi_rpc_url(cfg["kodi_url"])).host() if cfg["kodi_url"] else ""
-            return (host, cfg["nuc_user"], int(cfg["nuc_port"])) if host else None
+            return load_settings()["kodi_ssh"] or None
         return {"robot": self._ssh_target, "pi": self._pi_target, "ha": self._ha_ssh_target,
                 "nuc": self._nuc_target}[prefix]()
 
@@ -1743,6 +1742,11 @@ class ValetudoPanel(QgsDockWidget):
 
     def _refresh_ha(self, *_):
         url = load_settings()["ha_url"]
+        if not url:   # no Home Assistant server in the settings
+            if self._ha_state is not None:
+                self._ha_state = None
+                self._update_ha_header()
+            return
         has_token = has_ha_token()
         if not has_token:
             self._ha_token = ""
@@ -1779,10 +1783,8 @@ class ValetudoPanel(QgsDockWidget):
             self._ha["error"] = error
             if error == UNAUTHORISED:   # there, but no token to go further
                 self._ha_state = "no_token"
-            elif has_token or url.rstrip("/") != DEFAULT_HA_URL.rstrip("/"):
-                self._ha_state = "offline"   # set up (token, or an address of its own)
-            else:   # default address, no token, nothing answers: no Home Assistant
-                self._ha_state = None
+            else:   # a server of the settings: shown, even without a token
+                self._ha_state = "offline"
             self._update_ha_header()
 
         client.get("/config", ok, failed, timeout_ms=5000)

@@ -7,6 +7,9 @@ authentication manager (QgsAuthConfigSelect), which encrypts them.
 from qgis.PyQt.QtCore import QUrl
 from qgis.core import QgsSettings
 
+from . import servers as servers_model
+from .servers import on_host, ssh_address  # noqa: F401  (imported from here elsewhere)
+
 PLUGIN_NAME = "DomotiQGIS"   # shown in menus, titles and messages (not translated)
 KEY_URL = "valetudo/url"
 KEY_AUTH = "valetudo/authcfg"
@@ -78,94 +81,82 @@ def default_camera_url(robot_url):
     return f"tcp://{host}:{DEFAULT_CAMERA_PORT}" if host else ""
 
 
-def on_host(url, host, default_port):
-    """url with its host replaced by host (scheme, port and path kept):
-    on_host("http://localhost:8123/", "192.168.50.2", 8123) -> http://192.168.50.2:8123/"""
-    from urllib.parse import urlsplit, urlunsplit
-    parts = urlsplit(url if "://" in url else "http://" + url if url else "http://")
-    port = parts.port or default_port
-    return urlunsplit((parts.scheme or "http", f"{host}:{port}", parts.path or "/",
-                       parts.query, parts.fragment))
+def server_list():
+    """The servers (see servers.py). The first time, built from the settings of
+    earlier versions and stored."""
+    s = QgsSettings()
+    if s.contains(servers_model.KEY_SERVERS):
+        return servers_model.parse(s.value(servers_model.KEY_SERVERS, "", type=str))
+    migrated = servers_model.migrate({**_legacy_stored(), "has_ha_token": has_ha_token_legacy()})
+    save_servers(migrated)
+    return migrated
 
 
-def ssh_address(text, user, port):
-    """An SSH address as typed, tidied: "ssh://root@ha.lan:2222" -> ("ha.lan", "root",
-    2222). A user or port written in it wins over the separate fields."""
-    text = (text or "").strip()
-    if "://" in text:
-        text = text.split("://", 1)[1]
-    text = text.split("/", 1)[0]
-    if "@" in text:
-        typed_user, text = text.rsplit("@", 1)
-        user = typed_user or user
-    if text.startswith("["):   # [IPv6]:port
-        host, _, rest = text[1:].partition("]")
-        if rest.startswith(":") and rest[1:].isdigit():
-            port = int(rest[1:])
-        return host, user, port
-    if text.count(":") == 1:
-        host, typed_port = text.split(":")
-        if typed_port.isdigit():
-            return host, user, int(typed_port)
-        return host, user, port
-    return text, user, port
+def save_servers(servers):
+    QgsSettings().setValue(servers_model.KEY_SERVERS, servers_model.dumps(servers))
+
+
+def active_robot_id():
+    return QgsSettings().value(servers_model.KEY_ACTIVE_ROBOT, "", type=str)
 
 
 def load_settings():
-    """The settings; with "on the NUC", Home Assistant's and Kodi's addresses use the
-    NUC's host (their stored address still gives the port). SSH addresses typed with
-    a user or port (root@host:22) are split into their fields."""
+    """The settings: the plugin's options, and the servers' values under the names
+    the plugin has always read (robot address, Pi host…; see servers.legacy_config),
+    from the active robot and the first server of each type."""
     cfg = _stored_settings()
-    for prefix in ("pi", "nuc", "ha_ssh"):
-        cfg[f"{prefix}_host"], cfg[f"{prefix}_user"], cfg[f"{prefix}_port"] = ssh_address(
-            cfg[f"{prefix}_host"], cfg[f"{prefix}_user"], cfg[f"{prefix}_port"])
-    nuc = cfg["nuc_host"]
-    if nuc and cfg["ha_on_nuc"]:
-        cfg["ha_url"] = on_host(cfg["ha_url"], nuc, 8123)
-    if nuc and cfg["kodi_on_nuc"]:
-        cfg["kodi_url"] = on_host(cfg["kodi_url"], nuc, 8080)
+    servers = server_list()
+    cfg.update(servers_model.legacy_config(servers, active_robot_id()))
+    cfg["servers"] = servers
+    url = cfg["url"]
+    cfg["camera_url"] = cfg["camera_url"] or default_camera_url(url)
     return cfg
 
 
 def _stored_settings():
+    """The plugin's own options (the servers are in server_list())."""
     s = QgsSettings()
-    url = s.value(KEY_URL, "", type=str)
     return {
-        "url": url,
-        "authcfg": s.value(KEY_AUTH, "", type=str),
         "interval_s": s.value(KEY_INTERVAL, 2, type=int),
-        "camera_url": s.value(KEY_CAMERA_URL, "", type=str) or default_camera_url(url),
+        "camera_url": s.value(KEY_CAMERA_URL, "", type=str),
         "ffmpeg": s.value(KEY_FFMPEG, "", type=str),
         "camera_width": s.value(KEY_CAMERA_WIDTH, 640, type=int),
         "notify_dock": s.value(KEY_NOTIFY_DOCK, True, type=bool),
         "live_at_start": s.value(KEY_LIVE_AT_START, True, type=bool),
         "history": s.value(KEY_HISTORY, True, type=bool),
+        "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
+        **{key: s.value(f"valetudo/{key}", default, type=kind)
+           for key, (default, kind) in WIFI_DEFAULTS.items()},
+    }
+
+
+def _legacy_stored():
+    """The server settings of earlier versions, for servers.migrate()."""
+    s = QgsSettings()
+    return {
+        "url": s.value(KEY_URL, "", type=str).strip(),
+        "authcfg": s.value(KEY_AUTH, "", type=str),
         "ssh_user": s.value(KEY_SSH_USER, "root", type=str) or "root",
         "ssh_port": s.value(KEY_SSH_PORT, 22, type=int),
         "pi_host": s.value(KEY_PI_HOST, "", type=str).strip(),
         "pi_user": s.value(KEY_PI_USER, "pi", type=str).strip() or "pi",
         "pi_port": s.value(KEY_PI_PORT, 22, type=int),
-        "pi_wifi_dir": s.value(KEY_PI_WIFI_DIR, "valetudo_wifi", type=str).strip()
-                       or "valetudo_wifi",
-        "ha_url": s.value(KEY_HA_URL, DEFAULT_HA_URL, type=str).strip() or DEFAULT_HA_URL,
-        "nuc_host": s.value(KEY_NUC_HOST, "", type=str).strip(),
-        "kodi_url": s.value(KEY_KODI_URL, "", type=str).strip(),
+        "pi_wifi_dir": s.value(KEY_PI_WIFI_DIR, "valetudo_wifi", type=str).strip(),
+        "pi_web_url": s.value(KEY_PI_WEB_URL, "", type=str).strip(),
+        "ha_url": s.value(KEY_HA_URL, "", type=str).strip(),
         "ha_on_nuc": s.value(KEY_HA_ON_NUC, False, type=bool),
-        "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
-        "kodi_on_nuc": s.value(KEY_KODI_ON_NUC, False, type=bool),
-        "kodi_user": s.value(KEY_KODI_USER, "kodi", type=str).strip(),
-        "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip() or "root",
+        "ha_ssh_host": s.value(KEY_HA_SSH_HOST, "", type=str).strip(),
+        "ha_ssh_user": s.value(KEY_HA_SSH_USER, "root", type=str).strip(),
+        "ha_ssh_port": s.value(KEY_HA_SSH_PORT, 22, type=int),
+        "ha_log_command": s.value(KEY_HA_LOG_COMMAND, "", type=str).strip(),
+        "nuc_host": s.value(KEY_NUC_HOST, "", type=str).strip(),
+        "nuc_user": s.value(KEY_NUC_USER, "root", type=str).strip(),
         "nuc_port": s.value(KEY_NUC_PORT, 22, type=int),
         "nuc_log_command": s.value(KEY_NUC_LOG_COMMAND, "", type=str).strip(),
         "nuc_web_url": s.value(KEY_NUC_WEB_URL, "", type=str).strip(),
-        "pi_web_url": s.value(KEY_PI_WEB_URL, "", type=str).strip(),
-        "ha_ssh_host": s.value(KEY_HA_SSH_HOST, "", type=str).strip(),
-        "ha_ssh_user": s.value(KEY_HA_SSH_USER, "root", type=str).strip() or "root",
-        "ha_ssh_port": s.value(KEY_HA_SSH_PORT, 22, type=int),
-        "ha_log_command": s.value(KEY_HA_LOG_COMMAND, DEFAULT_HA_LOG_COMMAND,
-                                  type=str).strip() or DEFAULT_HA_LOG_COMMAND,
-        **{key: s.value(f"valetudo/{key}", default, type=kind)
-           for key, (default, kind) in WIFI_DEFAULTS.items()},
+        "kodi_url": s.value(KEY_KODI_URL, "", type=str).strip(),
+        "kodi_on_nuc": s.value(KEY_KODI_ON_NUC, False, type=bool),
+        "kodi_user": s.value(KEY_KODI_USER, "kodi", type=str).strip(),
     }
 
 
@@ -214,17 +205,18 @@ def set_secret(key, value):
         return False
 
 
-def has_ha_token():
+def has_ha_token_legacy():
     return has_secret(HA_TOKEN_SETTING)
+
+
+def has_ha_token():
+    """A token is stored for the (first) Home Assistant server."""
+    return has_secret(load_settings()["ha_token_key"])
 
 
 def ha_token():
     """The Home Assistant access token ("" if none)."""
-    return secret(HA_TOKEN_SETTING).strip()
-
-
-def set_ha_token(token):
-    return set_secret(HA_TOKEN_SETTING, (token or "").strip())
+    return secret(load_settings()["ha_token_key"]).strip()
 
 
 # -- Home Assistant sensors on the map ------------------------------------------

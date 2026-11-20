@@ -20,15 +20,27 @@ from qgis.PyQt.QtCore import QDateTime, Qt
 from qgis.core import QgsApplication, QgsSettings
 
 from . import room_groups
+from . import servers as servers_model
 from .settings import (HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_SETTING,
-                       secret, set_secret)
+                       secret, server_list, set_secret)
 
 FORMAT = "valetudo-qgis-config"
 VERSION = 1
 GROUP = "valetudo"
 PREFIX = "valetudo_qgis_config_"
 KEY_BACKUP_DIR = "valetudo/backup_dir"
-SECRET_KEYS = (HA_TOKEN_SETTING, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING)
+LEGACY_SECRET_KEYS = (HA_TOKEN_SETTING, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING)
+
+
+def secret_keys():
+    """Where the servers' tokens and passwords are (and those of earlier versions)."""
+    keys = list(LEGACY_SECRET_KEYS)
+    keys += [k for k in servers_model.all_secret_keys(server_list()) if k not in keys]
+    return keys
+
+
+def _is_secret_key(key):
+    return key in LEGACY_SECRET_KEYS or key.startswith(servers_model.SECRET_PREFIX + "/")
 
 
 def default_folder():
@@ -84,7 +96,7 @@ def export(include_secrets=False):
         with open(path, encoding="utf-8") as handle:
             data["room_groups"] = handle.read()
     if include_secrets:
-        data["secrets"] = {key: secret(key) for key in SECRET_KEYS if secret(key)}
+        data["secrets"] = {key: secret(key) for key in secret_keys() if secret(key)}
     return data
 
 
@@ -135,13 +147,15 @@ def read(path):
 def reset():
     """Back to the defaults: every plugin setting (except the backup folder), the
     tokens and passwords, and the room groups file, are removed."""
+    keys = secret_keys()   # before the servers list goes
     s = QgsSettings()
     s.beginGroup(GROUP)
     for key in s.allKeys():
         if f"{GROUP}/{key}" != KEY_BACKUP_DIR:
             s.remove(key)
     s.endGroup()
-    for key in SECRET_KEYS:
+    s.setValue(servers_model.KEY_SERVERS, "[]")   # no servers (not rebuilt from old keys)
+    for key in keys:
         set_secret(key, "")
     try:
         os.remove(room_groups.file_path())
@@ -169,6 +183,6 @@ def apply(data):
             handle.write(groups)
     stored = 0
     for key, value in (data.get("secrets") or {}).items():
-        if key in SECRET_KEYS and isinstance(value, str) and set_secret(key, value):
+        if _is_secret_key(key) and isinstance(value, str) and set_secret(key, value):
             stored += 1
     return count, stored

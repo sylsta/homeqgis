@@ -31,8 +31,23 @@ without restarting QGIS.
 
 1. When no robot is set, QGIS offers it at start-up: **Open settings…** in the
    message bar. Otherwise: *Settings > Options > DomotiQGIS* (or *Plugins > DomotiQGIS > Settings…*, which opens
-   that page): enter the robot address (e.g. `http://192.168.1.23`), click
-   **Test connection**, then **OK**. As for every Options page, *Cancel* saves nothing.
+   that page), tab **Servers**: **Add** a *Valetudo robot*, enter its address (e.g.
+   `http://192.168.1.23`), click **Test connection**, then **OK**. As for every Options
+   page, *Cancel* saves nothing.
+
+   **Servers** tab: the list of servers the plugin works with, in the order of the
+   panel; there is none to begin with. **Add** one of a type: *Valetudo robot*,
+   *Raspberry Pi*, *Home Assistant*, *Kodi*, *Linux computer* or *Web service* (any web
+   interface: Uptime Kuma, a router…); **⧉** duplicates the selected one (tokens and
+   passwords included), **－** removes it, **▲ ▼** reorder them. The selected server's
+   settings are on the right: a name, *Show in the status strip*, and the fields of its
+   type, with **Test connection**. *Runs on* (Home Assistant, Kodi, web services): the
+   Linux computer or Pi it runs on; its address then takes that computer's host, with
+   its own port, and SSH goes there. With several robots, *Robot in use* picks the one
+   the panel and the map work with. Tokens and passwords are kept encrypted in the QGIS
+   authentication database. The settings of earlier versions are turned into servers
+   the first time. For now the panel uses the first server of each type (the robot in
+   use for robots).
 2. Open the **DomotiQGIS panel** (the only toolbar button, or *Plugins > DomotiQGIS*).
    The menu and the toolbar stay minimal: everything happens in the panel.
 
@@ -169,7 +184,7 @@ The panel (titled *Connection*), from top to bottom:
 - **Show on map** (in the strip) loads the map, refreshes the robot live and keeps it
   in view (recentring only when it nears the edge). Click again to stop. It is
   turned on by itself when QGIS starts with an empty project and the robot answers
-  within a minute (*Settings > Options > DomotiQGIS*, tab *Robot*: "Show the robot on
+  within a minute (*Settings > Options > DomotiQGIS*, tab *Robot*, *General*: "Show the robot on
   the map when QGIS starts with an empty project"); a project with layers is left
   untouched.
 - While it is on, the map tools appear at the end of the DomotiQGIS toolbar: *Pick rooms on the map* (click a
@@ -542,6 +557,8 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |
 | `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
 | `project_layers.py`          | Our layers found again in a project, saved next to it   |
+| `servers.py`                 | The servers: types, fields, storage, earlier settings   |
+| `servers_editor.py`          | Servers tab of the settings                             |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings.py`                | Setting keys, defaults and `load_settings()`            |
 | `options_page.py`            | The Valetudo page of *Settings > Options*               |
