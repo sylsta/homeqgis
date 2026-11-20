@@ -68,22 +68,36 @@ without restarting QGIS.
 The panel (titled *Connection*), from top to bottom:
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  12 min · 18 m²  ⚠ │ (Pi)[On the air] (HA)[On the air] (NUC)[Off the air] (Kodi)[On the air]  [🗺] [⚙] [⋮] │  status strip
-├──┬───────────────────────────────────────────────────┤
-│📈│ Status    robot, Pi, Home Assistant, NUC, Kodi    │
-│🧹│ Clean     rooms tree, cleaning profile, buttons   │
-│📅│ Schedule  week view + list                        │
-│📶│ Wi-Fi     signal, colours, recordings, Pi maps    │
-│📷│ Camera                                            │
-│🔧│ Maintenance  robot, consumables, dock, statistics,│
-│  │           boot log, events                        │
-│⌨ │ Terminal  only while open, from a server's >_ menu│
-├──┴───────────────────────────────────────────────────┤
-│ [ Start cleaning all rooms ] [Dock]                  │  big button, at the bottom
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 % 12 min ⚠ │ (Pi)● (HA)● … [🗺][⚙][⋮] │  status strip
+├──────────────┬──────────────┬────────────────────────────┤
+│ 🤖 Robot     │ 🏠 Home      │ 🖥 Servers                  │  sections
+├──┬───────────┴──────────────┴────────────────────────────┤
+│🧹│ Clean     rooms tree, cleaning profile, buttons       │  Robot's side tabs
+│📅│ Schedule  week view + list                            │  (order: settings,
+│🕘│ History   outings by day or week, load, replay        │   UI configuration)
+│📷│ Camera                                                │
+│📶│ Wi-Fi     signal, colours, recordings, Pi maps        │
+│🔧│ Maintenance  robot, consumables, dock, statistics,    │
+│  │           boot log, events                            │
+├──┴───────────────────────────────────────────────────────┤
+│ [ Start cleaning all rooms ] [Dock]                      │  big button, at the bottom
+└──────────────────────────────────────────────────────────┘
+  🏠 Home: Home Assistant's devices, by area or by integration
+  🖥 Servers: 📈 Status (a frame per server) · ⌨ Terminal (while open)
 ```
 
+- **Sections**, at the top: **🤖 Robot** (the robot's side tabs below), **🏠 Home**
+  and **🖥 Servers** (the *Status* and *Terminal* tabs). A section gets an orange dot
+  when one of the ⚠ problems belongs to it.
+- **🏠 Home**: Home Assistant's devices, read with one request every 15 s while the
+  section is shown, grouped **by area** or **by integration** (Zigbee, Hue, Shelly…).
+  Each area shows its temperature, humidity, open doors and motion; each device its
+  main values, battery 🔋 and Zigbee link quality 📶, faded when unavailable, the battery
+  in orange below 20 %; unfold a device for all its entities. **⏻** switches lights,
+  plugs and switches on or off. A filter, *Problems only* (unavailable devices, low
+  batteries, also listed by the ⚠) and *Other entities* (Home Assistant's own: sun,
+  weather, automations, helpers…). Needs the Home Assistant server's access token.
 - **Status strip**, always visible: the state, battery, the job in progress (time
   and area, only while the robot works), a ⚠ when something needs you (dock tank
   empty or full, worn consumable, robot error, wrong clock: hover it for the list,
@@ -94,7 +108,7 @@ The panel (titled *Connection*), from top to bottom:
   configuration* tab of the settings, *Status strip*); hover it for the details. Then *Show on map*, **⚙**
   (the settings) and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
   Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
-  strip** for the *Status* tab.
+  strip** for the *Status* tab (Servers section).
 - **Status** tab, the detailed status of the servers: connection, robot model,
   Valetudo version and Wi-Fi, then the robot's address, its own clock (orange, with
   how far off, when it differs from the computer's by more than 2 minutes) and
@@ -580,6 +594,8 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `remote_desktop.py`          | VNC and RDP in the system's program, SSH tunnel         |
 | `server_frames.py`           | A Status tab frame per server; web and port checks      |
 | `ha_block.py`                | Home Assistant's frame                                  |
+| `ha_home.py`                 | Home Assistant's devices: template, grouping, summaries |
+| `home_tab.py`                | The panel's Home section                                |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings.py`                | Setting keys, defaults and `load_settings()`            |
 | `options_page.py`            | The Valetudo page of *Settings > Options*               |

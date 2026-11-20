@@ -3080,16 +3080,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Ordre par défaut</translation>
     </message>
     <message>
-        <source>Drag the tabs, or move the selected one with ▲ ▼: the panel's side tabs follow this order from top to bottom (applied with OK). The Terminal tab only shows while a console or log is open.</source>
-        <translation>Faites glisser les onglets, ou déplacez celui sélectionné avec ▲ ▼ : les onglets latéraux du panneau suivent cet ordre de haut en bas (appliqué avec OK). L'onglet Terminal n'apparaît que lorsqu'une console ou un journal est ouvert.</translation>
-    </message>
-    <message>
         <source>Move up</source>
         <translation>Monter</translation>
-    </message>
-    <message>
-        <source>Order of the panel's tabs</source>
-        <translation>Ordre des onglets du panneau</translation>
     </message>
     <message>
         <source>The map tools (right column) appear while Show on map is on; the advanced ones only with Advanced tools.</source>
@@ -3118,6 +3110,182 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Takes less room; hover the dot for the details.</source>
         <translation>Prend moins de place ; survolez la pastille pour les détails.</translation>
+    </message>
+    <message>
+        <source>open</source>
+        <translation>ouvert</translation>
+    </message>
+    <message>
+        <source>closed</source>
+        <translation>fermé</translation>
+    </message>
+    <message>
+        <source>motion</source>
+        <translation>mouvement</translation>
+    </message>
+    <message>
+        <source>no motion</source>
+        <translation>pas de mouvement</translation>
+    </message>
+    <message>
+        <source>occupied</source>
+        <translation>occupé</translation>
+    </message>
+    <message>
+        <source>clear</source>
+        <translation>libre</translation>
+    </message>
+    <message>
+        <source>home</source>
+        <translation>présent</translation>
+    </message>
+    <message>
+        <source>away</source>
+        <translation>absent</translation>
+    </message>
+    <message>
+        <source>wet</source>
+        <translation>humide</translation>
+    </message>
+    <message>
+        <source>dry</source>
+        <translation>sec</translation>
+    </message>
+    <message>
+        <source>smoke!</source>
+        <translation>fumée !</translation>
+    </message>
+    <message>
+        <source>gas!</source>
+        <translation>gaz !</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>faible</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normal</translation>
+    </message>
+    <message>
+        <source>problem</source>
+        <translation>problème</translation>
+    </message>
+    <message>
+        <source>Filter: name, model, area…</source>
+        <translation>Filtre : nom, modèle, pièce…</translation>
+    </message>
+    <message>
+        <source>By area</source>
+        <translation>Par pièce</translation>
+    </message>
+    <message>
+        <source>By integration</source>
+        <translation>Par intégration</translation>
+    </message>
+    <message>
+        <source>Read Home Assistant again now</source>
+        <translation>Relire Home Assistant maintenant</translation>
+    </message>
+    <message>
+        <source>Problems only</source>
+        <translation>Problèmes seulement</translation>
+    </message>
+    <message>
+        <source>Unavailable devices and low batteries</source>
+        <translation>Appareils indisponibles et piles faibles</translation>
+    </message>
+    <message>
+        <source>Other entities</source>
+        <translation>Autres entités</translation>
+    </message>
+    <message>
+        <source>Also Home Assistant's own entities, without a device: sun, weather, automations, scripts, helpers…</source>
+        <translation>Aussi les entités propres à Home Assistant, sans appareil : soleil, météo, automatisations, scripts, entrées…</translation>
+    </message>
+    <message>
+        <source>Zigbee link quality (0–255)</source>
+        <translation>Qualité du lien Zigbee (0–255)</translation>
+    </message>
+    <message>
+        <source>Device</source>
+        <translation>Appareil</translation>
+    </message>
+    <message>
+        <source>Add a Home Assistant server in the settings (Servers tab) to see your devices here.</source>
+        <translation>Ajoutez un serveur Home Assistant dans les paramètres (onglet Serveurs) pour voir vos appareils ici.</translation>
+    </message>
+    <message>
+        <source>Home Assistant needs an access token to list its devices: add one in the settings (Servers tab).</source>
+        <translation>Home Assistant demande un jeton d'accès pour lister ses appareils : ajoutez-en un dans les paramètres (onglet Serveurs).</translation>
+    </message>
+    <message>
+        <source>Reading Home Assistant…</source>
+        <translation>Lecture de Home Assistant…</translation>
+    </message>
+    <message>
+        <source>Unavailable</source>
+        <translation>Indisponible</translation>
+    </message>
+    <message>
+        <source>Unexpected answer from Home Assistant.</source>
+        <translation>Réponse inattendue de Home Assistant.</translation>
+    </message>
+    <message>
+        <source>No area</source>
+        <translation>Sans pièce</translation>
+    </message>
+    <message>
+        <source>{n} device(s)</source>
+        <translation>{n} appareil(s)</translation>
+    </message>
+    <message>
+        <source>Switch {entity} on or off</source>
+        <translation>Allumer ou éteindre {entity}</translation>
+    </message>
+    <message>
+        <source>Home Assistant: {error}</source>
+        <translation>Home Assistant : {error}</translation>
+    </message>
+    <message>
+        <source>{n} unavailable</source>
+        <translation>{n} indisponible(s)</translation>
+    </message>
+    <message>
+        <source>{n} low battery</source>
+        <translation>{n} pile(s) faible(s)</translation>
+    </message>
+    <message>
+        <source>{n} shown</source>
+        <translation>{n} affiché(s)</translation>
+    </message>
+    <message>
+        <source>Could not switch {entity}: {error}</source>
+        <translation>Impossible de commuter {entity} : {error}</translation>
+    </message>
+    <message>
+        <source>{n} open</source>
+        <translation>{n} ouvert(s)</translation>
+    </message>
+    <message>
+        <source>Drag the tabs, or move the selected one with ▲ ▼: the side tabs of the panel's Robot section follow this order from top to bottom (applied with OK).</source>
+        <translation>Faites glisser les onglets, ou déplacez celui sélectionné avec ▲ ▼ : les onglets latéraux de la section Robot du panneau suivent cet ordre de haut en bas (appliqué avec OK).</translation>
+    </message>
+    <message>
+        <source>Order of the robot's tabs</source>
+        <translation>Ordre des onglets du robot</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Maison</translation>
+    </message>
+    <message>
+        <source>{n} Home Assistant device(s) unavailable.</source>
+        <translation>{n} appareil(s) Home Assistant indisponible(s).</translation>
+    </message>
+    <message>
+        <source>{n} Home Assistant device(s) with a low battery.</source>
+        <translation>{n} appareil(s) Home Assistant avec une pile faible.</translation>
     </message>
 </context>
 </TS>

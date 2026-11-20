@@ -17,6 +17,7 @@ from qgis.PyQt.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QTabWidget,
     QTimeEdit,
     QHBoxLayout,
     QLabel,
@@ -61,6 +62,7 @@ from . import remote_desktop
 from . import servers as servers_model
 from .remote_desktop import RemoteDesktop
 from .ha_block import HaBlock
+from .home_tab import HomeTab
 from .server_frames import (PortBlock, ServerFrame, WebBlock, build_console_page,
                             build_log_page)
 from .servers_editor import TYPE_ICONS as SERVER_ICONS, display_name as server_display_name
@@ -71,6 +73,9 @@ from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minu
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
+KEY_TOP_TAB = "valetudo/panel_section"   # robot, home or servers
+TOP_TABS = ("robot", "home", "servers")
+SERVER_TABS = ("status", "terminal")     # side tabs of the Servers section
 KEY_TERMINAL = "valetudo/panel_terminal"     # "robot/console", "pi/log"…
 PI_LOG_PATH = "valetudo/collect.log"         # the Pi collector's log (README's cron line)
 KEY_COMPACT = "valetudo/panel_compact"       # compact mode: strip and big button only
@@ -608,6 +613,7 @@ class ValetudoPanel(QgsDockWidget):
             self.tabs.setTabIcon(i, self._tab_icons[key])
             self._tab_titles[key] = self._add_page_title(self.tabs.widget(i),
                                                          self._tab_icons[key], title)
+        self._build_top_tabs()
         # Status: Refresh all, at the right of its title
         self.btn_refresh_all = QToolButton()
         self.btn_refresh_all.setText(tr("Refresh all"))
@@ -627,6 +633,10 @@ class ValetudoPanel(QgsDockWidget):
         if last in self._tab_keys:
             self.tabs.setCurrentIndex(self._tab_keys.index(last))
         self.tabs.currentChanged.connect(self._on_tab_changed)
+        top = QgsSettings().value(KEY_TOP_TAB, "robot", type=str)
+        if last == "status" and top not in self._top_pages:   # (earlier versions)
+            top = "servers"
+        self.top_tabs.setCurrentWidget(self._top_pages.get(top, self._top_pages["robot"]))
 
         self._build_server_frames()
         for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
@@ -771,7 +781,7 @@ class ValetudoPanel(QgsDockWidget):
         if obj is getattr(self, "strip", None) \
                 and event.type() == QEvent.Type.MouseButtonRelease:
             if self.is_compact():   # compact mode: the strip folds / unfolds the panel
-                self._show_body(not self.tabs.isVisible())
+                self._show_body(not self.top_tabs.isVisible())
             else:
                 self.show_tab("status")
             return True
@@ -833,17 +843,102 @@ class ValetudoPanel(QgsDockWidget):
         self.tabs.setCurrentWidget(current)
         self.tabs.blockSignals(False)
 
+    # -- top-level tabs: 🤖 Robot · 🏠 Home · 🖥 Servers ---------------------------------
+
+    def _build_top_tabs(self):
+        """The robot's side tabs go under 🤖 Robot; Status and Terminal (all the servers)
+        under 🖥 Servers, with side tabs of their own; 🏠 Home lists Home Assistant's
+        devices (home_tab.py)."""
+        self._tab_pages = {key: self.tabs.widget(i) for i, key in enumerate(self._tab_keys)}
+        self.server_tabs = QTabWidget()
+        self.server_tabs.setTabPosition(self.tabs.tabPosition())
+        self.server_tabs.setDocumentMode(self.tabs.documentMode())
+        self.server_tabs.setIconSize(self.tabs.iconSize())
+        for key in SERVER_TABS:
+            page = self._tab_pages.get(key)
+            if page is None:
+                continue
+            index = self.tabs.indexOf(page)
+            tip = self.tabs.tabToolTip(index)
+            self.tabs.removeTab(index)
+            self.server_tabs.setTabToolTip(
+                self.server_tabs.addTab(page, self._tab_icons[key], ""), tip)
+        self._tab_keys = [key for key in self._tab_keys if key not in SERVER_TABS]
+        self.top_tabs = QTabWidget()
+        self.top_tabs.setDocumentMode(True)
+        root = self.tabs.parentWidget().layout()
+        index = root.indexOf(self.tabs)
+        root.removeWidget(self.tabs)
+        pages = {}
+        for key, inner in (("robot", self.tabs), ("servers", self.server_tabs)):
+            page = QWidget()
+            layout = QVBoxLayout(page)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(inner)
+            pages[key] = page
+        self.home_tab = HomeTab()
+        self.home_tab.problemsChanged.connect(self._on_home_problems)
+        pages["home"] = self.home_tab
+        self._top_pages = pages
+        self._top_icons = {"robot": icon(LOGO), "home": icon("tab_home"),
+                           "servers": icon("tab_servers")}
+        titles = {"robot": tr("Robot"), "home": tr("Home"), "servers": tr("Servers")}
+        for key in TOP_TABS:
+            self.top_tabs.addTab(pages[key], self._top_icons[key], titles[key])
+        root.insertWidget(index, self.top_tabs, 1)
+        for tabs in (self.server_tabs, self.top_tabs):
+            tabs.currentChanged.connect(self._on_section_changed)
+
+    def _tabs_for(self, key):
+        return self.server_tabs if key in SERVER_TABS else self.tabs
+
+    @staticmethod
+    def _top_for(key):
+        return "servers" if key in SERVER_TABS else ("home" if key == "home" else "robot")
+
+    def _page_shown(self, page):
+        """A side tab's page is in front: its section chosen and it selected there."""
+        for key, tab_page in self._tab_pages.items():
+            if tab_page is page:
+                return (self.top_tabs.currentWidget() is self._top_pages[self._top_for(key)]
+                        and self._tabs_for(key).currentWidget() is page)
+        return False
+
+    def _on_section_changed(self, *_):
+        top = next((k for k, p in self._top_pages.items()
+                    if p is self.top_tabs.currentWidget()), "robot")
+        QgsSettings().setValue(KEY_TOP_TAB, top)
+        self._update_camera()
+        self._update_console()
+        self._update_schedule()
+        self._update_home()
+
+    def _update_home(self):
+        self.home_tab.set_active(self.isVisible()
+                                 and self.top_tabs.currentWidget() is self.home_tab)
+
+    def _on_home_problems(self, unavailable, low):
+        self._set_problem("home_unavailable", tr("{n} Home Assistant device(s) unavailable.")
+                          .format(n=unavailable) if unavailable else None, "home")
+        self._set_problem("home_battery", tr("{n} Home Assistant device(s) with a low "
+                                             "battery.").format(n=low) if low else None, "home")
+
     def _set_tab_shown(self, key, shown):
         """Show or hide a side tab (Qt 5.15+)."""
-        if key in self._tab_keys:
-            self.tabs.setTabVisible(self._tab_keys.index(key), shown)
+        page = self._tab_pages.get(key)
+        if page is not None:
+            tabs = self._tabs_for(key)
+            tabs.setTabVisible(tabs.indexOf(page), shown)
 
     def show_tab(self, key):
-        """Bring a side tab to the front (unfolding a compact panel)."""
-        if key in self._tab_keys:
-            if self.is_compact() and not self.tabs.isVisible():
-                self._show_body(True)
-            self.tabs.setCurrentIndex(self._tab_keys.index(key))
+        """Bring a side tab (or "home") to the front, with its section (unfolding a
+        compact panel)."""
+        if self.is_compact() and not self.top_tabs.isVisible():
+            self._show_body(True)
+        self.top_tabs.setCurrentWidget(self._top_pages[self._top_for(key)])
+        page = self._tab_pages.get(key)
+        if page is not None:
+            self._tabs_for(key).setCurrentWidget(page)
 
     def _update_primary(self, *_):
         """Start when docked or idle, Pause while working, Resume when paused."""
@@ -880,10 +975,18 @@ class ValetudoPanel(QgsDockWidget):
         problems = list(self._problems.values())
         self.btn_warning.setVisible(bool(problems))
         self.btn_warning.setToolTip("\n".join(f"⚠ {text}" for text, _ in problems))
-        for i, tab_key in enumerate(self._tab_keys):
+        if not hasattr(self, "_tab_pages"):
+            return
+        for tab_key, page in self._tab_pages.items():
             flagged = any(t == tab_key for _, t in problems)
-            self.tabs.setTabIcon(i, badge_icon(self._tab_icons[tab_key]) if flagged
-                                 else self._tab_icons[tab_key])
+            tabs = self._tabs_for(tab_key)
+            tabs.setTabIcon(tabs.indexOf(page), badge_icon(self._tab_icons[tab_key])
+                            if flagged else self._tab_icons[tab_key])
+        for top_key, page in self._top_pages.items():   # the sections too
+            flagged = any(self._top_for(t) == top_key for _, t in problems if t)
+            self.top_tabs.setTabIcon(self.top_tabs.indexOf(page),
+                                     badge_icon(self._top_icons[top_key]) if flagged
+                                     else self._top_icons[top_key])
 
     def _on_warning_clicked(self, *_):
         """Open the tab of the first problem that has one."""
@@ -932,7 +1035,7 @@ class ValetudoPanel(QgsDockWidget):
         self._show_body(not compact)
 
     def _show_body(self, visible):
-        for widget in (self.tabs, self.lbl_feedback):
+        for widget in (self.top_tabs, self.lbl_feedback):
             widget.setVisible(visible)
 
     # -- terminal -------------------------------------------------------------------------
@@ -958,7 +1061,7 @@ class ValetudoPanel(QgsDockWidget):
     def close_terminal(self, *_):
         """Hide the Terminal tab; its sessions stop (they run only while shown)."""
         self._set_tab_shown("terminal", False)
-        if self.tabs.currentWidget() is self.tab_terminal:
+        if self._page_shown(self.tab_terminal):
             self.show_tab("status")
         self._update_console()
 
@@ -1212,7 +1315,7 @@ class ValetudoPanel(QgsDockWidget):
     def _update_schedule(self):
         """Read the timers each time the Schedule tab is shown."""
         if self.client is None or not self.isVisible() \
-                or self.tabs.currentWidget() is not self.tab_schedule:
+                or not self._page_shown(self.tab_schedule):
             return
         self.client.fetch_timers()
         if self._timer_props is None:
@@ -1813,6 +1916,7 @@ class ValetudoPanel(QgsDockWidget):
         frames are built again from the settings."""
         self._ssh_passwords = {}   # SSH passwords may have changed
         self._apply_tab_order()
+        self.home_tab.settings_changed()
         self._build_server_frames()
         self._update_console()
 
@@ -1821,14 +1925,14 @@ class ValetudoPanel(QgsDockWidget):
         self._update_servers()
         self._update_server_buttons()
         page = (self.terminal_stack.currentWidget()
-                if self.tabs.currentWidget() is self.tab_terminal else None)
+                if self._page_shown(self.tab_terminal) else None)
         for view in self.consoles + self.logs:
             view.update(self.isVisible(), page)
 
     def _update_camera(self):
         """Play while the panel is visible and the Camera tab is shown; keep playing
         CAMERA_GRACE_MS after that, so that a quick return is instant."""
-        if self.isVisible() and self.tabs.currentWidget() is self.camera_page:
+        if self.isVisible() and self._page_shown(self.camera_page):
             self._camera_grace.stop()
             if not self.camera.stream.is_running():
                 self.camera.play()
@@ -1850,6 +1954,7 @@ class ValetudoPanel(QgsDockWidget):
     def shutdown(self):
         """Called by the plugin on unload."""
         self.history_tab.shutdown()
+        self.home_tab.shutdown()
         self._camera_grace.stop()
         self.camera.shutdown()
         for entry in self._server_entries:
@@ -1863,6 +1968,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_camera()
         self._update_console()
         self._update_schedule()
+        self._update_home()
         if not visible:
             self._timer.stop()
             self._age_timer.stop()

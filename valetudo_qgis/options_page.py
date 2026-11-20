@@ -94,7 +94,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
     def _build_panel_tab(self):
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.addWidget(QLabel("<b>" + tr("Order of the panel's tabs") + "</b>"))
+        layout.addWidget(QLabel("<b>" + tr("Order of the robot's tabs") + "</b>"))
         row = QHBoxLayout()
         self.list_tabs = QListWidget()
         self.list_tabs.setIconSize(QSize(20, 20))
@@ -115,9 +115,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         default = QPushButton(tr("Default order"))
         default.clicked.connect(lambda: self._fill_tab_order(list(PANEL_TABS)))
         layout.addWidget(default, 0, Qt.AlignmentFlag.AlignLeft)
-        hint = QLabel(tr("Drag the tabs, or move the selected one with ▲ ▼: the panel's side "
-                         "tabs follow this order from top to bottom (applied with OK). The "
-                         "Terminal tab only shows while a console or log is open."))
+        hint = QLabel(tr("Drag the tabs, or move the selected one with ▲ ▼: the side tabs of "
+                         "the panel's Robot section follow this order from top to bottom "
+                         "(applied with OK)."))
         hint.setWordWrap(True)
         layout.addWidget(hint)
         # The plugin's toolbar: which commands it shows

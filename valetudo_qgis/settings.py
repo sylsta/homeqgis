@@ -41,9 +41,9 @@ KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the N
 KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
 KEY_VNC_COMMAND = "valetudo/vnc_command"   # remote desktop programs: empty = found
 KEY_RDP_COMMAND = "valetudo/rdp_command"
-KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the panel's side tabs, comma-separated keys
-PANEL_TABS = ("clean", "schedule", "history", "camera", "wifi", "status", "maintenance",
-              "terminal")   # their default order
+KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the robot's side tabs, comma-separated keys
+PANEL_TABS = ("clean", "schedule", "history", "camera", "wifi", "maintenance")
+# (their default order; Status and Terminal are in the panel's Servers section)
 KEY_STRIP_DOTS = "valetudo/strip_dots"   # servers in the strip: a dot instead of a label
 KEY_TOOLBAR = "valetudo/toolbar"   # the commands in the plugin's toolbar, comma-separated
 # The commands the toolbar can show, in its order; the map tools (last four) only
