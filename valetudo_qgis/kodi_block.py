@@ -60,6 +60,12 @@ class KodiBlock(QObject):
         else:
             self.timer.stop()
 
+    def strip_state(self):
+        return {True: "on", False: "off", None: "connecting"}[self.ok]
+
+    def tooltip(self):
+        return self.error if self.ok is False else self._host()
+
     def stop(self):
         self.timer.stop()
         if self._client is not None:

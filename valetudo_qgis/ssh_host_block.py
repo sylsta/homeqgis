@@ -55,6 +55,13 @@ class SshHostBlock(QObject):
             self.info, self.ok, self.last_ok = None, None, None
             self._on_clock(False)
 
+    def strip_state(self):
+        return {True: "on", False: "off", None: "connecting"}[self.ok]
+
+    def tooltip(self):
+        info = self.info or {}
+        return " · ".join(p for p in (info.get("hostname"), info.get("ip")) if p)
+
     def stop(self):
         self.timer.stop()
         self.runner.stop()

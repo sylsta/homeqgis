@@ -60,6 +60,10 @@ from .settings import (PLUGIN_NAME, KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, has_ha_t
 from . import remote_desktop
 from . import servers as servers_model
 from .remote_desktop import RemoteDesktop
+from .ha_block import HaBlock
+from .server_frames import (PortBlock, ServerFrame, WebBlock, build_console_page,
+                            build_log_page)
+from .servers_editor import TYPE_ICONS as SERVER_ICONS, display_name as server_display_name
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
 from .console_tab import ConsoleTab
@@ -149,8 +153,6 @@ STATE_COLORS = {
 }
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
-SERVERS = ("robot", "pi", "ha", "nuc", "kodi")   # frames of the Status tab
-RD_SERVERS = ("pi", "nuc", "kodi")   # frames with a remote desktop button
 HA_SUPERVISOR_PORT = 4327   # the Supervisor's web interface, on Home Assistant's host
 
 
@@ -162,14 +164,6 @@ def _on_port(url, port):
     return f"{parts.scheme() or 'http'}://{parts.host()}:{port}/"
 
 
-TERMINAL_DEVICES = ("robot", "pi", "ha", "nuc")   # with a console and a log in QGIS
-
-
-def _device_name(key):
-    return {"robot": tr("Robot"), "pi": tr("Raspberry Pi"), "ha": "Home Assistant",
-            "nuc": "NUC", "kodi": "Kodi"}.get(key, "")
-PI_INTERVAL_MS = 30_000    # Pi block refresh (one short SSH command) while visible
-HA_INTERVAL_MS = 60_000    # Home Assistant check (one GET) while visible
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
 ACTIVE_STATES = {"cleaning", "returning", "moving", "manual_control"}
 LOW_PERCENT = 10
@@ -403,9 +397,6 @@ class ValetudoPanel(QgsDockWidget):
         self._robot_text = self._version_text = ""
         self._wifi_html, self._wifi_tip = "", ""   # Wi-Fi signal in the header
         self._robot_ip, self._host = "", {}        # third header line
-        self._pi = None            # last Pi info (host_info.parse_pi), None = never read
-        self._pi_ok = None         # True / False after a Pi read, None before
-        self._pi_last_ok = None    # time.monotonic() of the last successful Pi read
         self._last_map = 0.0   # time.monotonic() of the last map received
 
         self._timer = QTimer(self)
@@ -441,113 +432,31 @@ class ValetudoPanel(QgsDockWidget):
         self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.strip.installEventFilter(self)
 
-        # -- Status tab: robot, Raspberry Pi, Home Assistant -----------------------------
-        self.lbl_pi_logo.setPixmap(icon(RPI_LOGO).pixmap(20, 20))
-        # Pi resources (load, RAM, disk, temperature), as the NUC's, under its info line
-        self.lbl_pi_resources = QLabel()
-        self.lbl_pi_resources.setWordWrap(True)
-        self.lbl_pi_resources.setVisible(False)
-        pi_layout = self.lbl_pi_info.parentWidget().layout()
-        pi_layout.insertWidget(pi_layout.indexOf(self.lbl_pi_info) + 1, self.lbl_pi_resources)
-        self.pi_runner = RobotSurvey(self)   # one-shot SSH runner
-        # NUC: a server read over SSH (ssh_host_block), shown only when set
-        self.lbl_nuc_logo.setPixmap(icon(NUC_ICON).pixmap(20, 20))
-        self.nuc = SshHostBlock(
-            {"header": self.nuc_header, "connection": self.lbl_nuc_connection,
-             "name": self.lbl_nuc_name,
-             "info": self.lbl_nuc_info, "resources": self.lbl_nuc_resources},
-            self._nuc_target, lambda epoch: self._local_time(epoch),
-            lambda wrong: self._set_problem(
-                "nuc_clock", tr("The NUC's clock is wrong.") if wrong else None), self)
-        # Kodi: read over its JSON-RPC (kodi_block), shown only when set
-        self.lbl_kodi_logo.setPixmap(icon(KODI_ICON).pixmap(20, 20))
-        self.kodi = KodiBlock(
-            {"header": self.kodi_header, "connection": self.lbl_kodi_connection,
-             "name": self.lbl_kodi_name,
-             "info": self.lbl_kodi_info, "play_row": self.kodi_play_row,
-             "playing": self.lbl_kodi_playing, "progress": self.bar_kodi_progress,
-             "play": self.btn_kodi_play, "stop": self.btn_kodi_stop},
-            self._kodi_settings, self)
-        # Each server's frame: 🌐 its web interface (system browser), >_ SSH (system terminal)
+        # -- Status tab: the robot's frame (from the .ui), then a frame per server of the
+        # settings, built by _build_server_frames() (the .ui's fixed ones stay hidden)
+        for frame in (self.pi_header, self.ha_header, self.nuc_header, self.kodi_header):
+            frame.setVisible(False)
+        self._server_entries = []   # see _build_server_frames
+        self._ssh_passwords = {}    # server id -> SSH target its password was given for
         self._terminal_entries = []   # "Console / Log in QGIS": advanced tools
-        for prefix in SERVERS:
-            web, ssh = getattr(self, f"btn_{prefix}_web"), getattr(self, f"btn_{prefix}_ssh")
-            web.setIcon(icon("web"))
-            ssh.setIcon(icon("tab_terminal"))
-            web.clicked.connect(lambda _=False, p=prefix: self.open_web(p))
-            ssh.clicked.connect(lambda _=False, p=prefix: self.open_ssh(p))
-            if prefix == "ha":
-                # Click: Home Assistant; its arrow: also the Supervisor's interface
-                menu = QMenu(web)
-                menu.addAction(icon("web"), "Home Assistant", lambda: self.open_web("ha"))
-                self._ha_supervisor_action = menu.addAction(
-                    icon("web"), tr("Supervisor (port {port})").format(port=HA_SUPERVISOR_PORT),
-                    lambda: self.open_web("ha_supervisor"))
-                web.setMenu(menu)
-                web.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
-            if prefix in TERMINAL_DEVICES:
-                # Click: the system terminal; its arrow: the console or log in QGIS
-                menu = QMenu(ssh)
-                menu.addAction(icon("tab_terminal"), tr("Terminal window"),
-                               lambda p=prefix: self.open_ssh(p))
-                self._terminal_entries += [
-                    menu.addAction(tr("Console in QGIS"),
-                                   lambda p=prefix: self.open_terminal(p, "console")),
-                    menu.addAction(tr("Log in QGIS"),
-                                   lambda p=prefix: self.open_terminal(p, "log"))]
-                ssh.setMenu(menu)
-                ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
-        # 🖥 remote desktop (VNC, RDP) of the computers, before their >_ button
-        self.remote_desktop = RemoteDesktop(self)
+        self.btn_robot_web.setIcon(icon("web"))
+        self.btn_robot_ssh.setIcon(icon("tab_terminal"))
+        self.btn_robot_web.clicked.connect(lambda _=False: self.open_web("robot"))
+        self.btn_robot_ssh.clicked.connect(lambda _=False: self.open_ssh("robot"))
+        menu = QMenu(self.btn_robot_ssh)   # click: the system terminal; arrow: in QGIS
+        menu.addAction(icon("tab_terminal"), tr("Terminal window"),
+                       lambda: self.open_ssh("robot"))
+        self._terminal_entries += [
+            menu.addAction(tr("Console in QGIS"), lambda: self.open_terminal("robot", "console")),
+            menu.addAction(tr("Log in QGIS"), lambda: self.open_terminal("robot", "log"))]
+        self.btn_robot_ssh.setMenu(menu)
+        self.btn_robot_ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        self.remote_desktop = RemoteDesktop(self)   # 🖥 of the computers
         self.remote_desktop.failed.connect(self._on_remote_desktop_failed)
-        self._rd_buttons = {}
-        for prefix in RD_SERVERS:
-            ssh = getattr(self, f"btn_{prefix}_ssh")
-            row = self.findChild(QHBoxLayout, f"{prefix}_header_row")
-            if row is None:
-                continue
-            button = QToolButton()
-            button.setIcon(icon("remote_desktop"))
-            button.setAutoRaise(ssh.autoRaise())
-            button.setVisible(False)
-            button.clicked.connect(lambda _=False, p=prefix: self.open_remote_desktop(p))
-            row.insertWidget(row.indexOf(ssh), button)
-            self._rd_buttons[prefix] = button
-        self.pi_runner.finished.connect(self._on_pi_info)
-        self._pi_timer = QTimer(self)
-        self._pi_timer.setInterval(PI_INTERVAL_MS)
-        self._pi_timer.timeout.connect(self._refresh_pi)
-        self.lbl_pi_strip_logo.setPixmap(icon(RPI_LOGO).pixmap(16, 16))
-        self.lbl_ha_strip_logo.setPixmap(icon(HA_LOGO).pixmap(16, 16))
         for name in ("sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
                      "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip"):
-            getattr(self, name).setVisible(False)   # replaced by the servers below
-        # Strip: each server set in the settings, its logo and an "On the air" pill
-        self._strip_servers = {}   # key -> (logo, pill)
-        self._strip_tips = {}      # key -> tooltip details
-        index = self.strip_layout.indexOf(self.lbl_ha_strip) + 1
-        for key, logo_name in (("pi", RPI_LOGO), ("ha", HA_LOGO), ("nuc", NUC_ICON),
-                               ("kodi", KODI_ICON)):
-            logo, pill = QLabel(), QLabel()
-            logo.setPixmap(icon(logo_name).pixmap(16, 16))
-            for widget in (logo, pill):
-                widget.setVisible(False)
-                self.strip_layout.insertWidget(index, widget)
-                index += 1
-            self._strip_servers[key] = (logo, pill)
-        self._order_servers()
+            getattr(self, name).setVisible(False)   # the strip's servers: see above
         self.lbl_details_logo.setPixmap(icon(LOGO).pixmap(20, 20))
-        self.lbl_ha_logo.setPixmap(icon(HA_LOGO).pixmap(20, 20))
-        self.ha_header.setVisible(False)
-        self._ha_client = None
-        self._ha_token = None        # read (decrypted) once, when first needed
-        self._ha_state = None        # None (hidden), "connecting", "online", "no_token", "offline"
-        self._ha = {}                # url, name, version, time zone, clock, start, error
-        self._ha_last_ok = None      # time.monotonic() of the last answer
-        self._ha_last_ok_clock = ""
-        self._ha_timer = QTimer(self)
-        self._ha_timer.setInterval(HA_INTERVAL_MS)
-        self._ha_timer.timeout.connect(self._refresh_ha)
         self._set_badge(None)
         self.lbl_error.setVisible(False)
 
@@ -630,34 +539,21 @@ class ValetudoPanel(QgsDockWidget):
                     "follow": getattr(self, f"chk_{p}log_follow"),
                     "clear": getattr(self, f"btn_{p}log_clear"),
                     "output": getattr(self, f"txt_{p}log")}
-        self.consoles = [
-            ConsoleTab(self.tab_console, console_widgets(""), self._ssh_target,
-                       tr("No robot configured."), self),
-            ConsoleTab(self.tab_pi_console, console_widgets("pi_"), self._pi_target,
-                       tr("No Raspberry Pi set in the settings."), self),
-            ConsoleTab(self.tab_ha_console, console_widgets("ha_"), self._ha_ssh_target,
-                       tr("No Home Assistant SSH address set in the settings."), self),
-            ConsoleTab(self.tab_nuc_console, console_widgets("nuc_"), self._nuc_target,
-                       tr("No NUC set in the settings."), self),
-        ]
-        self.logs = [
-            LogTab(self.tab_log, log_widgets(""), self._ssh_target, LOG_PATH,
-                   tr("No robot configured."), self),
-            LogTab(self.tab_pi_log, log_widgets("pi_"), self._pi_target, PI_LOG_PATH,
-                   tr("No Raspberry Pi set in the settings."), self),
-            LogTab(self.tab_ha_log, log_widgets("ha_"), self._ha_ssh_target,
-                   lambda: COMMAND_PREFIX + load_settings()["ha_log_command"],
-                   tr("No Home Assistant SSH address set in the settings."), self),
-            LogTab(self.tab_nuc_log, log_widgets("nuc_"), self._nuc_target,
-                   lambda: COMMAND_PREFIX + (load_settings()["nuc_log_command"]
-                                             or NUC_AUTO_LOG_COMMAND),
-                   tr("No NUC set in the settings."), self),
-        ]
+        # The robot's console and log (from the .ui); the servers' ones are added with
+        # their frames (_build_server_frames)
+        self.consoles = [ConsoleTab(self.tab_console, console_widgets(""), self._ssh_target,
+                                    tr("No robot configured."), self)]
+        self.logs = [LogTab(self.tab_log, log_widgets(""), self._ssh_target, LOG_PATH,
+                            tr("No robot configured."), self)]
+        for page in (self.tab_pi_console, self.tab_ha_console, self.tab_nuc_console,
+                     self.tab_pi_log, self.tab_ha_log, self.tab_nuc_log):
+            self.terminal_stack.removeWidget(page)   # (fixed pages of earlier versions)
+            page.setParent(None)
         # The Terminal tab is opened on a server from its >_ menu in the Status tab,
         # and hidden again with its ✕.
         choice = QgsSettings().value(KEY_TERMINAL, "robot/console", type=str) or "robot/console"
         device, _, mode = str(choice).partition("/")
-        self._term_device = device if device in TERMINAL_DEVICES else "robot"
+        self._term_device = device or "robot"   # checked once the servers are built
         (self.btn_term_log if mode == "log" else self.btn_term_console).setChecked(True)
         for button in (self.btn_term_console, self.btn_term_log):
             button.toggled.connect(self._on_terminal_switch)
@@ -731,7 +627,7 @@ class ValetudoPanel(QgsDockWidget):
             self.tabs.setCurrentIndex(self._tab_keys.index(last))
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
-        self._update_pi_tab()
+        self._build_server_frames()
         for box in (self.box_settings, self.box_current, self.box_total, self.box_consumables,
                     self.box_dock):
             box.setVisible(False)   # shown once the robot reports them
@@ -1050,15 +946,19 @@ class ValetudoPanel(QgsDockWidget):
         self._update_console()
 
     def _show_terminal_page(self):
+        device, mode = self._terminal_choice()
+        entry = self._entry(device) if device != "robot" else None
+        if device != "robot" and (entry is None or not entry["pages"]):
+            device = self._term_device = "robot"
+        name = tr("Robot") if device == "robot" else entry["name"]
         if "terminal" in self._tab_titles:   # (empty on the first call, see _build_ui)
-            self._tab_titles["terminal"][0].setText(
-                tr("Terminal · {server}").format(server=_device_name(self._term_device)))
-        pages = {("robot", "console"): self.tab_console, ("pi", "console"): self.tab_pi_console,
-                 ("ha", "console"): self.tab_ha_console,
-                 ("nuc", "console"): self.tab_nuc_console, ("nuc", "log"): self.tab_nuc_log,
-                 ("robot", "log"): self.tab_log, ("pi", "log"): self.tab_pi_log,
-                 ("ha", "log"): self.tab_ha_log}
-        self.terminal_stack.setCurrentWidget(pages[self._terminal_choice()])
+            self._tab_titles["terminal"][0].setText(tr("Terminal · {server}").format(server=name))
+        if device == "robot":
+            pages = {"console": self.tab_console, "log": self.tab_log}
+        else:
+            pages = entry["pages"]
+        self.btn_term_log.setEnabled("log" in pages)
+        self.terminal_stack.setCurrentWidget(pages.get(mode) or pages["console"])
 
     def _terminal_choice(self):
         """(device, mode) of the Terminal tab."""
@@ -1527,99 +1427,262 @@ class ValetudoPanel(QgsDockWidget):
         return (host, cfg["ssh_user"] or "root", int(cfg["ssh_port"])) if host else None
 
     @staticmethod
-    def _pi_target():
-        """(host, user, port) of the Raspberry Pi, or None when none is set."""
-        cfg = load_settings()
-        return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
+    def _local_time(epoch):
+        return QDateTime.fromSecsSinceEpoch(int(epoch)).toString("dd/MM/yyyy HH:mm")
 
-    def _ha_ssh_target(self):
-        """(host, user, port) of the Home Assistant server over SSH, or None. Without an
-        SSH address of its own: Home Assistant's host, as root (the SSH add-on's user).
+    # -- the servers of the settings: a frame each in the Status tab --------------------
 
-        Registers its SSH password, if one is stored (read once per target)."""
-        cfg = load_settings()
-        host = cfg["ha_ssh_host"] or QUrl(cfg["ha_url"]).host()
-        if not host:
-            return None
-        target = (host, cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
-        if getattr(self, "_ha_ssh_password_for", None) != target:
-            key = cfg["ha_ssh_password_key"]
-            password = secret(key) if has_secret(key) else ""
-            ssh_auth.set_password(*target, password)
-            self._ha_ssh_password_for = target
+    @staticmethod
+    def _servers():
+        return load_settings()["servers"]
+
+    def _build_server_frames(self):
+        """A frame (and a block keeping it up to date) per server of the settings, in
+        their order, the robot's own frame where the robot in use is; a pill in the
+        strip for each one shown there; consoles and logs for those with SSH."""
+        self._drop_server_frames()
+        servers = self._servers()
+        robot = servers_model.active_robot(servers, active_robot_id())
+        layout = self.robot_header.parentWidget().layout()
+        index = layout.indexOf(self.robot_header)
+        layout.removeWidget(self.robot_header)
+        strip_index = self.strip_layout.indexOf(self.lbl_ha_strip) + 1
+        robot_placed = False
+        for server in servers:
+            if server["type"] == "valetudo":
+                if not robot_placed and (robot is None or server is robot):
+                    layout.insertWidget(index, self.robot_header)
+                    index += 1
+                    robot_placed = True
+                continue
+            entry = self._make_server_entry(server, servers)
+            layout.insertWidget(index, entry["frame"])
+            index += 1
+            if server.get("strip", True):
+                for widget in entry["strip"]:
+                    self.strip_layout.insertWidget(strip_index, widget)
+                    strip_index += 1
+            self._server_entries.append(entry)
+        if not robot_placed:
+            layout.insertWidget(index, self.robot_header)
+        self._update_server_buttons()
+        self._update_strip_servers()
+        if self._term_device not in ("robot", *self._term_pages_devices()):
+            self._term_device = "robot"
+        self._show_terminal_page()
+
+    def _drop_server_frames(self):
+        for entry in self._server_entries:
+            entry["block"].stop()
+            for view in entry["views"]:
+                view.shutdown()
+                if view in self.consoles:
+                    self.consoles.remove(view)
+                if view in self.logs:
+                    self.logs.remove(view)
+            for page in entry["pages"].values():
+                self.terminal_stack.removeWidget(page)
+                page.deleteLater()
+            self.robot_header.parentWidget().layout().removeWidget(entry["frame"])
+            for widget in entry["strip"]:
+                self.strip_layout.removeWidget(widget)
+            for widget in (entry["frame"], *entry["strip"]):
+                widget.setParent(None)
+                widget.deleteLater()
+            self._set_problem(f"clock_{entry['id']}", None)
+        self._server_entries = []
+
+    def _make_server_entry(self, server, servers):
+        kind, sid = server["type"], server["id"]
+        name = server_display_name(server, servers)
+        logo = SERVER_ICONS[kind]
+        frame = ServerFrame(name, icon(logo).pixmap(20, 20), kind)
+        w = frame.widgets
+
+        def clock(wrong, n=name, i=sid):
+            self._set_problem(f"clock_{i}", tr("The clock of {name} is wrong.").format(name=n)
+                              if wrong else None, "maintenance")
+
+        def fresh():   # the server as now in the settings (it may have been edited)
+            return servers_model.find(self._servers(), sid) or server
+
+        if kind in ("rpi", "linux"):
+            block = SshHostBlock(w, lambda: self._ssh_for(fresh()), self._local_time, clock,
+                                 self)
+        elif kind == "ha":
+            block = HaBlock(w, lambda: servers_model.address(self._servers(), fresh()),
+                            lambda: secret(servers_model.secret_key(fresh(), "token")).strip(),
+                            self._local_time, self)
+        elif kind == "kodi":
+            block = KodiBlock(w, lambda: self._kodi_login(fresh()), self)
+        elif kind == "windows":
+            block = PortBlock(w, lambda: self._windows_port(fresh()), self)
+        else:
+            block = WebBlock(w, lambda: servers_model.address(self._servers(), fresh()), self)
+        frame.setVisible(True)
+        logo_label, pill = QLabel(), QLabel()
+        logo_label.setPixmap(icon(logo).pixmap(16, 16))
+        entry = {"id": sid, "server": server, "name": name, "frame": frame, "block": block,
+                 "strip": (logo_label, pill), "views": [], "pages": {}}
+        frame.btn_web.setIcon(icon("web"))
+        frame.btn_web.clicked.connect(lambda _=False: self.open_web(sid))
+        if kind == "ha":
+            menu = QMenu(frame.btn_web)
+            menu.addAction(icon("web"), "Home Assistant", lambda: self.open_web(sid))
+            menu.addAction(icon("web"), tr("Supervisor (port {port})").format(
+                port=HA_SUPERVISOR_PORT), lambda: self.open_web(sid, supervisor=True))
+            frame.btn_web.setMenu(menu)
+            frame.btn_web.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        frame.btn_rd.setIcon(icon("remote_desktop"))
+        frame.btn_rd.clicked.connect(lambda _=False: self.open_remote_desktop(sid))
+        frame.btn_ssh.setIcon(icon("tab_terminal"))
+        frame.btn_ssh.clicked.connect(lambda _=False: self.open_ssh(sid))
+        self._add_terminal_pages(entry, fresh)
+        if entry["pages"]:
+            menu = QMenu(frame.btn_ssh)
+            menu.addAction(icon("tab_terminal"), tr("Terminal window"),
+                           lambda: self.open_ssh(sid))
+            for mode, label in (("console", tr("Console in QGIS")), ("log", tr("Log in QGIS"))):
+                if mode in entry["pages"]:
+                    action = menu.addAction(label, lambda m=mode: self.open_terminal(sid, m))
+                    advanced = getattr(self, "act_advanced", None)
+                    action.setVisible(advanced.isChecked() if advanced is not None
+                                      else load_settings()["advanced_tools"])
+                    self._terminal_entries.append(action)
+            frame.btn_ssh.setMenu(menu)
+            frame.btn_ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        return entry
+
+    def _ssh_for(self, server):
+        """(host, user, port) for SSH on a server, or None; registers its SSH password
+        (Home Assistant), if one is stored."""
+        target = servers_model.ssh_target(self._servers(), server)
+        if target is not None and "ssh_password" in servers_model.secret_fields(server["type"]):
+            key = servers_model.secret_key(server, "ssh_password")
+            if self._ssh_passwords.get(server["id"]) != target:
+                ssh_auth.set_password(*target, secret(key) if has_secret(key) else "")
+                self._ssh_passwords[server["id"]] = target
         return target
 
-    @staticmethod
-    def _kodi_settings():
-        """(url, user, password) of Kodi, or None when no address is set."""
-        cfg = load_settings()
-        if not cfg["kodi_url"]:
+    def _kodi_login(self, server):
+        url = servers_model.address(self._servers(), server)
+        if not url:
             return None
-        key = cfg["kodi_password_key"]
-        password = secret(key) if has_secret(key) else ""
-        return (cfg["kodi_url"], cfg["kodi_user"], password)
+        key = servers_model.secret_key(server, "password")
+        return (url, servers_model.value(server, "user"), secret(key) if has_secret(key) else "")
 
-    @staticmethod
-    def _nuc_target():
-        """(host, user, port) of the NUC, or None when none is set."""
-        cfg = load_settings()
-        return (cfg["nuc_host"], cfg["nuc_user"], int(cfg["nuc_port"])) if cfg["nuc_host"] else None
+    def _windows_port(self, server):
+        """(host, port, what) to check a Windows computer: its SSH, else RDP or VNC."""
+        host = servers_model.ssh_address(servers_model.value(server, "host"), "", 22)[0]
+        if not host:
+            return None
+        if servers_model.value(server, "ssh"):
+            return host, servers_model.value(server, "port"), "SSH"
+        protocol = servers_model.value(server, "rd_protocol")
+        if protocol == "vnc":
+            return host, servers_model.value(server, "vnc_port"), "VNC"
+        return host, servers_model.value(server, "rdp_port"), "RDP"
 
-    # -- web interfaces and SSH sessions (Status tab) -------------------------------
+    def _add_terminal_pages(self, entry, fresh):
+        """Console and log pages in the Terminal tab, for a server with SSH."""
+        server = entry["server"]
+        kind = server["type"]
+        if kind not in ("rpi", "linux", "ha") and not (kind == "windows"
+                                                        and servers_model.value(server, "ssh")):
+            return
+        name = entry["name"]
+        none = tr("No SSH address for {name} in the settings.").format(name=name)
+        target = lambda: self._ssh_for(fresh())   # noqa: E731
+        page, widgets = build_console_page(tr(
+            "Runs on {name}, one command at a time, without a terminal: interactive "
+            "programs (vi, top, less…) do not work. cd is kept from one command to the "
+            "next, variables are not.").format(name=name))
+        console = ConsoleTab(page, widgets, target, none, self)
+        self.terminal_stack.addWidget(page)
+        self.consoles.append(console)
+        entry["pages"]["console"] = page
+        entry["views"].append(console)
+        if kind == "windows":
+            return   # no log command there
+        if kind == "rpi":
+            path = PI_LOG_PATH
+        elif kind == "ha":
+            path = lambda: COMMAND_PREFIX + servers_model.value(fresh(), "log_command")  # noqa
+        else:
+            path = lambda: COMMAND_PREFIX + (servers_model.value(fresh(), "log_command")  # noqa
+                                             or NUC_AUTO_LOG_COMMAND)
+        page, widgets = build_log_page()
+        log = LogTab(page, widgets, target, path, none, self)
+        self.terminal_stack.addWidget(page)
+        self.logs.append(log)
+        entry["pages"]["log"] = page
+        entry["views"].append(log)
 
-    def _server_web(self, prefix):
-        """Address of a server's web interface, or ""."""
-        cfg = load_settings()
-        url = {"robot": cfg["url"], "pi": cfg["pi_web_url"], "ha": cfg["ha_url"],
-               "ha_supervisor": _on_port(cfg["ha_url"], HA_SUPERVISOR_PORT),
-               "nuc": cfg["nuc_web_url"],
-               "kodi": kodi_rpc_url(cfg["kodi_url"])[:-len("jsonrpc")] if cfg["kodi_url"]
-               else ""}[prefix].strip()
+    def _term_pages_devices(self):
+        return [entry["id"] for entry in self._server_entries if entry["pages"]]
+
+    def _entry(self, sid):
+        return next((e for e in self._server_entries if e["id"] == sid), None)
+
+    # -- web interfaces, remote desktops and SSH sessions -------------------------------
+
+    def _server_web(self, sid, supervisor=False):
+        """Address of a server's web interface, or "" ("robot": the robot's)."""
+        if sid == "robot":
+            url = load_settings()["url"]
+        else:
+            entry = self._entry(sid)
+            server = servers_model.find(self._servers(), sid) if entry else None
+            if server is None:
+                return ""
+            kind = server["type"]
+            address = servers_model.address(self._servers(), server)
+            if kind == "ha":
+                url = _on_port(address, HA_SUPERVISOR_PORT) if supervisor else address
+            elif kind == "kodi":
+                url = kodi_rpc_url(address)[:-len("jsonrpc")] if address else ""
+            elif kind == "web":
+                url = address
+            else:
+                url = servers_model.value(server, "web_url")
+        url = (url or "").strip()
         if url and "://" not in url:
             url = "http://" + url
         return url
 
-    def _server_ssh(self, prefix):
-        """(host, user, port) for an SSH session on a server, or None. Kodi: the
-        computer it runs on (see servers.ssh_target)."""
-        if prefix == "kodi":
-            return load_settings()["kodi_ssh"] or None
-        return {"robot": self._ssh_target, "pi": self._pi_target, "ha": self._ha_ssh_target,
-                "nuc": self._nuc_target}[prefix]()
+    def _server_ssh(self, sid):
+        if sid == "robot":
+            return self._ssh_target()
+        server = servers_model.find(self._servers(), sid)
+        return self._ssh_for(server) if server is not None else None
+
+    def _remote_desktops(self, sid):
+        server = servers_model.find(self._servers(), sid)
+        return servers_model.remote_desktops(self._servers(), server) if server else []
 
     def _update_server_buttons(self):
         """Each button only where there is something to open; the tooltip says what."""
-        for prefix in SERVERS:
-            web, ssh = getattr(self, f"btn_{prefix}_web"), getattr(self, f"btn_{prefix}_ssh")
-            url, target = self._server_web(prefix), self._server_ssh(prefix)
+        rows = [("robot", self.btn_robot_web, None, self.btn_robot_ssh)]
+        rows += [(e["id"], e["frame"].btn_web, e["frame"].btn_rd, e["frame"].btn_ssh)
+                 for e in self._server_entries]
+        for sid, web, rd, ssh in rows:
+            url, target = self._server_web(sid), self._server_ssh(sid)
             web.setVisible(bool(url))
             tip = tr("Open the web interface in the browser: {url}").format(url=url)
-            if prefix == "ha" and url:
+            entry = self._entry(sid)
+            if url and entry is not None and entry["server"]["type"] == "ha":
                 tip += "\n" + tr("Its arrow: the Supervisor's interface, {url}").format(
-                    url=self._server_web("ha_supervisor"))
+                    url=self._server_web(sid, supervisor=True))
             web.setToolTip(tip)
             ssh.setVisible(target is not None)
             if target is not None:
                 ssh.setToolTip(tr("Open an SSH session in a terminal: {command}").format(
                     command=system_terminal.describe(*target)))
-            self._update_rd_button(prefix)
+            if rd is not None:
+                self._update_rd_button(sid, rd)
 
-    def _panel_server(self, prefix):
-        """The server of the settings shown in a frame (first of its type)."""
-        kind = {"pi": "rpi", "nuc": "linux", "kodi": "kodi"}.get(prefix)
-        return servers_model.first(load_settings()["servers"], kind) if kind else None
-
-    def _remote_desktops(self, prefix):
-        server = self._panel_server(prefix)
-        if server is None:
-            return []
-        return servers_model.remote_desktops(load_settings()["servers"], server)
-
-    def _update_rd_button(self, prefix):
-        button = self._rd_buttons.get(prefix)
-        if button is None:
-            return
-        desktops = self._remote_desktops(prefix)
+    def _update_rd_button(self, sid, button):
+        desktops = self._remote_desktops(sid)
         button.setVisible(bool(desktops))
         if not desktops:
             return
@@ -1631,19 +1694,18 @@ class ValetudoPanel(QgsDockWidget):
             menu = QMenu(button)
             for index, desktop in enumerate(desktops):
                 menu.addAction(icon("remote_desktop"), desktop[0].upper(),
-                               lambda p=prefix, i=index: self.open_remote_desktop(p, i))
+                               lambda i=index: self.open_remote_desktop(sid, i))
             button.setMenu(menu)
             button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         else:
             button.setMenu(None)
 
-    def open_remote_desktop(self, prefix, index=0):
-        desktops = self._remote_desktops(prefix)
+    def open_remote_desktop(self, sid, index=0):
+        desktops = self._remote_desktops(sid)
         if not desktops:
             return
         protocol, host, port, user, ssh = desktops[min(index, len(desktops) - 1)]
-        cfg = load_settings()
-        template = cfg[f"{protocol}_command"] or remote_desktop.detected(protocol)
+        template = load_settings()[f"{protocol}_command"] or remote_desktop.detected(protocol)
         self._rd_protocol = protocol
         self.remote_desktop.open(template, host, port, user, ssh)
         if ssh is not None and template:
@@ -1657,13 +1719,13 @@ class ValetudoPanel(QgsDockWidget):
             "tunnel": tr("The SSH tunnel could not be opened (SSH key or password, address?)."),
         }.get(reason, tr("The remote desktop program could not be started.")), "warning")
 
-    def open_web(self, prefix):
-        url = self._server_web(prefix)
+    def open_web(self, sid, supervisor=False):
+        url = self._server_web(sid, supervisor)
         if url:
             QDesktopServices.openUrl(QUrl(url))
 
-    def open_ssh(self, prefix):
-        target = self._server_ssh(prefix)
+    def open_ssh(self, sid):
+        target = self._server_ssh(sid)
         if target is None:
             return
         problem = system_terminal.open_ssh(*target, tr("Press Enter to close."))
@@ -1673,77 +1735,12 @@ class ValetudoPanel(QgsDockWidget):
         elif problem:
             self.show_feedback(tr("The terminal could not be started."), "warning")
 
-    def _update_pi_tab(self):
-        """The Pi's details, card and terminal exist only when a Pi address is set;
-        its details are read while the panel is visible. Same for the NUC's block."""
-        self.nuc.update(self.isVisible())
-        self._update_server_buttons()
-        self.kodi.update(self.isVisible())
-        has_pi = self._pi_target() is not None
-        self.pi_header.setVisible(has_pi)
-        self._update_strip_servers()
-        if has_pi and self.isVisible():
-            if not self._pi_timer.isActive():
-                self._pi_timer.start()
-                self._refresh_pi()
-        else:
-            self._pi_timer.stop()
-            self.pi_runner.stop()
-        if not has_pi:
-            self._pi, self._pi_ok, self._pi_last_ok = None, None, None
+    def _update_servers(self):
+        """The servers' blocks read while the panel is visible."""
+        for entry in self._server_entries:
+            entry["block"].update(self.isVisible())
 
-    # -- Raspberry Pi block ---------------------------------------------------------
-
-    def _refresh_pi(self, *_):
-        target = self._pi_target()
-        if target is None or self.pi_runner.is_busy():
-            return
-        self.pi_runner.run("pi_info", *target, host_info.SERVER_COMMAND)
-        if self._pi_ok is None:
-            self.lbl_pi_connection.setText(
-                f"<span style='color:#9e9e9e'>●</span> {tr('Connecting…')}")
-            self._set_strip_status(self.lbl_pi_strip, "#9e9e9e", tr("Connecting…"))
-
-    def _on_pi_info(self, _operation, ok, output, detail):
-        if ok:
-            self._pi = host_info.parse_pi(output, time.time())
-            self._pi.update(host_info.parse_resources(output))
-            self._pi_ok, self._pi_last_ok = True, time.monotonic()
-        else:
-            self._pi_ok = False
-            self.lbl_pi_connection.setToolTip(detail)
-        self._update_pi_header()
-
-    def _update_pi_header(self):
-        if self._pi_ok is None:
-            return
-        if self._pi_ok:
-            seconds = int(time.monotonic() - self._pi_last_ok)
-            text = tr("Connected · updated {seconds} s ago").format(seconds=seconds)
-            self.lbl_pi_connection.setText(f"<span style='color:#2e7d32'>●</span> {text}")
-            self.lbl_pi_connection.setToolTip("")
-            self._set_strip_status(self.lbl_pi_strip, "#2e7d32", tr("Online"), text)
-        else:
-            text = tr("Unreachable over SSH")
-            self.lbl_pi_connection.setText(f"<span style='color:#c62828'>●</span> {text}")
-            self._set_strip_status(self.lbl_pi_strip, "#c62828", tr("Offline"), text)
-        pi = self._pi or {}
-        self.lbl_pi_name.setTextFormat(Qt.TextFormat.PlainText)
-        self.lbl_pi_name.setText(" · ".join(p for p in (pi.get("hostname"), pi.get("uname")) if p))
-        # Offline: its last clock and uptime are no longer true, only the address is
-        online = bool(self._pi_ok)
-        line, wrong = host_info.info_line(pi.get("ip") or (self._pi_target() or [""])[0],
-                                          pi.get("time") if online else None,
-                                          pi.get("received_at"),
-                                          pi.get("uptime") if online else None,
-                                          self._local_time)
-        self.lbl_pi_info.setText(line)
-        self.lbl_pi_info.setStyleSheet("color: #ef6c00;" if wrong else "")
-        resources = host_info.resources_line(pi) if online else ""   # stale once offline
-        self.lbl_pi_resources.setText(resources)
-        self.lbl_pi_resources.setVisible(bool(resources))
-        self._set_problem("pi_clock", tr("The Raspberry Pi's clock is wrong.") if wrong else None,
-                          "maintenance")
+    # -- the servers in the strip ---------------------------------------------------------
 
     def _update_strip_tip(self):
         """What a click on the strip does, then the Wi-Fi signal (no longer shown in it)."""
@@ -1754,230 +1751,46 @@ class ValetudoPanel(QgsDockWidget):
             lines.append(wifi + (" · " + html.escape(self._wifi_tip) if self._wifi_tip else ""))
         self.strip.setToolTip("<br>".join(lines))
 
-    def _set_strip_status(self, label, _color, _text, tooltip=""):
-        """Details of the Pi or Home Assistant for its tooltip in the strip."""
-        self._strip_tips["pi" if label is self.lbl_pi_strip else "ha"] = tooltip
-        self._update_strip_servers()
-
-    def _strip_states(self):
-        """key -> state ("on", "off", "connecting", "no_token") of each server set in the
-        settings (absent: not set, not shown)."""
-        on = {True: "on", False: "off", None: "connecting"}
-        states = {}
-        if self._pi_target() is not None:
-            states["pi"] = on[self._pi_ok]
-        if self._ha_state is not None:
-            states["ha"] = {"online": "on", "offline": "off"}.get(self._ha_state, self._ha_state)
-        if self._nuc_target() is not None:
-            states["nuc"] = on[self.nuc.ok]
-        if self._kodi_settings() is not None:
-            states["kodi"] = on[self.kodi.ok]
-        return states
-
     def _update_strip_servers(self):
         """The servers in the strip: logo and a pill styled like the robot's state."""
-        if not getattr(self, "_strip_servers", None):
-            return
-        names = {"pi": tr("Raspberry Pi"), "ha": "Home Assistant", "nuc": tr("NUC"),
-                 "kodi": "Kodi"}
         pills = {"on": ("#2e7d32", tr("On the air")), "off": ("#c62828", tr("Off the air")),
                  "connecting": ("#9e9e9e", tr("Connecting…")),
                  "no_token": ("#ef6c00", tr("No token"))}
-        details = {"nuc": self.lbl_nuc_connection.text(),
-                   "kodi": self.lbl_kodi_connection.text()}
-        states = self._strip_states()
-        for key, (logo, pill) in self._strip_servers.items():
-            state = states.get(key)
-            logo.setVisible(state is not None)
-            pill.setVisible(state is not None)
-            if state is None:
+        shown = False
+        for entry in self._server_entries:
+            logo, pill = entry["strip"]
+            on_strip = bool(entry["server"].get("strip", True))
+            logo.setVisible(on_strip)
+            pill.setVisible(on_strip)
+            shown |= on_strip
+            if not on_strip:
                 continue
-            color, text = pills[state]
+            block = entry["block"]
+            state = block.strip_state()
+            color, text = pills.get(state, pills["connecting"])
             pill.setText(text)
             pill.setStyleSheet(f"background-color: {color}; color: white; font-weight: bold;"
                                "border-radius: 8px; padding: 1px 8px;")
-            extra = details.get(key) or html.escape(self._strip_tips.get(key, ""))
-            tip = f"<b>{html.escape(names[key])}</b>: {html.escape(text)}" + (
-                f"<br>{extra}" if extra else "")
+            details = entry["frame"].connection.text()
+            extra = block.tooltip() if hasattr(block, "tooltip") else ""
+            tip = (f"<b>{html.escape(entry['name'])}</b>: {html.escape(text)}<br>{details}"
+                   + (f"<br>{html.escape(extra)}" if extra else ""))
             logo.setToolTip(tip)
             pill.setToolTip(tip)
-        self.sep_pi.setVisible(bool(states))   # one separator before the servers
+        self.sep_pi.setVisible(shown)   # one separator before the servers
         self.sep_ha.setVisible(False)
 
-    # -- Home Assistant (strip) -----------------------------------------------------
-
-    def _update_ha(self):
-        """Check Home Assistant every HA_INTERVAL_MS while the panel is visible."""
-        if self.isVisible():
-            if not self._ha_timer.isActive():
-                self._ha_timer.start()
-                self._refresh_ha()
-        else:
-            self._ha_timer.stop()
-
-    def _refresh_ha(self, *_):
-        url = load_settings()["ha_url"]
-        if not url:   # no Home Assistant server in the settings
-            if self._ha_state is not None:
-                self._ha_state = None
-                self._update_ha_header()
-            return
-        has_token = has_ha_token()
-        if not has_token:
-            self._ha_token = ""
-        elif not self._ha_token:
-            self._ha_token = ha_token()   # may ask for the QGIS master password, once
-        if self._ha_client is not None:
-            self._ha_client.close()
-        client = self._ha_client = HomeAssistantClient(url, self._ha_token, self)
-        self._ha["url"] = url
-        if self._ha_state is None and has_token:
-            self._ha_state = "connecting"
-            self._update_ha_header()
-
-        def ok(config):
-            config = config if isinstance(config, dict) else {}
-            self._ha.update(name=config.get("location_name") or "",
-                            version=config.get("version") or "",
-                            time_zone=config.get("time_zone") or "",
-                            time=client.server_time, received_at=client.received_at,
-                            error="")
-            self._ha_state = "online"
-            self._ha_last_ok = time.monotonic()
-            self._ha_last_ok_clock = QDateTime.currentDateTime().toString("HH:mm:ss")
-            self._update_ha_header()
-            # Uptime: the "Uptime" integration's sensor (its state is the start time)
-            client.get("/states/sensor.uptime", uptime_ok,
-                       lambda _error: self._set_ha_start(None), timeout_ms=5000)
-
-        def uptime_ok(state):
-            start = parse_timestamp(state.get("state")) if isinstance(state, dict) else None
-            self._set_ha_start(start)
-
-        def failed(error):
-            self._ha["error"] = error
-            if error == UNAUTHORISED:   # there, but no token to go further
-                self._ha_state = "no_token"
-            else:   # a server of the settings: shown, even without a token
-                self._ha_state = "offline"
-            self._update_ha_header()
-
-        client.get("/config", ok, failed, timeout_ms=5000)
-
-    def _set_ha_start(self, start):
-        self._ha["start"] = start
-        self._update_ha_header()
-
-    def _update_ha_header(self):
-        """Home Assistant in the strip (status) and in the details (three lines)."""
-        state = self._ha_state
-        shown = state is not None
-        self.ha_header.setVisible(shown)
-        if not shown:
-            self._update_strip_servers()
-            return
-        ha, url = self._ha, self._ha.get("url", "")
-        if state == "connecting":
-            color, short = "#9e9e9e", tr("Connecting…")
-            long = short
-        elif state == "online":
-            seconds = int(time.monotonic() - self._ha_last_ok)
-            color, short = "#2e7d32", tr("Online")
-            long = tr("Connected · updated {seconds} s ago").format(seconds=seconds)
-        elif state == "no_token":
-            color, short = "#ef6c00", tr("No token")
-            long = tr("Found, no access token")
-        else:
-            color, short = "#c62828", tr("Offline")
-            long = tr("Unreachable · last update {time}").format(
-                time=self._ha_last_ok_clock or "—")
-        self.lbl_ha_connection.setText(f"<span style='color:{color}'>●</span> {long}")
-        self.lbl_ha_connection.setToolTip(ha.get("error", "") if state == "offline" else "")
-        # Second line: Home Assistant <version> · <home name> · <time zone>
-        if state == "no_token":
-            name = tr("Home Assistant answers at {url}. Add an access token in "
-                      "Settings › Options › {name} to use it.").format(url=url, name=PLUGIN_NAME)
-        else:
-            version = ha.get("version", "")
-            name = " · ".join(p for p in (
-                f"Home Assistant {version}" if version else "Home Assistant",
-                ha.get("name"), ha.get("time_zone")) if p)
-        self.lbl_ha_name.setTextFormat(Qt.TextFormat.PlainText)
-        self.lbl_ha_name.setText(name)
-        # Third line: address · Home Assistant's clock · uptime
-        host = QUrl(url).host() or url
-        online = state == "online"
-        uptime = None
-        if online and ha.get("start") and ha.get("time"):
-            uptime = max(0, ha["time"] - ha["start"])
-        line, wrong = host_info.info_line(host, ha.get("time") if online else None,
-                                          ha.get("received_at"), uptime, self._local_time)
-        self.lbl_ha_info.setText(line)
-        self.lbl_ha_info.setStyleSheet("color: #ef6c00;" if wrong else "")
-        if state == "offline":
-            tip = ha.get("error", "")
-        elif state == "no_token":
-            tip = name
-        else:
-            tip = " · ".join(p for p in (ha.get("name"), ha.get("version"), url) if p)
-        self._set_strip_status(self.lbl_ha_strip, color, short, tip)
-
-    @staticmethod
-    def _local_time(epoch):
-        return QDateTime.fromSecsSinceEpoch(int(epoch)).toString("dd/MM/yyyy HH:mm")
-
     def settings_changed(self):
-        """Called by the plugin after the Options page saved changes."""
-        self._order_servers()
-        self._ha_ssh_password_for = None   # the SSH password may have changed
+        """Called by the plugin after the Options page saved changes: the servers'
+        frames are built again from the settings."""
+        self._ssh_passwords = {}   # SSH passwords may have changed
+        self._build_server_frames()
         self._update_console()
-        self._ha_token = None   # the token may have changed
-        if self.isVisible():
-            self._refresh_ha()
-
-    def _server_order(self):
-        """Panel keys (robot, pi, ha, nuc, kodi) in the order of the settings' Servers tab:
-        each is the first server of its type (the robot in use for robots)."""
-        cfg = load_settings()
-        types = {"valetudo": "robot", "rpi": "pi", "ha": "ha", "linux": "nuc", "kodi": "kodi"}
-        servers = cfg.get("servers") or []
-        robot = servers_model.active_robot(servers, active_robot_id())
-        order = []
-        for server in servers:
-            key = types.get(server.get("type"))
-            if key is None or key in order:
-                continue
-            if key == "robot" and robot is not None and server is not robot:
-                continue
-            order.append(key)
-        return order + [key for key in types.values() if key not in order]
-
-    def _order_servers(self):
-        """The Status tab's frames and the strip's servers, in the settings' order."""
-        order = self._server_order()
-        frames = {"robot": self.robot_header, "pi": self.pi_header, "ha": self.ha_header,
-                  "nuc": self.nuc_header, "kodi": self.kodi_header}
-        layout = self.robot_header.parentWidget().layout()
-        indices = [layout.indexOf(frame) for frame in frames.values()]
-        if all(isinstance(i, int) and i >= 0 for i in indices):
-            base = min(indices)
-            for frame in frames.values():
-                layout.removeWidget(frame)
-            for offset, key in enumerate(order):
-                layout.insertWidget(base + offset, frames[key])
-        strip = [key for key in order if key in self._strip_servers]
-        index = self.strip_layout.indexOf(self.lbl_ha_strip) + 1
-        for key in strip:
-            for widget in self._strip_servers[key]:
-                self.strip_layout.removeWidget(widget)
-        for key in strip:
-            for widget in self._strip_servers[key]:
-                self.strip_layout.insertWidget(index, widget)
-                index += 1
 
     def _update_console(self):
         """Consoles and logs run only while their page of the Terminal tab is shown."""
-        self._update_pi_tab()
+        self._update_servers()
+        self._update_server_buttons()
         page = (self.terminal_stack.currentWidget()
                 if self.tabs.currentWidget() is self.tab_terminal else None)
         for view in self.consoles + self.logs:
@@ -2010,13 +1823,8 @@ class ValetudoPanel(QgsDockWidget):
         self.history_tab.shutdown()
         self._camera_grace.stop()
         self.camera.shutdown()
-        self._pi_timer.stop()
-        self.pi_runner.stop()
-        self.nuc.stop()
-        self.kodi.stop()
-        self._ha_timer.stop()
-        if self._ha_client is not None:
-            self._ha_client.close()
+        for entry in self._server_entries:
+            entry["block"].stop()
         for log in self.logs:
             log.shutdown()
         for console in self.consoles:
@@ -2025,7 +1833,6 @@ class ValetudoPanel(QgsDockWidget):
     def _on_visibility(self, visible):
         self._update_camera()
         self._update_console()
-        self._update_ha()
         self._update_schedule()
         if not visible:
             self._timer.stop()
@@ -2041,12 +1848,8 @@ class ValetudoPanel(QgsDockWidget):
     def refresh_all(self, *_):
         """Status tab: read every server again now."""
         self.refresh()
-        if self._pi_target() is not None:
-            self._refresh_pi()
-        self.nuc.refresh()
-        self.kodi.refresh()
-        if self._ha_state is not None:
-            self._refresh_ha()
+        for entry in self._server_entries:
+            entry["block"].refresh()
 
     def refresh(self, *_):
         client = self.client
@@ -2130,12 +1933,9 @@ class ValetudoPanel(QgsDockWidget):
         self._update_job()
 
     def _update_header(self):
-        self._update_pi_header()
-        self.nuc.render()
-        self.kodi.render()
-        self._update_strip_servers()   # NUC and Kodi: as just rendered
-        if self._ha_state == "online":
-            self._update_ha_header()
+        for entry in self._server_entries:
+            entry["block"].render()   # "updated N s ago"
+        self._update_strip_servers()
         if self.client is None or self._reachable is None:
             return
         if self._reachable:

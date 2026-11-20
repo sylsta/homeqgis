@@ -1622,10 +1622,6 @@ Continuer ?</translation>
         <translation>Nécessite une connexion SSH par clé : ssh-copy-id {user}@{host}</translation>
     </message>
     <message>
-        <source>No Raspberry Pi set in the settings.</source>
-        <translation>Aucun Raspberry Pi défini dans les paramètres.</translation>
-    </message>
-    <message>
         <source>Raspberry Pi</source>
         <translation>Raspberry Pi</translation>
     </message>
@@ -1804,10 +1800,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Démarrer à</translation>
     </message>
     <message>
-        <source>The Raspberry Pi's clock is wrong.</source>
-        <translation>L’horloge du Raspberry Pi est fausse.</translation>
-    </message>
-    <message>
         <source>Resume the paused job.</source>
         <translation>Reprendre la tâche en pause.</translation>
     </message>
@@ -1960,24 +1952,12 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Facultatif : votre serveur Home Assistant. Le jeton est facultatif lui aussi, mais sans lui le plugin peut seulement vérifier que Home Assistant est là. Créez-le dans Home Assistant, sur votre page de profil (Sécurité › Jetons d’accès longue durée). Il est conservé chiffré dans la base d’authentification de QGIS, qui peut demander votre mot de passe principal.</translation>
     </message>
     <message>
-        <source>Online</source>
-        <translation>En ligne</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Hors ligne</translation>
-    </message>
-    <message>
         <source>No token</source>
         <translation>Sans jeton</translation>
     </message>
     <message>
         <source>Found, no access token</source>
         <translation>Trouvé, sans jeton d’accès</translation>
-    </message>
-    <message>
-        <source>No Home Assistant SSH address set in the settings.</source>
-        <translation>Aucune adresse SSH Home Assistant dans les paramètres.</translation>
     </message>
     <message>
         <source>SSH address</source>
@@ -2078,10 +2058,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>{count} CPUs</source>
         <translation>{count} processeurs</translation>
-    </message>
-    <message>
-        <source>The NUC's clock is wrong.</source>
-        <translation>L’horloge du NUC est fausse.</translation>
     </message>
     <message>
         <source>NUC</source>
@@ -2242,10 +2218,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>automatic: journalctl, else /var/log/syslog</source>
         <translation>automatique : journalctl, sinon /var/log/syslog</translation>
-    </message>
-    <message>
-        <source>No NUC set in the settings.</source>
-        <translation>Aucun NUC défini dans les paramètres.</translation>
     </message>
     <message>
         <source>Runs on the NUC, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
@@ -2466,10 +2438,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Set the Raspberry Pi in Settings › Options › {name} first.</source>
         <translation>Définissez d’abord le Raspberry Pi dans Préférences › Options › {name}.</translation>
-    </message>
-    <message>
-        <source>Home Assistant answers at {url}. Add an access token in Settings › Options › {name} to use it.</source>
-        <translation>Home Assistant répond à {url}. Ajoutez un jeton d’accès dans Préférences › Options › {name} pour l’utiliser.</translation>
     </message>
     <message>
         <source>Press Enter to close.</source>
@@ -3082,6 +3050,30 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>No {protocol} program found: install Remmina, or set its command in the settings (Servers tab).</source>
         <translation>Aucun programme {protocol} trouvé : installez Remmina, ou indiquez sa commande dans les paramètres (onglet Serveurs).</translation>
+    </message>
+    <message>
+        <source>Home Assistant answers at {url}. Add an access token in the settings (Servers tab) to use it.</source>
+        <translation>Home Assistant répond à {url}. Ajoutez un jeton d'accès dans les paramètres (onglet Serveurs) pour l'utiliser.</translation>
+    </message>
+    <message>
+        <source>{what} answers · checked {seconds} s ago</source>
+        <translation>{what} répond · vérifié il y a {seconds} s</translation>
+    </message>
+    <message>
+        <source>Answers (HTTP {status}) · checked {seconds} s ago</source>
+        <translation>Répond (HTTP {status}) · vérifié il y a {seconds} s</translation>
+    </message>
+    <message>
+        <source>No SSH address for {name} in the settings.</source>
+        <translation>Pas d'adresse SSH pour {name} dans les paramètres.</translation>
+    </message>
+    <message>
+        <source>Runs on {name}, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
+        <translation>S'exécute sur {name}, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d'une commande à l'autre, les variables non.</translation>
+    </message>
+    <message>
+        <source>The clock of {name} is wrong.</source>
+        <translation>L'horloge de {name} est fausse.</translation>
     </message>
 </context>
 </TS>

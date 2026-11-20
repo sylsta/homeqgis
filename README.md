@@ -54,8 +54,10 @@ without restarting QGIS.
    `{port}`, `{user}`, `{userat}`), else the first found: Remmina, TigerVNC/TightVNC
    `vncviewer`, `xfreerdp` or KRDC on Linux; `mstsc` or a VNC viewer on Windows; the
    built-in Screen Sharing or Microsoft Remote Desktop on macOS. Kodi and web services
-   get the remote desktop of the computer they run on. The panel shows them in this order (Status tab and status strip);
-   for now it uses the first server of each type (the robot in use for robots).
+   get the remote desktop of the computer they run on. The panel shows each of them, in
+   this order (Status tab, status strip, Terminal tab); the map, history and Wi-Fi tools
+   use the robot in use, Home Assistant's sensors the first Home Assistant, the Pi's
+   Wi-Fi maps the first Pi.
 2. Open the **DomotiQGIS panel** (the only toolbar button, or *Plugins > DomotiQGIS*).
    The menu and the toolbar stay minimal: everything happens in the panel.
 
@@ -81,12 +83,10 @@ The panel (titled *Connection*), from top to bottom:
 - **Status strip**, always visible: the state, battery, the job in progress (time
   and area, only while the robot works), a ⚠ when something needs you (dock tank
   empty or full, worn consumable, robot error, wrong clock: hover it for the list,
-  click it to open the right tab), each server set in the settings (Raspberry Pi,
-  Home Assistant, NUC, Kodi) as its logo and a pill styled like the robot's state,
-  green *On the air* or red *Off the air* (hover it for the details: the Pi and the
-  NUC are checked over SSH every 30 s; Home Assistant every minute, *No token* when it
-  answers but no access token is set, hidden only at its default address with neither
-  a token nor an answer), *Show on map*, **⚙**
+  click it to open the right tab), then each server of the settings with *Show in the
+  status strip* ticked, in their order, as its logo and a pill styled like the robot's
+  state: green *On the air*, red *Off the air*, *Connecting…*, or *No token* (Home
+  Assistant answering without an access token); hover it for the details. Then *Show on map*, **⚙**
   (the settings) and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
   Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
   strip** for the *Status* tab.
@@ -95,21 +95,23 @@ The panel (titled *Connection*), from top to bottom:
   how far off, when it differs from the computer's by more than 2 minutes) and
   uptime, the state and battery, with *Show on map* on the first line; **Refresh
   all**, at the right of the tab's title, reads every server again (each also
-  refreshes by itself); with a Raspberry Pi set in the settings, the same for the Pi, plus
-  a line with its load, memory, disk and temperature (read over SSH every 30 s while
-  the panel is visible); then Home Assistant: version, home
-  name and time zone, its address, its own clock and its uptime (from the *Uptime*
-  integration's `sensor.uptime`, if you have it); then the NUC, when its address
-  is set (*Settings > Options > DomotiQGIS*, tab *Servers*, *NUC*, with a *Test connection*
-  button): its name and system, address, clock and uptime, and a line with its
-  load, memory, disk and temperature, read over SSH (key only) every 30 s while
-  the panel is visible; then Kodi, when its address is set (*Servers* tab, *Kodi*, of the
-  settings: address such as `http://192.168.50.2:8080/`, username, password kept
-  encrypted, *Test connection*): its version and system, address, uptime and CPU
-  temperature, and what is playing with its progress, **⏸ / ▶** and **⏹**. Read
-  over Kodi's JSON-RPC every 5 s while the panel is visible; in Kodi, turn on
-  *Settings > Services > Control > Allow remote control via HTTP*, with a
-  username and password.
+  refreshes by itself); then **a frame per server of the settings**, in the order of
+  their Servers tab (the robot's frame where the robot in use is), with its name:
+  - *Raspberry Pi*, *Linux computer*: name and system, address, clock and uptime, and
+    a line with its load, memory, disk and temperature, read over SSH (key, or the
+    password stored for Home Assistant) every 30 s while the panel is visible;
+  - *Home Assistant*: version, home name and time zone, its address, its own clock
+    and its uptime (from the *Uptime* integration's `sensor.uptime`, if you have it),
+    read every minute;
+  - *Kodi*: its version and system, address, uptime and CPU temperature, and what is
+    playing with its progress, **⏸ / ▶** and **⏹**, read over Kodi's JSON-RPC every 5 s
+    (in Kodi, turn on *Settings > Services > Control > Allow remote control via HTTP*,
+    with a username and password);
+  - *Windows computer*: whether its SSH (when its OpenSSH server is ticked), else RDP
+    or VNC port answers;
+  - *Web service*: whether its address answers, every minute.
+
+  A wrong clock (more than 2 minutes off) is shown in orange and listed by the ⚠.
 - Each server's frame in the Status tab has a **🌐** button, which opens its web
   interface in your browser, and a **>_** button, which opens an SSH session in your
   system's terminal (hover them for the address or command). A button appears only
@@ -121,12 +123,14 @@ The panel (titled *Connection*), from top to bottom:
     (tab *Servers*) if they run one, for example Cockpit on the NUC (`https://<NUC>:9090`), or,
     on the Pi, Uptime Kuma (port 3001, a dashboard watching all these servers),
     Glances (`glances -w`, port 61208) or Cockpit.
-  - SSH: with each server's SSH settings; Kodi's uses the NUC's user and port. The
+  - SSH: with each server's SSH settings; Kodi and web services use the computer they
+    run on. The
     terminal is the one named by the `TERMINAL` environment variable, else
     `x-terminal-emulator` (Debian, MX Linux…), else the first known terminal found;
     Terminal on macOS, Windows Terminal (or a console) on Windows. The window stays
     open when the session ends, to read any error. Password logins type the password
-    there. The small arrow beside >_ (robot, Pi, Home Assistant, NUC) also offers
+    there. The small arrow beside >_ (robot, Pi, Linux computers, Home Assistant, a
+    Windows computer with OpenSSH: console only) also offers
     *Console in QGIS* and *Log in QGIS*: the **Terminal** tab then appears, on that
     server, with a [Console | Log] switch; its ✕ hides it again.
 - **Big button**, at the bottom of the panel, after the robot's state: *Start
@@ -568,6 +572,8 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `servers.py`                 | The servers: types, fields, storage, earlier settings   |
 | `servers_editor.py`          | Servers tab of the settings                             |
 | `remote_desktop.py`          | VNC and RDP in the system's program, SSH tunnel         |
+| `server_frames.py`           | A Status tab frame per server; web and port checks      |
+| `ha_block.py`                | Home Assistant's frame                                  |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings.py`                | Setting keys, defaults and `load_settings()`            |
 | `options_page.py`            | The Valetudo page of *Settings > Options*               |
