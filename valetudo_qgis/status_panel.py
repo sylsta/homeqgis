@@ -436,13 +436,14 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_wifi_strip.setVisible(False)   # the Wi-Fi is in the strip's tooltip
         self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.strip.installEventFilter(self)
-        # 📷 the Camera tab in one click (before Show on map, ⚙ and ⋮)
+        # 📷 the Camera tab in one click, with the robot (then 🗺 Show on map, see
+        # bind_actions), before the servers
         self.btn_strip_camera = QToolButton()
         self.btn_strip_camera.setIcon(icon("tab_camera"))
         self.btn_strip_camera.setAutoRaise(True)
         self.btn_strip_camera.setToolTip(tr("Camera"))
         self.btn_strip_camera.clicked.connect(lambda _=False: self.show_tab("camera"))
-        self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_menu),
+        self.strip_layout.insertWidget(self.strip_layout.indexOf(self.sep_pi),
                                        self.btn_strip_camera)
 
         # -- Status tab: the robot's frame (from the .ui), then a frame per server of the
@@ -721,7 +722,7 @@ class ValetudoPanel(QgsDockWidget):
             live = QToolButton()
             live.setDefaultAction(act["live"])
             live.setAutoRaise(True)
-            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_menu), live)
+            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.sep_pi), live)
             # …and in the details, next to the connection line
             live_details = QToolButton()
             live_details.setDefaultAction(act["live"])

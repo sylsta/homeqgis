@@ -101,12 +101,12 @@ The panel (titled *Connection*), from top to bottom:
 - **Status strip**, always visible: the state, battery, the job in progress (time
   and area, only while the robot works), a ⚠ when something needs you (dock tank
   empty or full, worn consumable, robot error, wrong clock: hover it for the list,
-  click it to open the right tab), then each server of the settings with *Show in the
+  click it to open the right tab), **📷** (the Camera tab in one click) and *Show on
+  map*, next to the robot; then each server of the settings with *Show in the
   status strip* ticked, in their order, as its logo and a pill styled like the robot's
   state: green *On the air*, red *Off the air*, *Connecting…*, or *No token* (Home
   Assistant answering without an access token), or just a coloured dot (*UI
-  configuration* tab of the settings, *Status strip*); hover it for the details. Then **📷**
-  (the Camera tab in one click), *Show on map*, **⚙**
+  configuration* tab of the settings, *Status strip*); hover it for the details. Then **⚙**
   (the settings) and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
   Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
   strip** for the *Status* tab (Servers section).
