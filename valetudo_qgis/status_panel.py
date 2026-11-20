@@ -56,7 +56,7 @@ from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
 from .settings import (PLUGIN_NAME, KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
-                       active_robot_id, load_settings, secret)
+                       active_robot_id, load_settings, secret, tab_order)
 from . import remote_desktop
 from . import servers as servers_model
 from .remote_desktop import RemoteDesktop
@@ -619,6 +619,7 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_refresh_all.clicked.connect(self.refresh_all)
         if "status" in self._tab_titles:
             self._tab_titles["status"][1].addWidget(self.btn_refresh_all)
+        self._apply_tab_order()
         self._show_terminal_page()   # its title names the server
         self._set_tab_shown("terminal", False)   # see open_terminal
         last = QgsSettings().value(KEY_TAB, "clean", type=str)
@@ -815,6 +816,19 @@ class ValetudoPanel(QgsDockWidget):
         row.addWidget(label, 1)
         page.layout().insertLayout(0, row)
         return label, row
+
+    def _apply_tab_order(self):
+        """The side tabs in the order chosen in the settings (Panel tab)."""
+        bar = self.tabs.tabBar()
+        current = self.tabs.currentWidget()
+        self.tabs.blockSignals(True)
+        for target, key in enumerate(k for k in tab_order() if k in self._tab_keys):
+            source = self._tab_keys.index(key)
+            if source != target:
+                bar.moveTab(source, target)
+                self._tab_keys.insert(target, self._tab_keys.pop(source))
+        self.tabs.setCurrentWidget(current)
+        self.tabs.blockSignals(False)
 
     def _set_tab_shown(self, key, shown):
         """Show or hide a side tab (Qt 5.15+)."""
@@ -1784,6 +1798,7 @@ class ValetudoPanel(QgsDockWidget):
         """Called by the plugin after the Options page saved changes: the servers'
         frames are built again from the settings."""
         self._ssh_passwords = {}   # SSH passwords may have changed
+        self._apply_tab_order()
         self._build_server_frames()
         self._update_console()
 

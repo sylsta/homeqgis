@@ -41,6 +41,9 @@ KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the N
 KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
 KEY_VNC_COMMAND = "valetudo/vnc_command"   # remote desktop programs: empty = found
 KEY_RDP_COMMAND = "valetudo/rdp_command"
+KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the panel's side tabs, comma-separated keys
+PANEL_TABS = ("status", "clean", "schedule", "history", "wifi", "camera", "maintenance",
+              "terminal")   # their default order
 KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
 KEY_KODI_USER = "valetudo/kodi_user"
@@ -100,6 +103,14 @@ def save_servers(servers):
 
 def active_robot_id():
     return QgsSettings().value(servers_model.KEY_ACTIVE_ROBOT, "", type=str)
+
+
+def tab_order():
+    """The panel's side tabs in the order chosen in the settings (tabs not in the stored
+    order, e.g. added by a later version, keep their default place at the end)."""
+    stored = QgsSettings().value(KEY_TAB_ORDER, "", type=str)
+    order = [key for key in str(stored).split(",") if key in PANEL_TABS]
+    return order + [key for key in PANEL_TABS if key not in order]
 
 
 def load_settings():

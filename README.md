@@ -136,7 +136,8 @@ The panel (titled *Connection*), from top to bottom:
 - **Big button**, at the bottom of the panel, after the robot's state: *Start
   cleaning all rooms* when docked or idle, *Pause* while it works, *Resume* when
   paused; *Dock* next to it while away from the dock.
-- **Side tabs**: icons, their names as tooltips; a tab gets an orange dot when one
+- **Side tabs**: icons, their names as tooltips, in the order set in *Settings > Options >
+  DomotiQGIS*, tab **Panel** (drag them, or ▲ ▼; *Default order*); a tab gets an orange dot when one
   of the problems of the ⚠ belongs to it. Each tab's page starts with its title (its
   icon and name), which stays in place while the page scrolls; the Terminal's also
   names the server it is on.

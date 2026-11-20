@@ -3075,5 +3075,25 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>The clock of {name} is wrong.</source>
         <translation>L'horloge de {name} est fausse.</translation>
     </message>
+    <message>
+        <source>Default order</source>
+        <translation>Ordre par défaut</translation>
+    </message>
+    <message>
+        <source>Drag the tabs, or move the selected one with ▲ ▼: the panel's side tabs follow this order from top to bottom (applied with OK). The Terminal tab only shows while a console or log is open.</source>
+        <translation>Faites glisser les onglets, ou déplacez celui sélectionné avec ▲ ▼ : les onglets latéraux du panneau suivent cet ordre de haut en bas (appliqué avec OK). L'onglet Terminal n'apparaît que lorsqu'une console ou un journal est ouvert.</translation>
+    </message>
+    <message>
+        <source>Panel</source>
+        <translation>Panneau</translation>
+    </message>
+    <message>
+        <source>Move up</source>
+        <translation>Monter</translation>
+    </message>
+    <message>
+        <source>Order of the panel's tabs</source>
+        <translation>Ordre des onglets du panneau</translation>
+    </message>
 </context>
 </TS>

@@ -6,9 +6,11 @@ Cancel saves nothing, like the other Options pages.
 
 import os
 
-from qgis.PyQt.QtCore import QDateTime, QLocale, Qt, QUrl
+from qgis.PyQt.QtCore import QDateTime, QLocale, QSize, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtWidgets import (QFileDialog, QListWidgetItem, QMessageBox,
+from qgis.PyQt.QtWidgets import (QAbstractItemView, QHBoxLayout, QLabel, QListWidget,
+                                 QPushButton, QToolButton, QVBoxLayout, QWidget,
+                                 QFileDialog, QListWidgetItem, QMessageBox,
                                  QStackedWidget)
 from qgis.core import QgsSettings
 from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
@@ -22,7 +24,7 @@ from .servers_editor import ServersEditor
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_ADVANCED, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_RDP_COMMAND,
-    KEY_VNC_COMMAND, PLUGIN_NAME, WIFI_DEFAULTS,
+    KEY_TAB_ORDER, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, WIFI_DEFAULTS, tab_order,
     active_robot_id, default_camera_url, load_settings, save_servers, set_secret,
 )
 from .ui_loader import load_ui
@@ -32,7 +34,7 @@ PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_
 UI_WIDGETS = (
     "interval", "live_at_start", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "record_history",
-    "servers_layout", "chk_advanced",
+    "servers_layout", "chk_advanced", "tabs",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
     "btn_backup_reset", "about_layout",
@@ -49,6 +51,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._on_applied = on_applied
         self.servers_editor = ServersEditor(self)
         self.servers_layout.addWidget(self.servers_editor)
+        self._build_panel_tab()
         self._fill()
         self._setup_backup()
         self.about_layout.addWidget(AboutWidget(self))
@@ -73,12 +76,70 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.notify_dock.setChecked(cfg["notify_dock"])
         self.record_history.setChecked(cfg["history"])
         self.chk_advanced.setChecked(cfg["advanced_tools"])
+        self._fill_tab_order(tab_order())
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             if kind is bool:
                 widget.setChecked(cfg[key])
             else:
                 widget.setValue(cfg[key])
+
+    # -- Panel tab: the order of the panel's side tabs -------------------------------
+
+    def _build_panel_tab(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.addWidget(QLabel("<b>" + tr("Order of the panel's tabs") + "</b>"))
+        row = QHBoxLayout()
+        self.list_tabs = QListWidget()
+        self.list_tabs.setIconSize(QSize(20, 20))
+        self.list_tabs.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.list_tabs.setMaximumWidth(260)
+        row.addWidget(self.list_tabs)
+        buttons = QVBoxLayout()
+        for text, tip, step in (("▲", tr("Move up"), -1), ("▼", tr("Move down"), 1)):
+            button = QToolButton()
+            button.setText(text)
+            button.setToolTip(tip)
+            button.clicked.connect(lambda _=False, s=step: self._move_tab(s))
+            buttons.addWidget(button)
+        buttons.addStretch(1)
+        row.addLayout(buttons)
+        row.addStretch(1)
+        layout.addLayout(row)
+        default = QPushButton(tr("Default order"))
+        default.clicked.connect(lambda: self._fill_tab_order(list(PANEL_TABS)))
+        layout.addWidget(default, 0, Qt.AlignmentFlag.AlignLeft)
+        hint = QLabel(tr("Drag the tabs, or move the selected one with ▲ ▼: the panel's side "
+                         "tabs follow this order from top to bottom (applied with OK). The "
+                         "Terminal tab only shows while a console or log is open."))
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        layout.addStretch(1)
+        self.tabs.insertTab(self.tabs.count() - 2, page, tr("Panel"))
+
+    def _fill_tab_order(self, order):
+        labels = {"status": tr("Status"), "clean": tr("Clean"), "schedule": tr("Schedule"),
+                  "history": tr("History"), "wifi": tr("Wi-Fi"), "camera": tr("Camera"),
+                  "maintenance": tr("Maintenance"), "terminal": tr("Terminal")}
+        self.list_tabs.clear()
+        for key in order:
+            item = QListWidgetItem(icon(f"tab_{key}"), labels.get(key, key))
+            item.setData(Qt.ItemDataRole.UserRole, key)
+            self.list_tabs.addItem(item)
+
+    def _tab_order_on_screen(self):
+        return [self.list_tabs.item(i).data(Qt.ItemDataRole.UserRole)
+                for i in range(self.list_tabs.count())]
+
+    def _move_tab(self, step):
+        row = self.list_tabs.currentRow()
+        target = row + step
+        if row < 0 or not 0 <= target < self.list_tabs.count():
+            return
+        item = self.list_tabs.takeItem(row)
+        self.list_tabs.insertItem(target, item)
+        self.list_tabs.setCurrentRow(target)
 
     # -- Backup tab -----------------------------------------------------------------
 
@@ -217,6 +278,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_NOTIFY_DOCK, self.notify_dock.isChecked())
         s.setValue(KEY_HISTORY, self.record_history.isChecked())
         s.setValue(KEY_ADVANCED, self.chk_advanced.isChecked())
+        s.setValue(KEY_TAB_ORDER, ",".join(self._tab_order_on_screen()))
         secrets_changed, failed = False, False
         for key, value in editor.secret_changes():
             if set_secret(key, value):
