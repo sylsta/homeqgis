@@ -417,9 +417,10 @@ authentication database (QGIS may ask for its master password). **Test
 connection** reads the server's name and version.
 
 **Terminal** tab, *Home Assistant*: a console and a log on your Home Assistant
-server. Set its SSH address, user (`root` by default) and port in *Settings >
-Options > DomotiQGIS*, tab *Servers*, *Home Assistant*; without an address, its >_
-button has no console or log. On Home Assistant OS, install the *Terminal & SSH* add-on and set its SSH
+server, over SSH as `root` by default, on Home Assistant's own host unless you set
+another SSH address (user and port too) in *Settings > Options > DomotiQGIS*, tab
+*Servers*, *Home Assistant*. In the Status tab, the arrow of Home Assistant's 🌐
+button also opens the Supervisor's web interface (`http://<Home Assistant host>:4327`). On Home Assistant OS, install the *Terminal & SSH* add-on and set its SSH
 port in the add-on's *Network* settings, then either paste your public key
 (`~/.ssh/id_ed25519.pub`) in its `authorized_keys` option, or set a password in
 its options and in the plugin's *SSH password* field. The password is stored

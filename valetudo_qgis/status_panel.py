@@ -147,6 +147,15 @@ STATE_COLORS = {
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
 SERVERS = ("robot", "pi", "ha", "nuc", "kodi")   # frames of the Status tab
+HA_SUPERVISOR_PORT = 4327   # the Supervisor's web interface, on Home Assistant's host
+
+
+def _on_port(url, port):
+    """url's scheme and host on another port ("" if url has no host)."""
+    parts = QUrl(url if "://" in url else "http://" + url) if url else QUrl()
+    if not parts.host():
+        return ""
+    return f"{parts.scheme() or 'http'}://{parts.host()}:{port}/"
 
 
 TERMINAL_DEVICES = ("robot", "pi", "ha", "nuc")   # with a console and a log in QGIS
@@ -457,6 +466,15 @@ class ValetudoPanel(QgsDockWidget):
             ssh.setIcon(icon("tab_terminal"))
             web.clicked.connect(lambda _=False, p=prefix: self.open_web(p))
             ssh.clicked.connect(lambda _=False, p=prefix: self.open_ssh(p))
+            if prefix == "ha":
+                # Click: Home Assistant; its arrow: also the Supervisor's interface
+                menu = QMenu(web)
+                menu.addAction(icon("web"), "Home Assistant", lambda: self.open_web("ha"))
+                self._ha_supervisor_action = menu.addAction(
+                    icon("web"), tr("Supervisor (port {port})").format(port=HA_SUPERVISOR_PORT),
+                    lambda: self.open_web("ha_supervisor"))
+                web.setMenu(menu)
+                web.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
             if prefix in TERMINAL_DEVICES:
                 # Click: the system terminal; its arrow: the console or log in QGIS
                 menu = QMenu(ssh)
@@ -1488,13 +1506,15 @@ class ValetudoPanel(QgsDockWidget):
         return (cfg["pi_host"], cfg["pi_user"], int(cfg["pi_port"])) if cfg["pi_host"] else None
 
     def _ha_ssh_target(self):
-        """(host, user, port) of the Home Assistant server over SSH, or None.
+        """(host, user, port) of the Home Assistant server over SSH, or None. Without an
+        SSH address of its own: Home Assistant's host, as root (the SSH add-on's user).
 
         Registers its SSH password, if one is stored (read once per target)."""
         cfg = load_settings()
-        if not cfg["ha_ssh_host"]:
+        host = cfg["ha_ssh_host"] or QUrl(cfg["ha_url"]).host()
+        if not host:
             return None
-        target = (cfg["ha_ssh_host"], cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
+        target = (host, cfg["ha_ssh_user"], int(cfg["ha_ssh_port"]))
         if getattr(self, "_ha_ssh_password_for", None) != target:
             password = (secret(HA_SSH_PASSWORD_SETTING)
                         if has_secret(HA_SSH_PASSWORD_SETTING) else "")
@@ -1523,6 +1543,7 @@ class ValetudoPanel(QgsDockWidget):
         """Address of a server's web interface, or ""."""
         cfg = load_settings()
         url = {"robot": cfg["url"], "pi": cfg["pi_web_url"], "ha": cfg["ha_url"],
+               "ha_supervisor": _on_port(cfg["ha_url"], HA_SUPERVISOR_PORT),
                "nuc": cfg["nuc_web_url"],
                "kodi": kodi_rpc_url(cfg["kodi_url"])[:-len("jsonrpc")] if cfg["kodi_url"]
                else ""}[prefix].strip()
@@ -1546,7 +1567,11 @@ class ValetudoPanel(QgsDockWidget):
             web, ssh = getattr(self, f"btn_{prefix}_web"), getattr(self, f"btn_{prefix}_ssh")
             url, target = self._server_web(prefix), self._server_ssh(prefix)
             web.setVisible(bool(url))
-            web.setToolTip(tr("Open the web interface in the browser: {url}").format(url=url))
+            tip = tr("Open the web interface in the browser: {url}").format(url=url)
+            if prefix == "ha" and url:
+                tip += "\n" + tr("Its arrow: the Supervisor's interface, {url}").format(
+                    url=self._server_web("ha_supervisor"))
+            web.setToolTip(tip)
             ssh.setVisible(target is not None)
             if target is not None:
                 ssh.setToolTip(tr("Open an SSH session in a terminal: {command}").format(

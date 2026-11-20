@@ -114,7 +114,8 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.nuc_log_command.setPlaceholderText(tr("automatic: journalctl, else /var/log/syslog"))
         self.ha_ssh_host.setText(cfg["ha_ssh_host"])
         self.ha_ssh_host.setPlaceholderText(
-            QUrl(cfg["ha_url"]).host() or "192.168.50.1")
+            tr("Home Assistant's host ({host})").format(host=QUrl(cfg["ha_url"]).host())
+            if QUrl(cfg["ha_url"]).host() else "192.168.50.1")
         self.ha_ssh_user.setText(cfg["ha_ssh_user"])
         self.ha_ssh_port.setValue(cfg["ha_ssh_port"])
         self.ha_log_command.setText(cfg["ha_log_command"])

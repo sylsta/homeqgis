@@ -2951,5 +2951,17 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>NUC</source>
         <translation>NUC</translation>
     </message>
+    <message>
+        <source>Supervisor (port {port})</source>
+        <translation>Supervisor (port {port})</translation>
+    </message>
+    <message>
+        <source>Its arrow: the Supervisor's interface, {url}</source>
+        <translation>Sa flèche : l'interface du Supervisor, {url}</translation>
+    </message>
+    <message>
+        <source>Home Assistant's host ({host})</source>
+        <translation>hôte de Home Assistant ({host})</translation>
+    </message>
 </context>
 </TS>
