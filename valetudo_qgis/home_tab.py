@@ -19,7 +19,7 @@ from qgis.PyQt.QtGui import QColor, QFont
 from qgis.PyQt.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QHeaderView, QLabel,
                                  QLineEdit, QSplitter, QToolButton, QTreeWidget,
                                  QTreeWidgetItem, QVBoxLayout, QWidget)
-from qgis.core import QgsApplication, QgsSettings
+from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsSettings
 
 from . import ha_history, ha_home
 from .charts import color, sparkline_pixmap
@@ -29,6 +29,8 @@ from .i18n import tr
 from .settings import load_settings, secret
 
 REFRESH_MS = 15_000
+BUSY_GIVE_UP_S = 45      # an answer not back after this: asked again
+DETAIL_EVERY_S = 60      # the detail pane's graphs: read again every minute
 KEY_GROUP_BY = "valetudo/home_group_by"
 KEY_PROBLEMS_ONLY = "valetudo/home_problems_only"
 KEY_VIRTUAL = "valetudo/home_virtual"
@@ -60,6 +62,9 @@ class HomeTab(QWidget):
         self._token = None
         self._data = None         # the last answer of the template
         self._busy = False
+        self._busy_since = 0.0
+        self._updated_at = ""
+        self._detail_at = 0.0
         self._model = None
         self._spark, self._spark_at = {}, 0.0        # entity id -> 24 h of points
         self._batteries, self._battery_at = {}, 0.0  # battery entity id -> 10 days
@@ -197,9 +202,9 @@ class HomeTab(QWidget):
             self.lbl_status.setText(tr("Home Assistant needs an access token to list its "
                                        "devices: add one in the settings (Servers tab)."))
             return
-        if self._busy:
-            return
-        self._busy = True
+        if self._busy and time.monotonic() - self._busy_since < BUSY_GIVE_UP_S:
+            return   # the previous answer is still awaited (given up after a while)
+        self._busy, self._busy_since = True, time.monotonic()
         if self._data is None:
             self.lbl_status.setText(tr("Reading Home Assistant…"))
 
@@ -209,8 +214,19 @@ class HomeTab(QWidget):
                 self.lbl_status.setText(tr("Unexpected answer from Home Assistant."))
                 return
             self._data = data
-            self._render()
-            self._read_histories()
+            self._updated_at = time.strftime("%H:%M:%S")
+            try:
+                self._render()
+                self._read_histories()
+                if time.monotonic() - self._detail_at >= DETAIL_EVERY_S:
+                    self._detail_at = time.monotonic()
+                    self.detail.reload()   # the selected device's graphs too
+            except Exception as exc:   # shown, rather than refreshing no more silently
+                import traceback
+                QgsMessageLog.logMessage(traceback.format_exc(), "DomotiQGIS",
+                                         Qgis.MessageLevel.Warning)
+                self.lbl_status.setText(tr("Display error: {error} (details in the "
+                                           "DomotiQGIS log)").format(error=exc))
 
         def failed(error):
             self._busy = False
@@ -269,6 +285,7 @@ class HomeTab(QWidget):
         return sparkline_pixmap(values, line_color=color(2).name(), binary=True)
 
     def _on_selection(self):
+        self._detail_at = time.monotonic()
         items = self.tree.selectedItems()
         key = items[0].data(COL_NAME, ROLE_KEY) if items else None
         model = self._model
@@ -308,6 +325,9 @@ class HomeTab(QWidget):
         words = _state_words()
         expanded = self._expanded()
         first_time = not expanded and self.tree.topLevelItemCount() == 0
+        selected = [i.data(COL_NAME, ROLE_KEY) for i in self.tree.selectedItems()]
+        scroll = self.tree.verticalScrollBar().value()
+        self.tree.blockSignals(True)   # (no detail reload for the same selection)
         self.tree.clear()
         text, problems_only = self.edit_filter.text(), self.chk_problems.isChecked()
         shown = 0
@@ -341,6 +361,10 @@ class HomeTab(QWidget):
                 for entity in loose:
                     self._add_entity(group, entity, words)
                 group.setExpanded("group:loose" in expanded)
+        if selected:
+            self._select(selected[0])
+        self.tree.blockSignals(False)
+        self.tree.verticalScrollBar().setValue(scroll)
         unavailable = sum(1 for d in model["devices"] if "unavailable" in d["problems"])
         low = sum(1 for d in model["devices"] if "low_battery" in d["problems"])
         soon = sum(1 for d in model["devices"] if "battery_soon" in d["problems"])
@@ -352,7 +376,20 @@ class HomeTab(QWidget):
             parts.append(tr("{n} low battery").format(n=low))
         if shown != len(model["devices"]):
             parts.append(tr("{n} shown").format(n=shown))
+        if self._updated_at:
+            parts.append(tr("updated at {time}").format(time=self._updated_at))
         self.lbl_status.setText(" · ".join(parts))
+
+    def _select(self, key):
+        """Select the item with this key again (after the list was rebuilt)."""
+        def walk(item):
+            if item.data(COL_NAME, ROLE_KEY) == key:
+                item.setSelected(True)
+                return True
+            return any(walk(item.child(i)) for i in range(item.childCount()))
+        for i in range(self.tree.topLevelItemCount()):
+            if walk(self.tree.topLevelItem(i)):
+                return
 
     def _expanded(self):
         keys = set()

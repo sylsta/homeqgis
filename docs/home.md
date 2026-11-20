@@ -9,7 +9,9 @@ server in the settings, with its **access token** (see
 ## The device list
 
 Read with one request every 15 s while the section is shown (**⟳** reads again
-now).
+now); the line under the list says when it was last updated. The selection and
+the scroll position stay as they are, and the detail pane's graphs are read again
+every minute.
 
 - **Group by**: **area** (Home Assistant's rooms) or **integration** (Zigbee/ZHA,
   MQTT/Zigbee2MQTT, Hue, Shelly, ESPHome…).

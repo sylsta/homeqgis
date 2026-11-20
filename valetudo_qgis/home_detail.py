@@ -147,6 +147,7 @@ class DetailPane(QWidget):
 
     def show_devices(self, title, devices, area_name=""):
         self._subject = ("devices", title, devices, area_name)
+        self.chart.set_message(tr("Reading the history…"))
         self.reload()
 
     def show_compare(self, kind):
@@ -179,7 +180,8 @@ class DetailPane(QWidget):
             return
         self._request += 1
         number = self._request
-        self.chart.set_message(tr("Reading the history…"))
+        if not self.chart.series and not self.chart.timelines:   # (no flicker on refresh)
+            self.chart.set_message(tr("Reading the history…"))
 
         def ok(answer):
             if number == self._request:   # not a newer request since

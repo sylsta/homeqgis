@@ -3463,5 +3463,13 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>User manual</source>
         <translation>Manuel d'utilisation</translation>
     </message>
+    <message>
+        <source>Display error: {error} (details in the DomotiQGIS log)</source>
+        <translation>Erreur d'affichage : {error} (détails dans le journal DomotiQGIS)</translation>
+    </message>
+    <message>
+        <source>updated at {time}</source>
+        <translation>mis à jour à {time}</translation>
+    </message>
 </context>
 </TS>
