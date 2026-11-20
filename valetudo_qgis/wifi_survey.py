@@ -16,7 +16,7 @@ import time
 from qgis.PyQt.QtCore import QDateTime, QMetaType, QObject, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.core import (
-    Qgis, QgsColorRampShader, QgsCoordinateReferenceSystem, QgsFeature, QgsFeatureRequest, QgsField, QgsGeometry,
+    Qgis, QgsColorRampShader, QgsCoordinateReferenceSystem, QgsFeatureRequest, QgsField, QgsGeometry,
     QgsProperty, QgsRasterLayer, QgsRasterShader, QgsSingleBandPseudoColorRenderer,
     QgsSymbol, QgsSymbolLayer, QgsVectorLayer,
 )

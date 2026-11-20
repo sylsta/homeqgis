@@ -35,8 +35,6 @@ from .project_layers import project_folder, role_of, write_gpkg
 
 KEY_PERIOD = "valetudo/home_period"
 ON_STATES = ("on", "open", "playing", "home", "detected")
-COMPARE_KINDS = ("temperature", "humidity", "carbon_dioxide", "illuminance", "power",
-                 "pressure")
 REPLAY_GROUP = "domotiqgis/home_replay"
 
 
@@ -44,14 +42,6 @@ def kind_labels():
     return {"temperature": tr("Temperature"), "humidity": tr("Humidity"),
             "carbon_dioxide": "CO₂", "illuminance": tr("Light level"), "power": tr("Power"),
             "pressure": tr("Pressure")}
-
-
-def _numeric_entity(entity):
-    try:
-        float(entity.get("state"))
-        return True
-    except (TypeError, ValueError):
-        return entity.get("domain") == "sensor" and bool(entity.get("unit"))
 
 
 class DetailPane(QWidget):

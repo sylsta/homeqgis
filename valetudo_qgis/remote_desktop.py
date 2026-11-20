@@ -22,7 +22,6 @@ from qgis.PyQt.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
 from . import ssh_auth
 
-PROTOCOLS = ("vnc", "rdp")
 DEFAULT_PORTS = {"vnc": 5900, "rdp": 3389}
 TUNNEL_WAIT_MS = 10_000
 TUNNEL_HOLD_S = 30   # the tunnel waits this long for the program to connect

@@ -48,10 +48,6 @@ class SensorManager(QObject):
             self._client = HomeAssistantClient(url, token, self)
         return self._client
 
-    def reload_config(self):
-        """Re-read the stored sensors (after the user placed or removed one)."""
-        self._config = ha_sensors()
-
     def config(self):
         return list(self._config)
 

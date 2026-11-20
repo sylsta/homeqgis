@@ -1622,10 +1622,6 @@ Continuer ?</translation>
         <translation>Nécessite une connexion SSH par clé : ssh-copy-id {user}@{host}</translation>
     </message>
     <message>
-        <source>Raspberry Pi</source>
-        <translation>Raspberry Pi</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
@@ -1636,10 +1632,6 @@ Continuer ?</translation>
     <message>
         <source>SSH port</source>
         <translation>Port SSH</translation>
-    </message>
-    <message>
-        <source>Runs on the Raspberry Pi, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
-        <translation>S’exécute sur le Raspberry Pi, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables ne le sont pas.</translation>
     </message>
     <message>
         <source>first image after {seconds} s</source>
@@ -1928,10 +1920,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Connecté : {name}</translation>
     </message>
     <message>
-        <source>Home Assistant</source>
-        <translation>Home Assistant</translation>
-    </message>
-    <message>
         <source>Access token</source>
         <translation>Jeton d’accès</translation>
     </message>
@@ -1966,10 +1954,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Log command</source>
         <translation>Commande du journal</translation>
-    </message>
-    <message>
-        <source>Runs on the Home Assistant server, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
-        <translation>S’exécute sur le serveur Home Assistant, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
     </message>
     <message>
         <source>SSH password</source>
@@ -2060,10 +2044,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>{count} processeurs</translation>
     </message>
     <message>
-        <source>NUC</source>
-        <translation>NUC</translation>
-    </message>
-    <message>
         <source>CPU {temperature}</source>
         <translation>processeur {temperature}</translation>
     </message>
@@ -2080,20 +2060,12 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Un jeton ou un mot de passe n’a pas été enregistré : le mot de passe principal de QGIS est nécessaire pour le stocker chiffré.</translation>
     </message>
     <message>
-        <source>Kodi</source>
-        <translation>Kodi</translation>
-    </message>
-    <message>
         <source>Username</source>
         <translation>Nom d’utilisateur</translation>
     </message>
     <message>
         <source>Password</source>
         <translation>Mot de passe</translation>
-    </message>
-    <message>
-        <source>⏹</source>
-        <translation>⏹</translation>
     </message>
     <message>
         <source>Optional: with an address, the Status tab shows Kodi: its version, uptime and CPU temperature, what is playing, with Play/Pause and Stop. In Kodi: Settings › Services › Control, turn on Allow remote control via HTTP and set a username and password (port 8080 by default). The password is kept encrypted in the QGIS authentication database.</source>
@@ -2220,10 +2192,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>automatique : journalctl, sinon /var/log/syslog</translation>
     </message>
     <message>
-        <source>Runs on the NUC, one command at a time, without a terminal: interactive programs (vi, top, less…) do not work. cd is kept from one command to the next, variables are not.</source>
-        <translation>S’exécute sur le NUC, une commande à la fois, sans terminal : les programmes interactifs (vi, top, less…) ne fonctionnent pas. cd est conservé d’une commande à l’autre, les variables non.</translation>
-    </message>
-    <message>
         <source>Robot: map</source>
         <translation>Robot : carte</translation>
     </message>
@@ -2254,10 +2222,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Settings</source>
         <translation>Paramètres</translation>
-    </message>
-    <message>
-        <source>A control centre in QGIS for a robot vacuum running Valetudo, with its map as real GIS layers, and for the home servers around it: Raspberry Pi, Home Assistant, NUC and Kodi.</source>
-        <translation>Un centre de contrôle dans QGIS pour un robot aspirateur sous Valetudo, avec sa carte en vraies couches SIG, et pour les serveurs de la maison autour de lui : Raspberry Pi, Home Assistant, NUC et Kodi.</translation>
     </message>
     <message>
         <source>Unfold all</source>
@@ -2328,10 +2292,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Relevé enregistré dans QGIS, ou sur le robot lui-même quand QGIS est fermé</translation>
     </message>
     <message>
-        <source>Interpolated signal maps, per run and cumulative ones built on the Raspberry Pi</source>
-        <translation>Cartes du signal interpolées, par passage et cumulées, construites sur le Raspberry Pi</translation>
-    </message>
-    <message>
         <source>Live view, full screen, snapshots, MP4 recording, camera light</source>
         <translation>Vue en direct, plein écran, captures, enregistrement MP4, lumière de la caméra</translation>
     </message>
@@ -2348,44 +2308,12 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Console SSH et journal en direct sur le robot</translation>
     </message>
     <message>
-        <source>Status: system, clock, uptime</source>
-        <translation>État : système, horloge, durée de fonctionnement</translation>
-    </message>
-    <message>
-        <source>SSH console and live log</source>
-        <translation>Console SSH et journal en direct</translation>
-    </message>
-    <message>
-        <source>Builds the Wi-Fi maps by itself after each run; loaded into QGIS in one click</source>
-        <translation>Construit les cartes Wi-Fi tout seul après chaque passage ; chargées dans QGIS en un clic</translation>
-    </message>
-    <message>
-        <source>Status: version, home, clock, uptime</source>
-        <translation>État : version, maison, horloge, durée de fonctionnement</translation>
-    </message>
-    <message>
         <source>SSH console and live log, by key or password</source>
         <translation>Console SSH et journal en direct, par clé ou mot de passe</translation>
     </message>
     <message>
         <source>Status: system, clock, uptime, load, memory, disk, temperature</source>
         <translation>État : système, horloge, durée de fonctionnement, charge, mémoire, disque, température</translation>
-    </message>
-    <message>
-        <source>SSH console and live system log</source>
-        <translation>Console SSH et journal système en direct</translation>
-    </message>
-    <message>
-        <source>Status: version, uptime, temperature</source>
-        <translation>État : version, durée de fonctionnement, température</translation>
-    </message>
-    <message>
-        <source>What is playing, with its progress; play, pause and stop</source>
-        <translation>Ce qui est en lecture, avec sa progression ; lecture, pause et arrêt</translation>
-    </message>
-    <message>
-        <source>One Options page for all of them, with a test button for each</source>
-        <translation>Une seule page d’options pour tous, avec un bouton de test pour chacun</translation>
     </message>
     <message>
         <source>Tokens and passwords kept encrypted</source>
@@ -2858,10 +2786,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Off the air</source>
         <translation>Hors antenne</translation>
-    </message>
-    <message>
-        <source>NUC</source>
-        <translation>NUC</translation>
     </message>
     <message>
         <source>Supervisor (port {port})</source>
@@ -3470,6 +3394,54 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>updated at {time}</source>
         <translation>mis à jour à {time}</translation>
+    </message>
+    <message>
+        <source>Home Assistant devices by room, with their state and a sparkline</source>
+        <translation>Appareils Home Assistant par pièce, avec leur état et une mini-courbe</translation>
+    </message>
+    <message>
+        <source>History charts by period, comparison, battery trend, CSV and GeoPackage export</source>
+        <translation>Graphiques d'historique par période, comparaison, tendance des piles, export CSV et GeoPackage</translation>
+    </message>
+    <message>
+        <source>Sensor history replayed on the map with the Temporal Controller</source>
+        <translation>Historique des capteurs rejoué sur la carte avec le contrôleur temporel</translation>
+    </message>
+    <message>
+        <source>Any number of servers: Valetudo robots, Raspberry Pi, Home Assistant, Kodi, Linux and Windows computers, web services</source>
+        <translation>Autant de serveurs que voulu : robots Valetudo, Raspberry Pi, Home Assistant, Kodi, ordinateurs Linux et Windows, services web</translation>
+    </message>
+    <message>
+        <source>Remote desktop over VNC or RDP, through an SSH tunnel if needed</source>
+        <translation>Bureau à distance en VNC ou RDP, par un tunnel SSH si besoin</translation>
+    </message>
+    <message>
+        <source>Kodi: what is playing, with its progress; play, pause and stop</source>
+        <translation>Kodi : lecture en cours, avec sa progression ; lecture, pause et arrêt</translation>
+    </message>
+    <message>
+        <source>On the air or off the air at a glance on the status line</source>
+        <translation>En ligne ou hors ligne d'un coup d'œil sur la ligne d'état</translation>
+    </message>
+    <message>
+        <source>Interpolated signal maps, per run and cumulative ones built on a Raspberry Pi</source>
+        <translation>Cartes de signal interpolées, par passage et cumulées, construites sur un Raspberry Pi</translation>
+    </message>
+    <message>
+        <source>One Options page for all of them, with a test button for each server</source>
+        <translation>Une seule page d'options pour tous, avec un bouton de test par serveur</translation>
+    </message>
+    <message>
+        <source>Order of the panels and buttons of the toolbar chosen in the UI configuration</source>
+        <translation>Ordre des onglets et boutons de la barre d'outils choisis dans la configuration de l'interface</translation>
+    </message>
+    <message>
+        <source>A control centre in QGIS for a robot vacuum running Valetudo, with its map as real GIS layers, for the Home Assistant devices of the home, and for the servers around them.</source>
+        <translation>Un centre de contrôle dans QGIS pour un robot aspirateur sous Valetudo, avec sa carte en vraies couches SIG, pour les appareils Home Assistant de la maison et pour les serveurs qui les entourent.</translation>
+    </message>
+    <message>
+        <source>Raspberry Pi</source>
+        <translation>Raspberry Pi</translation>
     </message>
 </context>
 </TS>

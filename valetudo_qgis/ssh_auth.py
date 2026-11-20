@@ -35,10 +35,6 @@ def set_password(host, user, port, password):
         _passwords.pop(_key(host, user, port), None)
 
 
-def has_password(host, user, port):
-    return _key(host, user, port) in _passwords
-
-
 def askpass_script():
     """Path of the helper (written once per session, without the password)."""
     folder = tempfile.gettempdir()

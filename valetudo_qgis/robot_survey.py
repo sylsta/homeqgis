@@ -26,8 +26,6 @@ SCRIPT_NAME = "valetudo_wifi_survey.sh"
 DATA_NAME = "valetudo_wifi_survey.csv"
 PID_FILE = "/tmp/valetudo_wifi_survey.pid"
 PERSISTENT_DIRS = ("/data", "/mnt/UDISK", "/mnt/data", "/userdata", "/tmp")
-OPERATIONS = ("install", "ensure", "import", "remove")
-
 _PICK_DIR = (
     "d=; for c in " + " ".join(PERSISTENT_DIRS) + "; do "
     'if [ -d "$c" ] && touch "$c/.vq_test" 2>/dev/null; then rm -f "$c/.vq_test"; d=$c; break; fi; '

@@ -25,7 +25,7 @@ from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
-from .map_layers import ValetudoLayers, layer_names
+from .map_layers import ValetudoLayers
 from .map_overlay import MapOverlay
 from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
@@ -221,7 +221,7 @@ class ValetudoPlugin:
         self.iface.registerOptionsWidgetFactory(self.options_factory)
         # One switch for the map: load it, track the robot live and keep it in view.
         self._new_action("live", tr("Show on map"), self.toggle_live, checkable=True)
-        self.act["live"].setIcon(icon("show_map"))
+        self.act["live"].setIcon(icon("show_map"))   # (a map with the robot)
         self._new_action("start", tr("Clean everything"), lambda *_: self.control("start"))
         self._new_action("pause", labels["pause"], lambda *_: self.control("pause"))
         self._new_action("home", tr("Dock"), lambda *_: self.control("home"))

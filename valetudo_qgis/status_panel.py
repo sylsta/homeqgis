@@ -44,8 +44,7 @@ from . import room_groups
 from .i18n import tr
 from . import host_info
 from .history_tab import HistoryTab
-from .icons import APP_ICON, HA_LOGO, KODI_ICON, LOGO, NUC_ICON, RPI_LOGO, icon
-from .robot_survey import RobotSurvey
+from .icons import APP_ICON, LOGO, icon
 from .ssh_host_block import SshHostBlock
 from .kodi_block import KodiBlock
 from .kodi_client import rpc_url as kodi_rpc_url
@@ -56,8 +55,8 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (PLUGIN_NAME, KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
-                       active_robot_id, load_settings, secret, tab_order)
+from .settings import (KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, active_robot_id, has_secret,
+                       load_settings, secret, tab_order)
 from . import remote_desktop
 from . import servers as servers_model
 from .remote_desktop import RemoteDesktop
@@ -68,7 +67,6 @@ from .server_frames import (PortBlock, ServerFrame, WebBlock, build_console_page
                             build_log_page)
 from .servers_editor import TYPE_ICONS as SERVER_ICONS, display_name as server_display_name
 from . import ssh_auth
-from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
 from .console_tab import ConsoleTab
 from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minutes
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
@@ -90,19 +88,10 @@ KEY_PI_MAP_FULL = "valetudo/pi_map_full"   # "Load Wi-Fi map from the Pi": all r
 UI_WIDGETS = (
     # strip, details, action bar
     "strip", "strip_layout", "lbl_logo", "lbl_badge", "bar_battery", "lbl_wifi_strip", "lbl_job",
-    "btn_warning", "sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
-    "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip", "btn_menu",
-    "lbl_details_logo", "lbl_badge_details", "bar_battery_details",
-    "ha_header", "lbl_ha_logo", "lbl_ha_connection", "lbl_ha_name",
-    "lbl_ha_info", "nuc_header", "lbl_nuc_logo", "lbl_nuc_connection",
-    "lbl_nuc_name", "lbl_nuc_info", "lbl_nuc_resources",
-    "kodi_header", "lbl_kodi_logo", "lbl_kodi_connection",
-    "lbl_kodi_name", "lbl_kodi_info", "kodi_play_row", "lbl_kodi_playing",
-    "bar_kodi_progress", "btn_kodi_play", "btn_kodi_stop", "details", "header_layout", "lbl_connection",
-    "btn_robot_web", "btn_robot_ssh", "btn_pi_web", "btn_pi_ssh", "btn_ha_web", "btn_ha_ssh",
-    "btn_nuc_web", "btn_nuc_ssh", "btn_kodi_web", "btn_kodi_ssh",
-    "lbl_robot", "lbl_robot_info", "pi_header", "lbl_pi_logo", "lbl_pi_connection",
-    "lbl_pi_name", "lbl_pi_info", "action_layout", "btn_primary",
+    "btn_warning", "sep_servers", "btn_menu",
+    "lbl_details_logo", "lbl_badge_details", "bar_battery_details", "details", "header_layout", "lbl_connection",
+    "btn_robot_web", "btn_robot_ssh",
+    "lbl_robot", "lbl_robot_info", "action_layout", "btn_primary",
     "lbl_error", "lbl_feedback", "tabs",
     # Clean
     "tab_clean", "rooms", "box_settings", "settings_form", "combo_operation_mode",
@@ -127,19 +116,7 @@ UI_WIDGETS = (
     "terminal_stack",
     "tab_console", "lbl_console_status", "btn_console_connect", "btn_console_clear",
     "txt_console", "lbl_console_prompt", "edit_console", "btn_console_run", "btn_console_stop",
-    "tab_pi_console", "lbl_pi_console_status", "btn_pi_console_connect",
-    "btn_pi_console_clear", "txt_pi_console", "lbl_pi_console_prompt", "edit_pi_console",
-    "btn_pi_console_run", "btn_pi_console_stop",
     "tab_log", "lbl_log_status", "chk_log_follow", "btn_log_clear", "txt_log",
-    "tab_pi_log", "lbl_pi_log_status", "chk_pi_log_follow", "btn_pi_log_clear", "txt_pi_log",
-    "tab_ha_console", "lbl_ha_console_status", "btn_ha_console_connect",
-    "btn_ha_console_clear", "txt_ha_console", "lbl_ha_console_prompt", "edit_ha_console",
-    "btn_ha_console_run", "btn_ha_console_stop",
-    "tab_ha_log", "lbl_ha_log_status", "chk_ha_log_follow", "btn_ha_log_clear", "txt_ha_log",
-    "tab_nuc_console", "lbl_nuc_console_status", "btn_nuc_console_connect",
-    "btn_nuc_console_clear", "txt_nuc_console", "lbl_nuc_console_prompt", "edit_nuc_console",
-    "btn_nuc_console_run", "btn_nuc_console_stop",
-    "tab_nuc_log", "lbl_nuc_log_status", "chk_nuc_log_follow", "btn_nuc_log_clear", "txt_nuc_log",
     "box_status", "status_form", "lbl_state", "lbl_dock", "lbl_attachments",
     "lbl_position", "system_grid", "txt_boot", "list_events",
     "lbl_features",
@@ -444,13 +421,11 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_strip_camera.setAutoRaise(True)
         self.btn_strip_camera.setToolTip(tr("Camera"))
         self.btn_strip_camera.clicked.connect(lambda _=False: self.show_tab("camera"))
-        self.strip_layout.insertWidget(self.strip_layout.indexOf(self.sep_pi),
+        self.strip_layout.insertWidget(self.strip_layout.indexOf(self.sep_servers),
                                        self.btn_strip_camera)
 
         # -- Status tab: the robot's frame (from the .ui), then a frame per server of the
-        # settings, built by _build_server_frames() (the .ui's fixed ones stay hidden)
-        for frame in (self.pi_header, self.ha_header, self.nuc_header, self.kodi_header):
-            frame.setVisible(False)
+        # settings, built by _build_server_frames()
         self._server_entries = []   # see _build_server_frames
         self._ssh_passwords = {}    # server id -> SSH target its password was given for
         self._terminal_entries = []   # "Console / Log in QGIS": advanced tools
@@ -468,9 +443,7 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_robot_ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.remote_desktop = RemoteDesktop(self)   # 🖥 of the computers
         self.remote_desktop.failed.connect(self._on_remote_desktop_failed)
-        for name in ("sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
-                     "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip"):
-            getattr(self, name).setVisible(False)   # the strip's servers: see above
+        self.sep_servers.setVisible(False)   # shown with the strip's servers
         self.lbl_details_logo.setPixmap(icon(LOGO).pixmap(20, 20))
         self._set_badge(None)
         self.lbl_error.setVisible(False)
@@ -560,10 +533,6 @@ class ValetudoPanel(QgsDockWidget):
                                     tr("No robot configured."), self)]
         self.logs = [LogTab(self.tab_log, log_widgets(""), self._ssh_target, LOG_PATH,
                             tr("No robot configured."), self)]
-        for page in (self.tab_pi_console, self.tab_ha_console, self.tab_nuc_console,
-                     self.tab_pi_log, self.tab_ha_log, self.tab_nuc_log):
-            self.terminal_stack.removeWidget(page)   # (fixed pages of earlier versions)
-            page.setParent(None)
         # The Terminal tab is opened on a server from its >_ menu in the Status tab,
         # and hidden again with its ✕.
         choice = QgsSettings().value(KEY_TERMINAL, "robot/console", type=str) or "robot/console"
@@ -723,7 +692,7 @@ class ValetudoPanel(QgsDockWidget):
             live = QToolButton()
             live.setDefaultAction(act["live"])
             live.setAutoRaise(True)
-            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.sep_pi), live)
+            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.sep_servers), live)
             # …and in the details, next to the connection line
             live_details = QToolButton()
             live_details.setDefaultAction(act["live"])
@@ -1588,7 +1557,7 @@ class ValetudoPanel(QgsDockWidget):
         layout = self.robot_header.parentWidget().layout()
         index = layout.indexOf(self.robot_header)
         layout.removeWidget(self.robot_header)
-        strip_index = self.strip_layout.indexOf(self.lbl_ha_strip) + 1
+        strip_index = self.strip_layout.indexOf(self.sep_servers) + 1
         robot_placed = False
         for server in servers:
             if server["type"] == "valetudo":
@@ -1928,8 +1897,7 @@ class ValetudoPanel(QgsDockWidget):
                    + (f"<br>{html.escape(extra)}" if extra else ""))
             logo.setToolTip(tip)
             pill.setToolTip(tip)
-        self.sep_pi.setVisible(shown)   # one separator before the servers
-        self.sep_ha.setVisible(False)
+        self.sep_servers.setVisible(shown)   # one separator before the servers
 
     def settings_changed(self):
         """Called by the plugin after the Options page saved changes: the servers'

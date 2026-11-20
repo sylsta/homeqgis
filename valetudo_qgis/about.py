@@ -33,7 +33,7 @@ def metadata():
 
 
 def sections():
-    """(title, [lines]) of what the plugin does, robot first, then the servers."""
+    """(title, [lines]) of what the plugin does: robot, home, servers, settings."""
     return [
         (tr("Robot: map"), [
             tr("Floor, walls, rooms, robot, dock, path and planned path as QGIS layers"),
@@ -59,7 +59,7 @@ def sections():
         (tr("Robot: Wi-Fi"), [
             tr("Signal now and over the last 10 minutes"),
             tr("Survey recorded in QGIS, or on the robot itself while QGIS is closed"),
-            tr("Interpolated signal maps, per run and cumulative ones built on the Raspberry Pi"),
+            tr("Interpolated signal maps, per run and cumulative ones built on a Raspberry Pi"),
         ]),
         (tr("Robot: camera"), [
             tr("Live view, full screen, snapshots, MP4 recording, camera light"),
@@ -70,25 +70,23 @@ def sections():
             tr("Reboot over SSH, boot watch with Valetudo's log, clock check"),
             tr("SSH console and live log on the robot"),
         ]),
-        (tr("Raspberry Pi"), [
-            tr("Status: system, clock, uptime"),
-            tr("SSH console and live log"),
-            tr("Builds the Wi-Fi maps by itself after each run; loaded into QGIS in one click"),
+        (tr("Home"), [
+            tr("Home Assistant devices by room, with their state and a sparkline"),
+            tr("History charts by period, comparison, battery trend, CSV and GeoPackage export"),
+            tr("Sensor history replayed on the map with the Temporal Controller"),
         ]),
-        (tr("Home Assistant"), [
-            tr("Status: version, home, clock, uptime"),
-            tr("SSH console and live log, by key or password"),
-        ]),
-        (tr("NUC"), [
+        (tr("Servers"), [
+            tr("Any number of servers: Valetudo robots, Raspberry Pi, Home Assistant, "
+               "Kodi, Linux and Windows computers, web services"),
             tr("Status: system, clock, uptime, load, memory, disk, temperature"),
-            tr("SSH console and live system log"),
-        ]),
-        (tr("Kodi"), [
-            tr("Status: version, uptime, temperature"),
-            tr("What is playing, with its progress; play, pause and stop"),
+            tr("SSH console and live log, by key or password"),
+            tr("Remote desktop over VNC or RDP, through an SSH tunnel if needed"),
+            tr("Kodi: what is playing, with its progress; play, pause and stop"),
+            tr("On the air or off the air at a glance on the status line"),
         ]),
         (tr("Settings"), [
-            tr("One Options page for all of them, with a test button for each"),
+            tr("One Options page for all of them, with a test button for each server"),
+            tr("Order of the panels and buttons of the toolbar chosen in the UI configuration"),
             tr("Tokens and passwords kept encrypted"),
             tr("Timestamped backups of the configuration, reset"),
             tr("English and French"),
@@ -149,8 +147,8 @@ class AboutWidget(QWidget):
         layout.addLayout(header)
         intro = QLabel(tr(
             "A control centre in QGIS for a robot vacuum running Valetudo, with its map "
-            "as real GIS layers, and for the home servers around it: Raspberry Pi, Home "
-            "Assistant, NUC and Kodi."))
+            "as real GIS layers, for the Home Assistant devices of the home, and for the "
+            "servers around them."))
         intro.setWordWrap(True)
         layout.addWidget(intro)
 

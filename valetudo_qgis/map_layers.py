@@ -15,7 +15,6 @@ from qgis.core import (
     QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsExpression,
-    QgsFeature,
     QgsFillSymbol,
     QgsField,
     QgsGeometry,
@@ -510,10 +509,3 @@ class ValetudoLayers:
         replace_features(sensors, feats)
 
     # -- selection --------------------------------------------------------------
-
-    def selected_segment_ids(self):
-        rooms = self.layer("rooms")
-        if rooms is None:
-            return []
-        return [f["segment_id"] for f in rooms.selectedFeatures()
-                if f["type"] == "segment" and f["segment_id"]]

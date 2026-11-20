@@ -301,9 +301,6 @@ class ValetudoClient(QObject):
     def stop_polling(self):
         self._timer.stop()
 
-    def is_polling(self):
-        return self._timer.isActive()
-
     # -- commands -----------------------------------------------------------
 
     def _command(self, capability, payload, key, path_suffix=""):

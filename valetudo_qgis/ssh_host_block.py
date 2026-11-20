@@ -1,4 +1,4 @@
-"""A server read over SSH, shown as a block of the Status tab (the NUC):
+"""A server read over SSH, shown as a block of the Status tab (a Linux or Windows computer, a Raspberry Pi…):
 
     (logo) ● Connected · updated 5 s ago                      [⟳]
     nuc · Linux nuc 6.6.0 … x86_64 GNU/Linux

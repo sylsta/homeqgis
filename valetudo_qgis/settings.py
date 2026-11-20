@@ -8,37 +8,18 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.core import QgsSettings
 
 from . import servers as servers_model
-from .servers import on_host, ssh_address  # noqa: F401  (imported from here elsewhere)
 
 PLUGIN_NAME = "DomotiQGIS"   # shown in menus, titles and messages (not translated)
-KEY_URL = "valetudo/url"
-KEY_AUTH = "valetudo/authcfg"
+
+# -- the plugin's options ---------------------------------------------------------------
 KEY_INTERVAL = "valetudo/interval_s"
 KEY_CAMERA_URL = "valetudo/camera_url"
 KEY_FFMPEG = "valetudo/ffmpeg"
 KEY_CAMERA_WIDTH = "valetudo/camera_width"
 KEY_NOTIFY_DOCK = "valetudo/notify_dock"
 KEY_LIVE_AT_START = "valetudo/live_at_start"   # "Show on map" when QGIS starts
-KEY_SSH_USER = "valetudo/ssh_user"
-KEY_SSH_PORT = "valetudo/ssh_port"
-KEY_PI_HOST = "valetudo/pi_host"   # Raspberry Pi (or other Linux machine): empty = none
-KEY_PI_USER = "valetudo/pi_user"
-KEY_PI_PORT = "valetudo/pi_port"
-KEY_PI_WIFI_DIR = "valetudo/pi_wifi_dir"   # output folder of pi/valetudo_wifi_collect.py
-KEY_HA_URL = "valetudo/ha_url"   # Home Assistant server
-KEY_NUC_HOST = "valetudo/nuc_host"   # empty = no NUC block in the Status tab
-KEY_NUC_USER = "valetudo/nuc_user"
-KEY_NUC_PORT = "valetudo/nuc_port"
-KEY_NUC_WEB_URL = "valetudo/nuc_web_url"   # optional web interface (e.g. Cockpit)
-KEY_PI_WEB_URL = "valetudo/pi_web_url"     # optional web interface (e.g. Uptime Kuma)
-KEY_NUC_LOG_COMMAND = "valetudo/nuc_log_command"   # empty = NUC_AUTO_LOG_COMMAND
-# The system log, wherever it is: the journal under systemd, else syslog
-# (sysvinit, e.g. MX Linux by default).
-NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl >/dev/null; "
-                        "then journalctl -n 200 -f; else tail -n 200 -F /var/log/syslog; fi")
 KEY_ADVANCED = "valetudo/advanced_tools"   # Terminal, robot Wi-Fi recorder, boot watch, restrictions
-KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the NUC's host
-KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
+KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_VNC_COMMAND = "valetudo/vnc_command"   # remote desktop programs: empty = found
 KEY_RDP_COMMAND = "valetudo/rdp_command"
 KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the robot's side tabs, comma-separated keys
@@ -52,24 +33,44 @@ TOOLBAR_CHOICES = ("status_panel", "live", "start", "home", "zone", "goto", "set
                    "pick_rooms", "place_sensor", "edit_restrictions", "send_restrictions")
 DEFAULT_TOOLBAR = ("status_panel", "pick_rooms", "place_sensor", "edit_restrictions",
                    "send_restrictions")
-KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
-KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
-KEY_KODI_USER = "valetudo/kodi_user"
-DEFAULT_HA_URL = "http://localhost:8123/"
-KEY_HA_SSH_HOST = "valetudo/ha_ssh_host"   # empty = no Home Assistant terminal
-KEY_HA_SSH_USER = "valetudo/ha_ssh_user"
-KEY_HA_SSH_PORT = "valetudo/ha_ssh_port"
-KEY_HA_LOG_COMMAND = "valetudo/ha_log_command"
-# Home Assistant OS keeps its log in the system journal, not in a file.
-DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
-# The Home Assistant token is not a QgsSettings value: it is stored encrypted
-# in the QGIS authentication database under this key (see ha_token()).
-HA_TOKEN_SETTING = "valetudo/ha_token"
-HA_SSH_PASSWORD_SETTING = "valetudo/ha_ssh_password"   # same: encrypted, optional
-KODI_PASSWORD_SETTING = "valetudo/kodi_password"         # same
 # Home Assistant sensors shown on the map: a JSON list of {entity_id, x, y},
 # x and y in the robot's frame (cm, Valetudo convention). Values come live from HA.
 KEY_HA_SENSORS = "valetudo/ha_sensors"
+# A Linux computer's system log, wherever it is: the journal under systemd, else
+# syslog (sysvinit, e.g. MX Linux by default).
+NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl >/dev/null; "
+                        "then journalctl -n 200 -f; else tail -n 200 -F /var/log/syslog; fi")
+
+# -- the servers of earlier versions, before the list of servers (servers.py) -----------
+# Read once, by servers.migrate() (see server_list() and _legacy_stored()).
+KEY_URL = "valetudo/url"
+KEY_AUTH = "valetudo/authcfg"
+KEY_SSH_USER = "valetudo/ssh_user"
+KEY_SSH_PORT = "valetudo/ssh_port"
+KEY_PI_HOST = "valetudo/pi_host"
+KEY_PI_USER = "valetudo/pi_user"
+KEY_PI_PORT = "valetudo/pi_port"
+KEY_PI_WIFI_DIR = "valetudo/pi_wifi_dir"
+KEY_PI_WEB_URL = "valetudo/pi_web_url"
+KEY_HA_URL = "valetudo/ha_url"
+KEY_HA_ON_NUC = "valetudo/ha_on_nuc"
+KEY_HA_SSH_HOST = "valetudo/ha_ssh_host"
+KEY_HA_SSH_USER = "valetudo/ha_ssh_user"
+KEY_HA_SSH_PORT = "valetudo/ha_ssh_port"
+KEY_HA_LOG_COMMAND = "valetudo/ha_log_command"
+KEY_NUC_HOST = "valetudo/nuc_host"
+KEY_NUC_USER = "valetudo/nuc_user"
+KEY_NUC_PORT = "valetudo/nuc_port"
+KEY_NUC_WEB_URL = "valetudo/nuc_web_url"
+KEY_NUC_LOG_COMMAND = "valetudo/nuc_log_command"
+KEY_KODI_URL = "valetudo/kodi_url"
+KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"
+KEY_KODI_USER = "valetudo/kodi_user"
+# Their tokens and passwords, encrypted in the QGIS authentication database: the
+# servers made from them by the migration keep using these keys.
+HA_TOKEN_SETTING = "valetudo/ha_token"
+HA_SSH_PASSWORD_SETTING = "valetudo/ha_ssh_password"
+KODI_PASSWORD_SETTING = "valetudo/kodi_password"
 
 # Wi-Fi survey: setting key -> (default value, type). Read by load_settings().
 WIFI_DEFAULTS = {
