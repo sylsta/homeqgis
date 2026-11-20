@@ -44,6 +44,7 @@ KEY_RDP_COMMAND = "valetudo/rdp_command"
 KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the panel's side tabs, comma-separated keys
 PANEL_TABS = ("clean", "schedule", "history", "camera", "wifi", "status", "maintenance",
               "terminal")   # their default order
+KEY_STRIP_DOTS = "valetudo/strip_dots"   # servers in the strip: a dot instead of a label
 KEY_TOOLBAR = "valetudo/toolbar"   # the commands in the plugin's toolbar, comma-separated
 # The commands the toolbar can show, in its order; the map tools (last four) only
 # while "Show on map" is on.
@@ -158,6 +159,7 @@ def _stored_settings():
         "live_at_start": s.value(KEY_LIVE_AT_START, True, type=bool),
         "history": s.value(KEY_HISTORY, True, type=bool),
         "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
+        "strip_dots": s.value(KEY_STRIP_DOTS, False, type=bool),
         "vnc_command": s.value(KEY_VNC_COMMAND, "", type=str).strip(),
         "rdp_command": s.value(KEY_RDP_COMMAND, "", type=str).strip(),
         **{key: s.value(f"valetudo/{key}", default, type=kind)

@@ -3107,5 +3107,17 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Toolbar</source>
         <translation>Barre d'outils</translation>
     </message>
+    <message>
+        <source>Status strip</source>
+        <translation>Barre d'état</translation>
+    </message>
+    <message>
+        <source>Servers as a coloured dot instead of an On the air / Off the air label</source>
+        <translation>Serveurs en pastille colorée au lieu d'une étiquette À l'antenne / Hors antenne</translation>
+    </message>
+    <message>
+        <source>Takes less room; hover the dot for the details.</source>
+        <translation>Prend moins de place ; survolez la pastille pour les détails.</translation>
+    </message>
 </context>
 </TS>

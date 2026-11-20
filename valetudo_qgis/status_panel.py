@@ -1458,7 +1458,9 @@ class ValetudoPanel(QgsDockWidget):
         their order, the robot's own frame where the robot in use is; a pill in the
         strip for each one shown there; consoles and logs for those with SSH."""
         self._drop_server_frames()
-        servers = self._servers()
+        cfg = load_settings()
+        self._strip_dots = cfg["strip_dots"]   # dots or On the air labels
+        servers = cfg["servers"]
         robot = servers_model.active_robot(servers, active_robot_id())
         layout = self.robot_header.parentWidget().layout()
         index = layout.indexOf(self.robot_header)
@@ -1778,6 +1780,7 @@ class ValetudoPanel(QgsDockWidget):
                  "connecting": ("#9e9e9e", tr("Connecting…")),
                  "no_token": ("#ef6c00", tr("No token"))}
         shown = False
+        dots = getattr(self, "_strip_dots", False)
         for entry in self._server_entries:
             logo, pill = entry["strip"]
             on_strip = bool(entry["server"].get("strip", True))
@@ -1789,9 +1792,13 @@ class ValetudoPanel(QgsDockWidget):
             block = entry["block"]
             state = block.strip_state()
             color, text = pills.get(state, pills["connecting"])
-            pill.setText(text)
-            pill.setStyleSheet(f"background-color: {color}; color: white; font-weight: bold;"
-                               "border-radius: 8px; padding: 1px 8px;")
+            if dots:   # just a coloured dot (UI configuration)
+                pill.setText("●")
+                pill.setStyleSheet(f"color: {color}; font-size: 14px;")
+            else:
+                pill.setText(text)
+                pill.setStyleSheet(f"background-color: {color}; color: white; "
+                                   "font-weight: bold; border-radius: 8px; padding: 1px 8px;")
             details = entry["frame"].connection.text()
             extra = block.tooltip() if hasattr(block, "tooltip") else ""
             tip = (f"<b>{html.escape(entry['name'])}</b>: {html.escape(text)}<br>{details}"
