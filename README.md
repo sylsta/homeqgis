@@ -105,7 +105,8 @@ The panel (titled *Connection*), from top to bottom:
   status strip* ticked, in their order, as its logo and a pill styled like the robot's
   state: green *On the air*, red *Off the air*, *Connecting…*, or *No token* (Home
   Assistant answering without an access token), or just a coloured dot (*UI
-  configuration* tab of the settings, *Status strip*); hover it for the details. Then *Show on map*, **⚙**
+  configuration* tab of the settings, *Status strip*); hover it for the details. Then **📷**
+  (the Camera tab in one click), *Show on map*, **⚙**
   (the settings) and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
   Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
   strip** for the *Status* tab (Servers section).

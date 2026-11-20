@@ -436,6 +436,14 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_wifi_strip.setVisible(False)   # the Wi-Fi is in the strip's tooltip
         self.strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.strip.installEventFilter(self)
+        # 📷 the Camera tab in one click (before Show on map, ⚙ and ⋮)
+        self.btn_strip_camera = QToolButton()
+        self.btn_strip_camera.setIcon(icon("tab_camera"))
+        self.btn_strip_camera.setAutoRaise(True)
+        self.btn_strip_camera.setToolTip(tr("Camera"))
+        self.btn_strip_camera.clicked.connect(lambda _=False: self.show_tab("camera"))
+        self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_menu),
+                                       self.btn_strip_camera)
 
         # -- Status tab: the robot's frame (from the .ui), then a frame per server of the
         # settings, built by _build_server_frames() (the .ui's fixed ones stay hidden)
