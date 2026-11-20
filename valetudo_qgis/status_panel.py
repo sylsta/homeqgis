@@ -55,7 +55,7 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (PLUGIN_NAME, KEY_ADVANCED, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
+from .settings import (PLUGIN_NAME, DEFAULT_HA_URL, KEY_ADVANCED, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
                        load_settings, secret)
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
@@ -477,7 +477,20 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_ha_strip_logo.setPixmap(icon(HA_LOGO).pixmap(16, 16))
         for name in ("sep_pi", "lbl_pi_strip_logo", "lbl_pi_strip",
                      "sep_ha", "lbl_ha_strip_logo", "lbl_ha_strip"):
-            getattr(self, name).setVisible(False)
+            getattr(self, name).setVisible(False)   # replaced by the servers below
+        # Strip: each server set in the settings, its logo and an "On the air" pill
+        self._strip_servers = {}   # key -> (logo, pill)
+        self._strip_tips = {}      # key -> tooltip details
+        index = self.strip_layout.indexOf(self.lbl_ha_strip) + 1
+        for key, logo_name in (("pi", RPI_LOGO), ("ha", HA_LOGO), ("nuc", NUC_ICON),
+                               ("kodi", KODI_ICON)):
+            logo, pill = QLabel(), QLabel()
+            logo.setPixmap(icon(logo_name).pixmap(16, 16))
+            for widget in (logo, pill):
+                widget.setVisible(False)
+                self.strip_layout.insertWidget(index, widget)
+                index += 1
+            self._strip_servers[key] = (logo, pill)
         self.lbl_details_logo.setPixmap(icon(LOGO).pixmap(20, 20))
         self.lbl_ha_logo.setPixmap(icon(HA_LOGO).pixmap(20, 20))
         self.ha_header.setVisible(False)
@@ -1563,10 +1576,7 @@ class ValetudoPanel(QgsDockWidget):
         self.kodi.update(self.isVisible())
         has_pi = self._pi_target() is not None
         self.pi_header.setVisible(has_pi)
-        for widget in (self.lbl_pi_strip_logo, self.lbl_pi_strip):
-            widget.setVisible(has_pi)
-        self._strip_servers = {**getattr(self, "_strip_servers", {}), "pi": has_pi}
-        self._update_strip_separators()
+        self._update_strip_servers()
         if has_pi and self.isVisible():
             if not self._pi_timer.isActive():
                 self._pi_timer.start()
@@ -1635,20 +1645,54 @@ class ValetudoPanel(QgsDockWidget):
             lines.append(wifi + (" · " + html.escape(self._wifi_tip) if self._wifi_tip else ""))
         self.strip.setToolTip("<br>".join(lines))
 
-    def _set_strip_status(self, label, color, text, tooltip=""):
-        """A server in the strip: its logo and a coloured dot; the words in the tooltip."""
-        name = tr("Raspberry Pi") if label is self.lbl_pi_strip else "Home Assistant"
-        label.setText(f"<span style='color:{color}'>●</span>")
-        tip = f"<b>{html.escape(name)}</b>: {html.escape(text)}" + (
-            f"<br>{html.escape(tooltip)}" if tooltip else "")
-        label.setToolTip(tip)
-        logo = self.lbl_pi_strip_logo if label is self.lbl_pi_strip else self.lbl_ha_strip_logo
-        logo.setToolTip(tip)
+    def _set_strip_status(self, label, _color, _text, tooltip=""):
+        """Details of the Pi or Home Assistant for its tooltip in the strip."""
+        self._strip_tips["pi" if label is self.lbl_pi_strip else "ha"] = tooltip
+        self._update_strip_servers()
 
-    def _update_strip_separators(self):
-        """One separator before the servers, whichever are shown."""
-        shown = getattr(self, "_strip_servers", {})
-        self.sep_pi.setVisible(any(shown.values()))
+    def _strip_states(self):
+        """key -> state ("on", "off", "connecting", "no_token") of each server set in the
+        settings (absent: not set, not shown)."""
+        on = {True: "on", False: "off", None: "connecting"}
+        states = {}
+        if self._pi_target() is not None:
+            states["pi"] = on[self._pi_ok]
+        if self._ha_state is not None:
+            states["ha"] = {"online": "on", "offline": "off"}.get(self._ha_state, self._ha_state)
+        if self._nuc_target() is not None:
+            states["nuc"] = on[self.nuc.ok]
+        if self._kodi_settings() is not None:
+            states["kodi"] = on[self.kodi.ok]
+        return states
+
+    def _update_strip_servers(self):
+        """The servers in the strip: logo and a pill styled like the robot's state."""
+        if not getattr(self, "_strip_servers", None):
+            return
+        names = {"pi": tr("Raspberry Pi"), "ha": "Home Assistant", "nuc": tr("NUC"),
+                 "kodi": "Kodi"}
+        pills = {"on": ("#2e7d32", tr("On the air")), "off": ("#c62828", tr("Off the air")),
+                 "connecting": ("#9e9e9e", tr("Connecting…")),
+                 "no_token": ("#ef6c00", tr("No token"))}
+        details = {"nuc": self.lbl_nuc_connection.text(),
+                   "kodi": self.lbl_kodi_connection.text()}
+        states = self._strip_states()
+        for key, (logo, pill) in self._strip_servers.items():
+            state = states.get(key)
+            logo.setVisible(state is not None)
+            pill.setVisible(state is not None)
+            if state is None:
+                continue
+            color, text = pills[state]
+            pill.setText(text)
+            pill.setStyleSheet(f"background-color: {color}; color: white; font-weight: bold;"
+                               "border-radius: 8px; padding: 1px 8px;")
+            extra = details.get(key) or html.escape(self._strip_tips.get(key, ""))
+            tip = f"<b>{html.escape(names[key])}</b>: {html.escape(text)}" + (
+                f"<br>{extra}" if extra else "")
+            logo.setToolTip(tip)
+            pill.setToolTip(tip)
+        self.sep_pi.setVisible(bool(states))   # one separator before the servers
         self.sep_ha.setVisible(False)
 
     # -- Home Assistant (strip) -----------------------------------------------------
@@ -1700,9 +1744,9 @@ class ValetudoPanel(QgsDockWidget):
             self._ha["error"] = error
             if error == UNAUTHORISED:   # there, but no token to go further
                 self._ha_state = "no_token"
-            elif has_token:
-                self._ha_state = "offline"
-            else:   # no token and nothing answers: no Home Assistant, nothing to show
+            elif has_token or url.rstrip("/") != DEFAULT_HA_URL.rstrip("/"):
+                self._ha_state = "offline"   # set up (token, or an address of its own)
+            else:   # default address, no token, nothing answers: no Home Assistant
                 self._ha_state = None
             self._update_ha_header()
 
@@ -1716,11 +1760,9 @@ class ValetudoPanel(QgsDockWidget):
         """Home Assistant in the strip (status) and in the details (three lines)."""
         state = self._ha_state
         shown = state is not None
-        for widget in (self.lbl_ha_strip_logo, self.lbl_ha_strip, self.ha_header):
-            widget.setVisible(shown)
-        self._strip_servers = {**getattr(self, "_strip_servers", {}), "ha": shown}
-        self._update_strip_separators()
+        self.ha_header.setVisible(shown)
         if not shown:
+            self._update_strip_servers()
             return
         ha, url = self._ha, self._ha.get("url", "")
         if state == "connecting":
@@ -1938,6 +1980,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_pi_header()
         self.nuc.render()
         self.kodi.render()
+        self._update_strip_servers()   # NUC and Kodi: as just rendered
         if self._ha_state == "online":
             self._update_ha_header()
         if self.client is None or self._reachable is None:

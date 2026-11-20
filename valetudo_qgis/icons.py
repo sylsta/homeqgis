@@ -12,7 +12,7 @@ APP_ICON = "domotiqgis"   # the plugin's own icon: Plugin Manager, menu, panel, 
 LOGO = "valetudo_logo_small"   # Valetudo's: the robot (status strip, Status tab)
 RPI_LOGO = "rpi_logo"   # the Pi block of the panel (COLOUR-Raspberry-Pi-Symbol…png, cropped to the berry)
 HA_LOGO = "HA-lockup-stacked-color-on-dark"   # Home Assistant, in the panel's strip
-KODI_ICON = "media_player"   # the Kodi block (a generic symbol; themed)
+KODI_ICON = "kodi"   # Kodi: the Status tab block and the strip
 NUC_ICON = "nuc"   # the NUC block of the Status tab (themed: recoloured in dark mode)
 # Single-colour icons are drawn in this grey: it is replaced by the theme's text
 # colour when they are loaded, so they stay visible in a dark theme.

@@ -40,7 +40,7 @@ The panel (titled *Connection*), from top to bottom:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  12 min · 18 m²  ⚠ │ (Pi)● (HA)●  [🗺] [⚙] [⋮] │  status strip
+│ (logo) [Cleaning] ▮▮▮▮▯ 82 %  12 min · 18 m²  ⚠ │ (Pi)[On the air] (HA)[On the air] (NUC)[Off the air] (Kodi)[On the air]  [🗺] [⚙] [⋮] │  status strip
 ├──┬───────────────────────────────────────────────────┤
 │📈│ Status    robot, Pi, Home Assistant, NUC, Kodi    │
 │🧹│ Clean     rooms tree, cleaning profile, buttons   │
@@ -58,10 +58,12 @@ The panel (titled *Connection*), from top to bottom:
 - **Status strip**, always visible: the state, battery, the job in progress (time
   and area, only while the robot works), a ⚠ when something needs you (dock tank
   empty or full, worn consumable, robot error, wrong clock: hover it for the list,
-  click it to open the right tab), the Raspberry Pi and Home Assistant as their logo
-  and a coloured dot (hover them for their status: the Pi is checked over SSH every
-  30 s; Home Assistant every minute, *No token* when it answers but no access token
-  is set, hidden when there is neither a token nor an answer), *Show on map*, **⚙**
+  click it to open the right tab), each server set in the settings (Raspberry Pi,
+  Home Assistant, NUC, Kodi) as its logo and a pill styled like the robot's state,
+  green *On the air* or red *Off the air* (hover it for the details: the Pi and the
+  NUC are checked over SSH every 30 s; Home Assistant every minute, *No token* when it
+  answers but no access token is set, hidden only at its default address with neither
+  a token nor an answer), *Show on map*, **⚙**
   (the settings) and the ⋮ menu (Locate, Watch robot boot, Reboot, Settings, Refresh now, Compact mode,
   Advanced tools, About). The Wi-Fi signal is in the strip's tooltip. **Click the
   strip** for the *Status* tab.
@@ -393,7 +395,7 @@ finish (e.g. `tail -f`) by opening a new session.
 **Terminal** tab, *Raspberry Pi*: the same console and log on a Raspberry Pi (or any Linux machine
 of your network, e.g. the one that builds the Wi-Fi maps). Set its address, SSH
 user (`pi` by default) and port in *Settings > Options > DomotiQGIS*, tab *Servers*,
-*Raspberry Pi*; the Pi's frame in the Status tab (with its >_ menu) and its dot in
+*Raspberry Pi*; the Pi's frame in the Status tab (with its >_ menu) and its pill in
 the strip appear once an address is set. Its *Log*
 follows `~/valetudo/collect.log`, the log of the Pi's Wi-Fi collector (see its cron
 line). It also needs key-based login from your PC: `ssh-copy-id pi@192.168.50.1`.

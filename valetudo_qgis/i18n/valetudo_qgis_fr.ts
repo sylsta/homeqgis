@@ -2939,5 +2939,17 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Robot map not saved: {error}</source>
         <translation>Carte du robot non enregistrée : {error}</translation>
     </message>
+    <message>
+        <source>On the air</source>
+        <translation>À l'antenne</translation>
+    </message>
+    <message>
+        <source>Off the air</source>
+        <translation>Hors antenne</translation>
+    </message>
+    <message>
+        <source>NUC</source>
+        <translation>NUC</translation>
+    </message>
 </context>
 </TS>
