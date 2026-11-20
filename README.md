@@ -46,7 +46,15 @@ without restarting QGIS.
    its own port, and SSH goes there. With several robots, *Robot in use* picks the one
    the panel and the map work with. Tokens and passwords are kept encrypted in the QGIS
    authentication database. The settings of earlier versions are turned into servers
-   the first time. The panel shows them in this order (Status tab and status strip);
+   the first time. **Remote desktop** (Raspberry Pi, Linux and Windows computers): VNC,
+   RDP or both, with their ports and user; *Through SSH* (on by default, except for
+   Windows) opens an SSH tunnel first, so the VNC or RDP server can stay closed to the
+   network. The Status tab's 🖥 button (its arrow: VNC or RDP) opens it in the system's
+   program: the one set under *Remote desktop programs* (a command with `{host}`,
+   `{port}`, `{user}`, `{userat}`), else the first found: Remmina, TigerVNC/TightVNC
+   `vncviewer`, `xfreerdp` or KRDC on Linux; `mstsc` or a VNC viewer on Windows; the
+   built-in Screen Sharing or Microsoft Remote Desktop on macOS. Kodi and web services
+   get the remote desktop of the computer they run on. The panel shows them in this order (Status tab and status strip);
    for now it uses the first server of each type (the robot in use for robots).
 2. Open the **DomotiQGIS panel** (the only toolbar button, or *Plugins > DomotiQGIS*).
    The menu and the toolbar stay minimal: everything happens in the panel.
@@ -559,6 +567,7 @@ Run it on the Pi with `node uptime_kuma_monitors.js`. In the plugin, set the Pi'
 | `project_layers.py`          | Our layers found again in a project, saved next to it   |
 | `servers.py`                 | The servers: types, fields, storage, earlier settings   |
 | `servers_editor.py`          | Servers tab of the settings                             |
+| `remote_desktop.py`          | VNC and RDP in the system's program, SSH tunnel         |
 | `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
 | `settings.py`                | Setting keys, defaults and `load_settings()`            |
 | `options_page.py`            | The Valetudo page of *Settings > Options*               |

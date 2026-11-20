@@ -7,7 +7,11 @@ with it:
     ha         Home Assistant
     kodi       Kodi (JSON-RPC)
     linux      a Linux computer, read over SSH
+    windows    a Windows computer (remote desktop, optional OpenSSH)
     web        a web service: its address answers or not, and opens in the browser
+
+Computers (Pi, Linux, Windows) can have a remote desktop: VNC, RDP or both,
+directly or through an SSH tunnel (see remote_desktop.py).
 
 A server is a dict: id, type, name, strip (shown in the panel's status strip)
 and the fields of its type (TYPE_FIELDS). "runs_on" (Home Assistant, Kodi, web
@@ -29,8 +33,17 @@ from urllib.parse import urlsplit, urlunsplit
 
 KEY_SERVERS = "valetudo/servers"
 KEY_ACTIVE_ROBOT = "valetudo/active_robot"   # id of the robot in use
-TYPES = ("valetudo", "rpi", "ha", "kodi", "linux", "web")
-HOST_TYPES = ("rpi", "linux")               # what a server can "run on"
+TYPES = ("valetudo", "rpi", "ha", "kodi", "linux", "windows", "web")
+HOST_TYPES = ("rpi", "linux", "windows")    # what a server can "run on"
+RD_PROTOCOLS = ("none", "vnc", "rdp", "both")
+
+
+def _remote_desktop(protocol, through_ssh):
+    return [("rd_protocol", "choice", protocol), ("vnc_port", "port", 5900),
+            ("rdp_port", "port", 3389), ("rd_user", "text", ""),
+            ("rd_ssh", "bool", through_ssh)]
+
+
 DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
 SECRET_PREFIX = "valetudo/server"           # valetudo/server/<id>/<field>
 
@@ -39,7 +52,8 @@ TYPE_FIELDS = {
     "valetudo": [("url", "url", ""), ("authcfg", "authcfg", ""),
                  ("ssh_user", "text", "root"), ("ssh_port", "port", 22)],
     "rpi": [("host", "text", ""), ("user", "text", "pi"), ("port", "port", 22),
-            ("wifi_dir", "text", "valetudo_wifi"), ("web_url", "url", "")],
+            ("wifi_dir", "text", "valetudo_wifi"), ("web_url", "url", ""),
+            *_remote_desktop("none", True)],
     "ha": [("url", "url", "http://localhost:8123/"), ("runs_on", "server", ""),
            ("token", "secret", ""), ("ssh_host", "text", ""), ("ssh_user", "text", "root"),
            ("ssh_password", "secret", ""), ("ssh_port", "port", 22),
@@ -47,7 +61,10 @@ TYPE_FIELDS = {
     "kodi": [("url", "url", "http://localhost:8080/"), ("runs_on", "server", ""),
              ("user", "text", "kodi"), ("password", "secret", "")],
     "linux": [("host", "text", ""), ("user", "text", "root"), ("port", "port", 22),
-              ("log_command", "text", ""), ("web_url", "url", "")],
+              ("log_command", "text", ""), ("web_url", "url", ""),
+              *_remote_desktop("none", True)],
+    "windows": [("host", "text", ""), ("ssh", "bool", False), ("user", "text", ""),
+                ("port", "port", 22), ("web_url", "url", ""), *_remote_desktop("rdp", False)],
     "web": [("url", "url", ""), ("runs_on", "server", "")],
 }
 DEFAULT_PORTS = {"ha": 8123, "kodi": 8080}
@@ -80,6 +97,10 @@ def value(server, field):
                     return int(got) if got else default
                 except (TypeError, ValueError):
                     return default
+            if kind == "bool":
+                return default if got is None or got == "" else bool(got)
+            if kind == "choice":
+                return got if got in RD_PROTOCOLS else default
             return got.strip() if isinstance(got, str) and got.strip() else default
     return server.get(field)
 
@@ -130,7 +151,7 @@ def host_server(servers, server):
 def address(servers, server):
     """A server's address as used: its URL (on its computer's host when it runs on
     one), or the host of an SSH server."""
-    if server["type"] in ("rpi", "linux"):
+    if server["type"] in HOST_TYPES:
         return value(server, "host")
     url = value(server, "url")
     target = host_server(servers, server)
@@ -167,7 +188,9 @@ def ssh_target(servers, server):
     """(host, user, port) for SSH on a server, or None. Home Assistant: its SSH address,
     else its own host; Kodi and web services: the computer they run on."""
     kind = server["type"]
-    if kind in ("rpi", "linux"):
+    if kind == "windows" and not value(server, "ssh"):
+        return None   # no OpenSSH server
+    if kind in HOST_TYPES:
         host = value(server, "host")
         return ssh_address(host, value(server, "user"), value(server, "port")) if host else None
     if kind == "valetudo":
@@ -185,6 +208,26 @@ def ssh_target(servers, server):
         return None
     linux = first(servers, "linux")   # as earlier versions: the NUC's SSH login
     return (host, value(linux, "user"), value(linux, "port")) if linux else (host, "root", 22)
+
+
+def remote_desktops(servers, server):
+    """[(protocol, host, port, user, ssh or None)] of a server's remote desktops: its
+    own (computers), else those of the computer it runs on (Kodi, web services).
+    ssh: (host, user, port) of the tunnel when it goes through SSH."""
+    if server["type"] not in HOST_TYPES:
+        target = host_server(servers, server)
+        return remote_desktops(servers, target) if target is not None else []
+    host = ssh_address(value(server, "host"), "", 22)[0]
+    protocol = value(server, "rd_protocol")
+    if not host or protocol == "none":
+        return []
+    ssh = ssh_target(servers, server) if value(server, "rd_ssh") else None
+    out = []
+    for name in ("vnc", "rdp"):
+        if protocol in (name, "both"):
+            out.append((name, host, value(server, f"{name}_port"), value(server, "rd_user"),
+                        ssh))
+    return out
 
 
 # -- the robot in use, the first of each type ---------------------------------------

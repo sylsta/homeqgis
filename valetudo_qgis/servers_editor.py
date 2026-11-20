@@ -18,7 +18,7 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import QgsNetworkAccessManager
 from qgis.gui import QgsAuthConfigSelect
 
-from . import host_info
+from . import host_info, remote_desktop
 from . import servers as model
 from .client import ValetudoClient
 from .ha_client import UNAUTHORISED, HomeAssistantClient
@@ -29,14 +29,18 @@ from .robot_survey import RobotSurvey
 from .settings import secret
 
 TYPE_ICONS = {"valetudo": LOGO, "rpi": RPI_LOGO, "ha": HA_LOGO, "kodi": KODI_ICON,
-              "linux": NUC_ICON, "web": "web"}
+              "linux": NUC_ICON, "windows": "computer", "web": "web"}
 ROLE_ID = Qt.ItemDataRole.UserRole
 
 
 def type_labels():
     return {"valetudo": tr("Valetudo robot"), "rpi": tr("Raspberry Pi"),
             "ha": "Home Assistant", "kodi": "Kodi", "linux": tr("Linux computer"),
-            "web": tr("Web service")}
+            "windows": tr("Windows computer"), "web": tr("Web service")}
+
+
+def protocol_labels():
+    return {"none": tr("None"), "vnc": "VNC", "rdp": "RDP", "both": tr("VNC and RDP")}
 
 
 def field_labels(kind):
@@ -46,7 +50,10 @@ def field_labels(kind):
               "wifi_dir": tr("Wi-Fi maps folder"), "web_url": tr("Web address"),
               "runs_on": tr("Runs on"), "token": tr("Access token"),
               "ssh_host": tr("SSH address"), "ssh_password": tr("SSH password"),
-              "log_command": tr("Log command"), "password": tr("Password")}
+              "log_command": tr("Log command"), "password": tr("Password"),
+              "rd_protocol": tr("Remote desktop"), "vnc_port": tr("VNC port"),
+              "rdp_port": tr("RDP port"), "rd_user": tr("Remote desktop user"),
+              "rd_ssh": "", "ssh": ""}
     if kind == "kodi":
         labels["user"] = tr("Username")
     return labels
@@ -68,6 +75,7 @@ def placeholders(kind, server, servers):
                "ssh_user": "root", "ssh_password": tr("Optional: else your SSH key"),
                "log_command": model.DEFAULT_HA_LOG_COMMAND},
         "kodi": {"url": "http://192.168.50.2:8080/", "user": "kodi"},
+        "windows": {"host": "192.168.50.3", "web_url": ""},
         "web": {"url": "http://192.168.50.1:3001"},
     }[kind]
 
@@ -100,6 +108,9 @@ def hints(kind):
                    "Settings › Services › Control, turn on Allow remote control via HTTP and "
                    "set a username and password (port 8080 by default). The password is kept "
                    "encrypted in the QGIS authentication database."),
+        "windows": tr("A Windows computer: its remote desktop (RDP, built into Windows: "
+                      "Settings › System › Remote Desktop) or a VNC server, and SSH if "
+                      "its OpenSSH server is on."),
         "web": tr("Any web interface (Uptime Kuma, Mosquitto's, a router…): the panel shows "
                   "whether it answers, and its web button opens it in the browser."),
     }[kind]
@@ -179,6 +190,18 @@ class ServersEditor(QWidget):
         self.lbl_empty = QLabel(tr("No server yet: add one with Add (a Valetudo robot first)."))
         self.lbl_empty.setWordWrap(True)
         right.addWidget(self.lbl_empty)
+        tools = QFormLayout()
+        tools.addRow(QLabel("<b>" + tr("Remote desktop programs") + "</b>"))
+        self.vnc_command, self.rdp_command = QLineEdit(), QLineEdit()
+        for protocol, field in (("vnc", self.vnc_command), ("rdp", self.rdp_command)):
+            found = remote_desktop.detected(protocol)
+            field.setPlaceholderText(found or tr("none found: enter its command"))
+            field.setToolTip(tr("Empty: the program found ({found}). A command of your own "
+                                "can use {{host}}, {{port}}, {{user}} and {{userat}} "
+                                "(the user and @, or nothing).").format(
+                                    found=found or tr("none")))
+            tools.addRow(tr("{protocol} program").format(protocol=protocol.upper()), field)
+        right.addLayout(tools)
         layout.addLayout(right, 1)
 
     def _tool(self, text, tip, slot):
@@ -198,6 +221,13 @@ class ServersEditor(QWidget):
 
     def servers(self):
         return copy.deepcopy(self._servers)
+
+    def load_programs(self, vnc, rdp):
+        self.vnc_command.setText(vnc)
+        self.rdp_command.setText(rdp)
+
+    def programs(self):
+        return self.vnc_command.text().strip(), self.rdp_command.text().strip()
 
     def active_robot(self):
         robot = model.active_robot(self._servers, self._active)
@@ -352,6 +382,8 @@ class ServersEditor(QWidget):
         labels = field_labels(kind)
         examples = placeholders(kind, server, self._servers)
         for field, field_kind, default in model.TYPE_FIELDS[kind]:
+            if field == "rd_protocol":
+                form.addRow(QLabel("<b>" + tr("Remote desktop") + "</b>"))
             form.addRow(labels[field], self._field(server, field, field_kind, default,
                                                    examples.get(field, "")))
         hint = QLabel(hints(kind))
@@ -366,6 +398,22 @@ class ServersEditor(QWidget):
             widget.setRange(1, 65535)
             widget.setValue(model.value(server, field))
             widget.valueChanged.connect(lambda v: self._set(server, field, v, relist=False))
+            return widget
+        if kind == "bool":
+            texts = {"rd_ssh": tr("Through SSH (an encrypted tunnel: nothing to open on "
+                                  "its firewall)"),
+                     "ssh": tr("OpenSSH server (SSH button, consoles, tunnel)")}
+            widget = QCheckBox(texts.get(field, field))
+            widget.setChecked(model.value(server, field))
+            widget.toggled.connect(lambda on: self._set(server, field, on, relist=False))
+            return widget
+        if kind == "choice":
+            widget = QComboBox()
+            for key, label in protocol_labels().items():
+                widget.addItem(label, key)
+            widget.setCurrentIndex(max(0, widget.findData(model.value(server, field))))
+            widget.currentIndexChanged.connect(
+                lambda i, w=widget: self._set(server, field, w.itemData(i), relist=False))
             return widget
         if kind == "authcfg":
             widget = QgsAuthConfigSelect(self)

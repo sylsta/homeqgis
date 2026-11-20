@@ -21,7 +21,8 @@ from .servers import KEY_ACTIVE_ROBOT
 from .servers_editor import ServersEditor
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_ADVANCED, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
-    KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, PLUGIN_NAME, WIFI_DEFAULTS,
+    KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_RDP_COMMAND,
+    KEY_VNC_COMMAND, PLUGIN_NAME, WIFI_DEFAULTS,
     active_robot_id, default_camera_url, load_settings, save_servers, set_secret,
 )
 from .ui_loader import load_ui
@@ -60,6 +61,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s = QgsSettings()
         cfg = load_settings()
         self.servers_editor.load(cfg["servers"], active_robot_id())
+        self.servers_editor.load_programs(cfg["vnc_command"], cfg["rdp_command"])
         self.interval.setValue(cfg["interval_s"])
         self.live_at_start.setChecked(cfg["live_at_start"])
         # Empty camera URL = derived from the robot address.
@@ -204,6 +206,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         editor = self.servers_editor
         save_servers(editor.servers())
         s.setValue(KEY_ACTIVE_ROBOT, editor.active_robot())
+        vnc, rdp = editor.programs()
+        s.setValue(KEY_VNC_COMMAND, vnc)
+        s.setValue(KEY_RDP_COMMAND, rdp)
         s.setValue(KEY_INTERVAL, self.interval.value())
         s.setValue(KEY_LIVE_AT_START, self.live_at_start.isChecked())
         s.setValue(KEY_CAMERA_URL, self.camera_url.text().strip())

@@ -39,6 +39,8 @@ NUC_AUTO_LOG_COMMAND = ("if [ -d /run/systemd/system ] && command -v journalctl 
 KEY_ADVANCED = "valetudo/advanced_tools"   # Terminal, robot Wi-Fi recorder, boot watch, restrictions
 KEY_HA_ON_NUC = "valetudo/ha_on_nuc"       # Home Assistant's address uses the NUC's host
 KEY_KODI_ON_NUC = "valetudo/kodi_on_nuc"   # Kodi's address uses the NUC's host
+KEY_VNC_COMMAND = "valetudo/vnc_command"   # remote desktop programs: empty = found
+KEY_RDP_COMMAND = "valetudo/rdp_command"
 KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_KODI_URL = "valetudo/kodi_url"   # empty = no Kodi block in the Status tab
 KEY_KODI_USER = "valetudo/kodi_user"
@@ -125,6 +127,8 @@ def _stored_settings():
         "live_at_start": s.value(KEY_LIVE_AT_START, True, type=bool),
         "history": s.value(KEY_HISTORY, True, type=bool),
         "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
+        "vnc_command": s.value(KEY_VNC_COMMAND, "", type=str).strip(),
+        "rdp_command": s.value(KEY_RDP_COMMAND, "", type=str).strip(),
         **{key: s.value(f"valetudo/{key}", default, type=kind)
            for key, (default, kind) in WIFI_DEFAULTS.items()},
     }

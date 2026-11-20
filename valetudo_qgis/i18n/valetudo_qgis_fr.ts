@@ -2999,5 +2999,89 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>General</source>
         <translation>Général</translation>
     </message>
+    <message>
+        <source>Windows computer</source>
+        <translation>Ordinateur Windows</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Aucun</translation>
+    </message>
+    <message>
+        <source>VNC and RDP</source>
+        <translation>VNC et RDP</translation>
+    </message>
+    <message>
+        <source>Remote desktop</source>
+        <translation>Bureau à distance</translation>
+    </message>
+    <message>
+        <source>VNC port</source>
+        <translation>Port VNC</translation>
+    </message>
+    <message>
+        <source>RDP port</source>
+        <translation>Port RDP</translation>
+    </message>
+    <message>
+        <source>Remote desktop user</source>
+        <translation>Utilisateur du bureau à distance</translation>
+    </message>
+    <message>
+        <source>A Windows computer: its remote desktop (RDP, built into Windows: Settings › System › Remote Desktop) or a VNC server, and SSH if its OpenSSH server is on.</source>
+        <translation>Un ordinateur Windows : son bureau à distance (RDP, intégré à Windows : Paramètres › Système › Bureau à distance) ou un serveur VNC, et SSH si son serveur OpenSSH est activé.</translation>
+    </message>
+    <message>
+        <source>Through SSH (an encrypted tunnel: nothing to open on its firewall)</source>
+        <translation>Par SSH (un tunnel chiffré : rien à ouvrir sur son pare-feu)</translation>
+    </message>
+    <message>
+        <source>OpenSSH server (SSH button, consoles, tunnel)</source>
+        <translation>Serveur OpenSSH (bouton SSH, consoles, tunnel)</translation>
+    </message>
+    <message>
+        <source>none found: enter its command</source>
+        <translation>aucun trouvé : indiquez sa commande</translation>
+    </message>
+    <message>
+        <source>Remote desktop programs</source>
+        <translation>Programmes de bureau à distance</translation>
+    </message>
+    <message>
+        <source>Empty: the program found ({found}). A command of your own can use {{host}}, {{port}}, {{user}} and {{userat}} (the user and @, or nothing).</source>
+        <translation>Vide : le programme trouvé ({found}). Une commande personnelle peut utiliser {{host}}, {{port}}, {{user}} et {{userat}} (l'utilisateur et @, ou rien).</translation>
+    </message>
+    <message>
+        <source>{protocol} program</source>
+        <translation>Programme {protocol}</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>aucun</translation>
+    </message>
+    <message>
+        <source>Opening the SSH tunnel…</source>
+        <translation>Ouverture du tunnel SSH…</translation>
+    </message>
+    <message>
+        <source>The remote desktop program could not be started.</source>
+        <translation>Le programme de bureau à distance n'a pas pu être lancé.</translation>
+    </message>
+    <message>
+        <source>Open the remote desktop: {protocol} on {host}:{port}</source>
+        <translation>Ouvrir le bureau à distance : {protocol} sur {host}:{port}</translation>
+    </message>
+    <message>
+        <source>(through SSH)</source>
+        <translation>(par SSH)</translation>
+    </message>
+    <message>
+        <source>The SSH tunnel could not be opened (SSH key or password, address?).</source>
+        <translation>Le tunnel SSH n'a pas pu être ouvert (clé SSH ou mot de passe, adresse ?).</translation>
+    </message>
+    <message>
+        <source>No {protocol} program found: install Remmina, or set its command in the settings (Servers tab).</source>
+        <translation>Aucun programme {protocol} trouvé : installez Remmina, ou indiquez sa commande dans les paramètres (onglet Serveurs).</translation>
+    </message>
 </context>
 </TS>

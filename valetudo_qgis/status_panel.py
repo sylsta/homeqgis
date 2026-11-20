@@ -57,7 +57,9 @@ from . import schedule
 from .rooms_tree import RoomsTree
 from .settings import (PLUGIN_NAME, KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, has_ha_token, has_secret, ha_token,
                        active_robot_id, load_settings, secret)
+from . import remote_desktop
 from . import servers as servers_model
+from .remote_desktop import RemoteDesktop
 from . import ssh_auth
 from .ha_client import UNAUTHORISED, HomeAssistantClient, parse_timestamp
 from .console_tab import ConsoleTab
@@ -148,6 +150,7 @@ STATE_COLORS = {
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
 SERVERS = ("robot", "pi", "ha", "nuc", "kodi")   # frames of the Status tab
+RD_SERVERS = ("pi", "nuc", "kodi")   # frames with a remote desktop button
 HA_SUPERVISOR_PORT = 4327   # the Supervisor's web interface, on Home Assistant's host
 
 
@@ -494,6 +497,22 @@ class ValetudoPanel(QgsDockWidget):
                                    lambda p=prefix: self.open_terminal(p, "log"))]
                 ssh.setMenu(menu)
                 ssh.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        # 🖥 remote desktop (VNC, RDP) of the computers, before their >_ button
+        self.remote_desktop = RemoteDesktop(self)
+        self.remote_desktop.failed.connect(self._on_remote_desktop_failed)
+        self._rd_buttons = {}
+        for prefix in RD_SERVERS:
+            ssh = getattr(self, f"btn_{prefix}_ssh")
+            row = self.findChild(QHBoxLayout, f"{prefix}_header_row")
+            if row is None:
+                continue
+            button = QToolButton()
+            button.setIcon(icon("remote_desktop"))
+            button.setAutoRaise(ssh.autoRaise())
+            button.setVisible(False)
+            button.clicked.connect(lambda _=False, p=prefix: self.open_remote_desktop(p))
+            row.insertWidget(row.indexOf(ssh), button)
+            self._rd_buttons[prefix] = button
         self.pi_runner.finished.connect(self._on_pi_info)
         self._pi_timer = QTimer(self)
         self._pi_timer.setInterval(PI_INTERVAL_MS)
@@ -1583,6 +1602,60 @@ class ValetudoPanel(QgsDockWidget):
             if target is not None:
                 ssh.setToolTip(tr("Open an SSH session in a terminal: {command}").format(
                     command=system_terminal.describe(*target)))
+            self._update_rd_button(prefix)
+
+    def _panel_server(self, prefix):
+        """The server of the settings shown in a frame (first of its type)."""
+        kind = {"pi": "rpi", "nuc": "linux", "kodi": "kodi"}.get(prefix)
+        return servers_model.first(load_settings()["servers"], kind) if kind else None
+
+    def _remote_desktops(self, prefix):
+        server = self._panel_server(prefix)
+        if server is None:
+            return []
+        return servers_model.remote_desktops(load_settings()["servers"], server)
+
+    def _update_rd_button(self, prefix):
+        button = self._rd_buttons.get(prefix)
+        if button is None:
+            return
+        desktops = self._remote_desktops(prefix)
+        button.setVisible(bool(desktops))
+        if not desktops:
+            return
+        lines = [tr("Open the remote desktop: {protocol} on {host}:{port}").format(
+            protocol=d[0].upper(), host=d[1], port=d[2])
+            + (" " + tr("(through SSH)") if d[4] else "") for d in desktops]
+        button.setToolTip("\n".join(lines))
+        if len(desktops) > 1:
+            menu = QMenu(button)
+            for index, desktop in enumerate(desktops):
+                menu.addAction(icon("remote_desktop"), desktop[0].upper(),
+                               lambda p=prefix, i=index: self.open_remote_desktop(p, i))
+            button.setMenu(menu)
+            button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        else:
+            button.setMenu(None)
+
+    def open_remote_desktop(self, prefix, index=0):
+        desktops = self._remote_desktops(prefix)
+        if not desktops:
+            return
+        protocol, host, port, user, ssh = desktops[min(index, len(desktops) - 1)]
+        cfg = load_settings()
+        template = cfg[f"{protocol}_command"] or remote_desktop.detected(protocol)
+        self._rd_protocol = protocol
+        self.remote_desktop.open(template, host, port, user, ssh)
+        if ssh is not None and template:
+            self.show_feedback(tr("Opening the SSH tunnel…"))
+
+    def _on_remote_desktop_failed(self, reason):
+        protocol = getattr(self, "_rd_protocol", "vnc").upper()
+        self.show_feedback({
+            "no_program": tr("No {protocol} program found: install Remmina, or set its "
+                             "command in the settings (Servers tab).").format(protocol=protocol),
+            "tunnel": tr("The SSH tunnel could not be opened (SSH key or password, address?)."),
+        }.get(reason, tr("The remote desktop program could not be started.")), "warning")
 
     def open_web(self, prefix):
         url = self._server_web(prefix)
