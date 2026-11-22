@@ -1702,10 +1702,6 @@ Continuer ?</translation>
         <translation>Lecture de la carte Wi-Fi complète sur le Pi…</translation>
     </message>
     <message>
-        <source>Show the robot on the map when QGIS starts with an empty project</source>
-        <translation>Afficher le robot sur la carte quand QGIS démarre avec un projet vide</translation>
-    </message>
-    <message>
         <source>Wi-Fi {signal} dBm</source>
         <translation>Wi-Fi {signal} dBm</translation>
     </message>
@@ -2242,10 +2238,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Floor, walls, rooms, robot, dock, path and planned path as QGIS layers</source>
         <translation>Sol, murs, pièces, robot, station, trajet et trajet prévu en couches QGIS</translation>
-    </message>
-    <message>
-        <source>Shown by itself when QGIS starts with an empty project</source>
-        <translation>Affichée d’elle-même quand QGIS démarre avec un projet vide</translation>
     </message>
     <message>
         <source>All rooms, ticked rooms, room groups, a zone drawn on the map, 1 to 3 passes</source>
@@ -3462,6 +3454,62 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Map</source>
         <translation>Carte</translation>
+    </message>
+    <message>
+        <source>QGIS projects (*.qgz *.qgs)</source>
+        <translation>Projets QGIS (*.qgz *.qgs)</translation>
+    </message>
+    <message>
+        <source>Robot project</source>
+        <translation>Projet du robot</translation>
+    </message>
+    <message>
+        <source>The QGIS project of the robot: its map, history and Wi-Fi maps are kept in folders next to it. Show on map in a project never saved offers to open it.</source>
+        <translation>Le projet QGIS du robot : sa carte, son historique et ses cartes Wi-Fi sont rangés dans des dossiers à côté. Afficher sur la carte dans un projet jamais enregistré propose de l'ouvrir.</translation>
+    </message>
+    <message>
+        <source>To show the robot on the map when QGIS starts, choose its project: the map, history and Wi-Fi maps are kept next to it.</source>
+        <translation>Pour afficher le robot sur la carte au démarrage de QGIS, choisissez son projet : la carte, l'historique et les cartes Wi-Fi sont rangés à côté.</translation>
+    </message>
+    <message>
+        <source>Robot project…</source>
+        <translation>Projet du robot…</translation>
+    </message>
+    <message>
+        <source>This project has never been saved. The robot's map, history and Wi-Fi maps are kept in folders next to the project.</source>
+        <translation>Ce projet n'a jamais été enregistré. La carte, l'historique et les cartes Wi-Fi du robot sont rangés dans des dossiers à côté du projet.</translation>
+    </message>
+    <message>
+        <source>Save as the robot project…</source>
+        <translation>Enregistrer comme projet du robot…</translation>
+    </message>
+    <message>
+        <source>Save the robot project</source>
+        <translation>Enregistrer le projet du robot</translation>
+    </message>
+    <message>
+        <source>Open the robot project</source>
+        <translation>Ouvrir le projet du robot</translation>
+    </message>
+    <message>
+        <source>Save this project as the robot project?</source>
+        <translation>Enregistrer ce projet comme projet du robot ?</translation>
+    </message>
+    <message>
+        <source>Open the robot project ({name}), or save this project as the robot project?</source>
+        <translation>Ouvrir le projet du robot ({name}), ou enregistrer ce projet comme projet du robot ?</translation>
+    </message>
+    <message>
+        <source>Project not saved: {error}</source>
+        <translation>Projet non enregistré : {error}</translation>
+    </message>
+    <message>
+        <source>When QGIS starts without a project, open the robot project and show the robot on the map</source>
+        <translation>Au démarrage de QGIS sans projet, ouvrir le projet du robot et afficher le robot sur la carte</translation>
+    </message>
+    <message>
+        <source>Its own QGIS project, opened with the map when QGIS starts, if asked</source>
+        <translation>Son propre projet QGIS, ouvert avec la carte au démarrage de QGIS, si souhaité</translation>
     </message>
 </context>
 </TS>

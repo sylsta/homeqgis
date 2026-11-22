@@ -72,8 +72,10 @@ and set a username and password (port 8080 by default).
 
 ## Robot
 
-- **General**: live tracking refresh; show the robot on the map when QGIS starts
-  with an empty project; **advanced tools**; *Edit room groups…*.
+- **General**: live tracking refresh; the **robot project** (the QGIS project the
+  robot's map, history and Wi-Fi maps are kept next to); when QGIS starts without a
+  project, open the robot project and show the robot on the map; **advanced
+  tools**; *Edit room groups…*.
 - **Camera**: stream URL (empty: `tcp://<robot>:8555`), ffmpeg path, video width.
 - **Notifications**: warn when a dock tank is empty, full or missing.
 - **History**: record the robot's outings.

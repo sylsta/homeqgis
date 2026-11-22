@@ -9,7 +9,7 @@ import os
 
 from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
 from qgis.PyQt.QtWidgets import (
-    QAction, QCheckBox, QInputDialog, QMessageBox, QPushButton, QToolButton,
+    QAction, QCheckBox, QFileDialog, QInputDialog, QMessageBox, QPushButton, QToolButton,
 )
 from qgis.core import (
     QgsApplication,
@@ -33,7 +33,7 @@ from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .manual import open_manual
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import (KEY_ADVANCED, PLUGIN_NAME, TOOLBAR_CHOICES, follow_robot,
+from .settings import (KEY_ADVANCED, KEY_ROBOT_PROJECT, PLUGIN_NAME, TOOLBAR_CHOICES, follow_robot,
                        has_ha_token, load_settings, toolbar_keys)
 from .sensors import SensorManager
 from .quiet_travel import QUIET_PRESETS, QuietTravel
@@ -579,6 +579,16 @@ class ValetudoPlugin:
             return
         if not cfg["live_at_start"]:
             return
+        project = QgsProject.instance()
+        if not project.fileName() and not project.mapLayers():   # QGIS opened without one
+            path = cfg["robot_project"]
+            if path and os.path.exists(path):
+                self.iface.addProject(path)
+            else:
+                self._offer_robot_project()
+                return
+        if not self._is_robot_project():
+            return   # another project was opened: left as it is
         self._live_at_start = True
         QTimer.singleShot(LIVE_AT_START_WINDOW_MS,
                           lambda: setattr(self, "_live_at_start", False))
@@ -590,9 +600,9 @@ class ValetudoPlugin:
         if ok and self._live_at_start and not self._unloaded:
             self._live_at_start = False   # once per QGIS session
             live = self.act.get("live")
-            # Only into an empty project: never add the robot's map to one the user opened.
+            # Only in the robot project: never add the robot's map to another one.
             if live is not None and live.isEnabled() and not live.isChecked() \
-                    and not QgsProject.instance().mapLayers():
+                    and self._is_robot_project():
                 live.trigger()   # same as a click: checked, then toggle_live(True)
         previous, self._reachable = self._reachable, ok
         if ok and self.capabilities is None and self.client is not None:
@@ -724,9 +734,105 @@ class ValetudoPlugin:
                     canvas.refresh()
                 return
 
+    # -- the robot project ------------------------------------------------------------
+
+    @staticmethod
+    def _is_robot_project():
+        path = load_settings()["robot_project"]
+        current = QgsProject.instance().fileName()
+        return bool(path and current) and \
+            os.path.normcase(os.path.abspath(path)) == os.path.normcase(os.path.abspath(current))
+
+    def _offer_robot_project(self):
+        """QGIS started without a project and no robot project is set: say how to get
+        the map shown at start-up (never a dialog at start-up)."""
+        bar = self.iface.messageBar()
+        item = bar.createMessage(PLUGIN_NAME, tr(
+            "To show the robot on the map when QGIS starts, choose its project: the map, "
+            "history and Wi-Fi maps are kept next to it."))
+        button = QPushButton(tr("Robot project…"))
+        button.clicked.connect(lambda: (bar.popWidget(widget), self._show_on_map()))
+        item.layout().addWidget(button)
+        widget = bar.pushWidget(item, Qgis.MessageLevel.Info, 0)
+
+    def _show_on_map(self):
+        live = self.act.get("live")
+        if live is not None and live.isEnabled() and not live.isChecked():
+            live.trigger()
+
+    def _ensure_project(self):
+        """True when the project has a file, so that the robot's layers can be kept
+        next to it. Otherwise offer to open the robot project, or to save this one as
+        the robot project."""
+        if QgsProject.instance().fileName():
+            return True
+        path = load_settings()["robot_project"]
+        box = QMessageBox(self.iface.mainWindow())
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle(PLUGIN_NAME)
+        box.setText(tr("This project has never been saved. The robot's map, history and "
+                       "Wi-Fi maps are kept in folders next to the project."))
+        open_button = None
+        if path and os.path.exists(path):
+            box.setInformativeText(tr("Open the robot project ({name}), or save this "
+                                      "project as the robot project?")
+                                   .format(name=os.path.basename(path)))
+            open_button = box.addButton(tr("Open the robot project"),
+                                        QMessageBox.ButtonRole.AcceptRole)
+        else:
+            box.setInformativeText(tr("Save this project as the robot project?"))
+        save_button = box.addButton(tr("Save as the robot project…"),
+                                    QMessageBox.ButtonRole.ActionRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(open_button or save_button)
+        box.exec()
+        if open_button is not None and box.clickedButton() is open_button:
+            return self._open_robot_project(path)
+        if box.clickedButton() is save_button:
+            return self._save_as_robot_project(path)
+        return False
+
+    def _open_robot_project(self, path):
+        # Changes to the current project: QGIS asks whether to save them first
+        if QgsProject.instance().isDirty() and not self.iface.newProject(True):
+            return False
+        return bool(self.iface.addProject(path)) and bool(QgsProject.instance().fileName())
+
+    def _save_as_robot_project(self, current=""):
+        # A folder of its own: map/, history/ and wifi/ are created next to the project
+        start = current or os.path.join(os.path.expanduser("~"), "DomotiQGIS", "robot.qgz")
+        folder = os.path.dirname(start)
+        made = not os.path.isdir(folder)
+        if made:
+            try:
+                os.makedirs(folder)
+            except OSError:
+                made = False
+        path, _filter = QFileDialog.getSaveFileName(
+            self.iface.mainWindow(), tr("Save the robot project"), start,
+            tr("QGIS projects (*.qgz *.qgs)"))
+        used = bool(path) and os.path.dirname(os.path.abspath(path)) == os.path.abspath(folder)
+        if made and not used and not os.listdir(folder):
+            try:
+                os.rmdir(folder)   # not used after all
+            except OSError:
+                pass
+        if not path:
+            return False
+        if not path.lower().endswith((".qgz", ".qgs")):
+            path += ".qgz"
+        project = QgsProject.instance()
+        project.setFileName(path)
+        if not project.write():
+            self._message(tr("Project not saved: {error}").format(error=project.error()),
+                          Qgis.MessageLevel.Warning)
+            return False
+        QgsSettings().setValue(KEY_ROBOT_PROJECT, path)
+        return True
+
     def toggle_live(self, checked):
         client = self._get_client()
-        if not client:
+        if not client or (checked and not self._ensure_project()):
             self.act["live"].setChecked(False)
             return
         if checked:
@@ -744,7 +850,7 @@ class ValetudoPlugin:
                 self.build_wifi_map()
             return
         client = self._get_client()
-        if not client:
+        if not client or not self._ensure_project():   # its layers go next to the project
             self.act["wifi_survey"].setChecked(False)
             return
         if not self.layers.exists():
@@ -798,7 +904,7 @@ class ValetudoPlugin:
     def edit_restrictions(self, *_):
         """Load the robot's restrictions into two editable layers."""
         client = self._get_client()
-        if not client:
+        if not client or not self._ensure_project():   # its layers go next to the project
             return
         if not self.layers.exists():
             client.fetch_map()   # show the map too: zones are drawn on top of it
@@ -1089,7 +1195,7 @@ class ValetudoPlugin:
     def _start_split(self, seg_id, name):
         """From the rooms list: draw the cut line on the map (two clicks)."""
         client = self._get_client()
-        if not client:
+        if not client or not (self.layers.exists() or self._ensure_project()):
             return
         if not self.layers.exists():
             client.fetch_map()   # the line is drawn on the robot's map
@@ -1612,6 +1718,8 @@ class ValetudoPlugin:
     def _on_map(self, map_json):
         self._last_map = map_json
         self.panel.update_map(map_json)
+        if not QgsProject.instance().fileName():
+            return   # no folder to keep the layers in (Show on map asks for a project)
         if not self.layers.exists():
             self._prepare_project()
         try:

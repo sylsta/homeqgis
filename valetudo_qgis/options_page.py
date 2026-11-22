@@ -13,7 +13,7 @@ from qgis.PyQt.QtWidgets import (QAbstractItemView, QCheckBox, QGridLayout, QHBo
                                  QFileDialog, QListWidgetItem, QMessageBox,
                                  QStackedWidget)
 from qgis.core import QgsSettings
-from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
+from qgis.gui import QgsFileWidget, QgsOptionsPageWidget, QgsOptionsWidgetFactory
 
 from . import config_backup, room_groups
 from .about import AboutWidget
@@ -23,7 +23,7 @@ from .servers import KEY_ACTIVE_ROBOT
 from .servers_editor import ServersEditor
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_ADVANCED, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
-    KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_RDP_COMMAND,
+    KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_ROBOT_PROJECT, KEY_RDP_COMMAND,
     KEY_FOLLOW_ROBOT, KEY_STRIP_DOTS, KEY_TAB_ORDER, KEY_TOOLBAR, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, TOOLBAR_CHOICES,
     WIFI_DEFAULTS, tab_order, toolbar_keys,
     active_robot_id, default_camera_url, load_settings, save_servers, set_secret,
@@ -33,7 +33,7 @@ from .ui_loader import load_ui
 PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_page.ui)
 
 UI_WIDGETS = (
-    "interval", "live_at_start", "btn_room_groups",
+    "interval", "robot_project", "live_at_start", "btn_room_groups",
     "camera_url", "ffmpeg", "camera_width", "notify_dock", "record_history",
     "servers_layout", "chk_advanced", "tabs",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
@@ -52,6 +52,12 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self._on_applied = on_applied
         self.servers_editor = ServersEditor(self)
         self.servers_layout.addWidget(self.servers_editor)
+        self.robot_project.setStorageMode(QgsFileWidget.StorageMode.SaveFile)
+        self.robot_project.setFilter(tr("QGIS projects (*.qgz *.qgs)"))
+        self.robot_project.setDialogTitle(tr("Robot project"))
+        self.robot_project.setToolTip(tr(
+            "The QGIS project of the robot: its map, history and Wi-Fi maps are kept in "
+            "folders next to it. Show on map in a project never saved offers to open it."))
         self._build_panel_tab()
         self._fill()
         self._setup_backup()
@@ -68,6 +74,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.servers_editor.load_programs(cfg["vnc_command"], cfg["rdp_command"])
         self.interval.setValue(cfg["interval_s"])
         self.live_at_start.setChecked(cfg["live_at_start"])
+        self.robot_project.setFilePath(cfg["robot_project"])
         # Empty camera URL = derived from the robot address.
         self.camera_url.setText(s.value(KEY_CAMERA_URL, "", type=str))
         self.camera_url.setPlaceholderText(
@@ -315,6 +322,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_RDP_COMMAND, rdp)
         s.setValue(KEY_INTERVAL, self.interval.value())
         s.setValue(KEY_LIVE_AT_START, self.live_at_start.isChecked())
+        s.setValue(KEY_ROBOT_PROJECT, self.robot_project.filePath().strip())
         s.setValue(KEY_CAMERA_URL, self.camera_url.text().strip())
         s.setValue(KEY_FFMPEG, self.ffmpeg.text().strip())
         s.setValue(KEY_CAMERA_WIDTH, self.camera_width.value())

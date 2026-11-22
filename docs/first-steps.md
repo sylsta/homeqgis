@@ -42,9 +42,16 @@ Wi-Fi recorder on the robot, the boot watch, the editing of no-go zones), so tha
 the first look stays simple. Turn them on in the panel's **⋮ › Advanced tools**,
 or in the settings' *Robot* tab.
 
-## Save the project
+## The robot project
 
-Several features write files **next to the project**: the robot's
-[history](robot/history.md), its [map](map.md#saved-with-the-project), the
-[Wi-Fi survey](robot/wifi.md). Save your project once (*Project › Save*) and they
-start; until then the plugin keeps what it can in memory and reminds you.
+The robot's [map](map.md#saved-with-the-project), [history](robot/history.md) and
+[Wi-Fi survey](robot/wifi.md) are kept in [folders next to the project](files.md),
+so the plugin never loads them into a project that has never been saved.
+
+The first time you click **🗺 Show on map** in such a project, it offers to save it
+as the **robot project** (in a folder of its own, `~/DomotiQGIS/robot.qgz` by
+default). Once a robot project is set, it offers to open it instead. The robot
+project is shown, and can be changed, in the settings' *Robot* tab, *General*.
+
+Show on map also works in any other saved project: the robot's layers then go in
+folders next to that one.

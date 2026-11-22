@@ -18,6 +18,7 @@ KEY_FFMPEG = "valetudo/ffmpeg"
 KEY_CAMERA_WIDTH = "valetudo/camera_width"
 KEY_NOTIFY_DOCK = "valetudo/notify_dock"
 KEY_LIVE_AT_START = "valetudo/live_at_start"   # "Show on map" when QGIS starts
+KEY_ROBOT_PROJECT = "valetudo/robot_project"   # the QGIS project of the robot (.qgz)
 KEY_ADVANCED = "valetudo/advanced_tools"   # Terminal, robot Wi-Fi recorder, boot watch, restrictions
 KEY_HISTORY = "valetudo/history"   # record the robot's outings in <project folder>/history
 KEY_VNC_COMMAND = "valetudo/vnc_command"   # remote desktop programs: empty = found
@@ -168,6 +169,7 @@ def _stored_settings():
         "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
         "strip_dots": s.value(KEY_STRIP_DOTS, False, type=bool),
         "follow_robot": s.value(KEY_FOLLOW_ROBOT, False, type=bool),
+        "robot_project": s.value(KEY_ROBOT_PROJECT, "", type=str).strip(),
         "vnc_command": s.value(KEY_VNC_COMMAND, "", type=str).strip(),
         "rdp_command": s.value(KEY_RDP_COMMAND, "", type=str).strip(),
         **{key: s.value(f"valetudo/{key}", default, type=kind)

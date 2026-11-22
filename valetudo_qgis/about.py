@@ -38,7 +38,7 @@ def sections():
         (tr("Robot: map"), [
             tr("Floor, walls, rooms, robot, dock, path and planned path as QGIS layers"),
             tr("Live tracking, optionally keeping the robot in view; status card on the map"),
-            tr("Shown by itself when QGIS starts with an empty project"),
+            tr("Its own QGIS project, opened with the map when QGIS starts, if asked"),
         ]),
         (tr("Robot: cleaning"), [
             tr("All rooms, ticked rooms, room groups, a zone drawn on the map, 1 to 3 passes"),

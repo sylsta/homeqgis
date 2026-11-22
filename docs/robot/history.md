@@ -30,8 +30,9 @@ that crosses midnight stays in the file of the day it started), with three layer
 - Time on the dock is not recorded.
 
 !!! note "Save the project first"
-    The history folder sits next to the project. Until the project is saved, the
-    outing under way is kept in memory and a message offers to save the project.
+    The history folder sits next to the project. Until the project is saved (see
+    [the robot project](../first-steps.md#the-robot-project)), the outing under way
+    is kept in memory and a message offers to save the project.
 
 Turn it off in the settings: tab *Robot*, *History*.
 

@@ -20,9 +20,14 @@ The map stays where you put it; to keep the robot in view (recentring only when 
 nears the edge), tick *Keep the robot in view* in the settings, *UI configuration*.
 Click again to stop.
 
-It turns on by itself when QGIS starts with an empty project and the robot answers
-within a minute (settings, *Robot* tab, *General*). A project with layers is left
-untouched.
+In a project that has never been saved, it first offers to open the
+[robot project](first-steps.md#the-robot-project), or to save this one as the robot
+project: the map is kept next to it.
+
+When QGIS starts without a project, it can open the robot project and turn Show on
+map on once the robot answers (within a minute): tick *When QGIS starts without a
+project, open the robot project…* in the settings, *Robot* tab, *General*. A project
+you open yourself is left untouched.
 
 While it is on:
 
