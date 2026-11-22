@@ -3600,10 +3600,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>L'extension y a été copiée (pas de lien possible ici) : relancez ceci après chaque mise à jour de l'extension.</translation>
     </message>
     <message>
-        <source>Tokens and passwords copied.</source>
-        <translation>Jetons et mots de passe copiés.</translation>
-    </message>
-    <message>
         <source>Choose another profile than the one in use.</source>
         <translation>Choisissez un autre profil que celui en cours.</translation>
     </message>
@@ -3626,6 +3622,10 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>A launcher that starts it like an app, in a QGIS profile of its own</source>
         <translation>Un lanceur qui le démarre comme une application, dans un profil QGIS à part</translation>
+    </message>
+    <message>
+        <source>Tokens and passwords copied. At the first start, QGIS asks for its master password (the same as here): tick the box that stores it in your wallet, so that it is not asked again.</source>
+        <translation>Jetons et mots de passe copiés. Au premier démarrage, QGIS demande son mot de passe principal (le même qu'ici) : cochez la case qui l'enregistre dans votre wallet, pour qu'il ne soit plus demandé.</translation>
     </message>
 </context>
 </TS>

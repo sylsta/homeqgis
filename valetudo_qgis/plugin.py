@@ -987,7 +987,9 @@ class ValetudoPlugin:
             lines.append(tr("The plugin was copied into it (no link possible here): run "
                             "this again after updating the plugin."))
         if result["secrets"]:
-            lines.append(tr("Tokens and passwords copied."))
+            lines.append(tr("Tokens and passwords copied. At the first start, QGIS asks for "
+                            "its master password (the same as here): tick the box that "
+                            "stores it in your wallet, so that it is not asked again."))
         lines += [tr("Launcher: {path}").format(path=path) for path in result["launchers"]]
         if not result["launchers"]:
             lines.append(tr("No launcher: start it with {command}").format(

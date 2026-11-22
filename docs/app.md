@@ -20,6 +20,11 @@ It is still QGIS underneath: QGIS must be installed, and it starts as fast as QG
   only DomotiQGIS's.
 - **Shortcut on the desktop** and **Entry in the applications menu**.
 
+!!! note "The master password"
+    With the tokens and passwords copied, the app's first start asks for QGIS's
+    **master password**: the same as in your usual QGIS. Tick *Store/update the
+    master password in your Wallet/KeyRing* so that it is not asked again.
+
 ![The app launcher dialog](images/app-launcher.png)
 
 What it creates:
