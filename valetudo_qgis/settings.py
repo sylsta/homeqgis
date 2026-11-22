@@ -218,6 +218,30 @@ def has_secret(key):
         return False
 
 
+# The master password is asked once at a time: while its window is open, other parts
+# of the plugin reading a secret (timers keep running) get "" instead of a second
+# window (Qt: "Recursive call detected"). Cancelled, it is not asked again by reads
+# until a secret is stored (the user's own action).
+_asking = False
+_declined = False
+
+
+def _unlock(manager, prompt):
+    """True once the master password is known (from the wallet, or typed)."""
+    global _asking, _declined
+    if manager.masterPasswordIsSet():
+        return True
+    if _asking or (_declined and not prompt):
+        return False
+    _asking = True
+    try:
+        ok = bool(manager.setMasterPassword(True))   # the wallet, else its window
+    finally:
+        _asking = False
+    _declined = not ok
+    return ok
+
+
 def secret(key):
     """The secret stored under key ("" if none, or if it cannot be decrypted)."""
     try:
@@ -225,7 +249,7 @@ def secret(key):
         manager = QgsApplication.authManager()
         # Without a stored secret, do not decrypt anything: that would ask for
         # the master password for nothing.
-        if not manager.existsAuthSetting(key):
+        if not manager.existsAuthSetting(key) or not _unlock(manager, prompt=False):
             return ""
         value = manager.authSetting(key, "", True)
     except Exception:   # authentication database unavailable
@@ -245,7 +269,7 @@ def set_secret(key, value):
             if manager.existsAuthSetting(key):
                 return bool(manager.removeAuthSetting(key))
             return True
-        if not manager.setMasterPassword(True):   # asks once, if not yet set or verified
+        if not _unlock(manager, prompt=True):   # asks once, if not yet set or verified
             return False
         return bool(manager.storeAuthSetting(key, value, True))
     except Exception:
