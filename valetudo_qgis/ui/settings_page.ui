@@ -163,6 +163,13 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="record_jobs">
+            <property name="text">
+             <string>Record the camera during each job, until the robot is back on its dock (videos folder next to the project)</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

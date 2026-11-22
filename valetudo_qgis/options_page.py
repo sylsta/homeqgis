@@ -23,10 +23,11 @@ from .servers import KEY_ACTIVE_ROBOT
 from .servers_editor import ServersEditor
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_ADVANCED, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
-    KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_ROBOT_PROJECT, KEY_RDP_COMMAND,
-    KEY_FOLLOW_ROBOT, KEY_STRIP_DOTS, KEY_TAB_ORDER, KEY_TOOLBAR, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, TOOLBAR_CHOICES,
-    WIFI_DEFAULTS, tab_order, toolbar_keys,
-    active_robot_id, default_camera_url, load_settings, save_servers, set_secret,
+    KEY_FOLLOW_ROBOT, KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK,
+    KEY_RDP_COMMAND, KEY_RECORD_JOBS, KEY_ROBOT_PROJECT, KEY_STRIP_DOTS, KEY_TAB_ORDER,
+    KEY_TOOLBAR, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, TOOLBAR_CHOICES, WIFI_DEFAULTS,
+    active_robot_id, default_camera_url, load_settings, save_servers, set_secret, tab_order,
+    toolbar_keys,
 )
 from .ui_loader import load_ui
 
@@ -34,7 +35,7 @@ PAGE_NAME = "ValetudoOptionsPage"   # object name of the page (root of settings_
 
 UI_WIDGETS = (
     "interval", "robot_project", "live_at_start", "btn_room_groups",
-    "camera_url", "ffmpeg", "camera_width", "notify_dock", "record_history",
+    "camera_url", "ffmpeg", "camera_width", "record_jobs", "notify_dock", "record_history",
     "servers_layout", "chk_advanced", "tabs",
     "backup_folder", "btn_backup_browse", "btn_backup_open", "list_backups",
     "chk_backup_secrets", "btn_backup_save", "btn_backup_load", "btn_backup_load_file",
@@ -81,6 +82,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
             default_camera_url(cfg["url"]) or f"tcp://192.168.1.23:{DEFAULT_CAMERA_PORT}")
         self.ffmpeg.setText(cfg["ffmpeg"])
         self.camera_width.setValue(cfg["camera_width"])
+        self.record_jobs.setChecked(cfg["record_jobs"])
         self.notify_dock.setChecked(cfg["notify_dock"])
         self.record_history.setChecked(cfg["history"])
         self.chk_advanced.setChecked(cfg["advanced_tools"])
@@ -326,6 +328,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_CAMERA_URL, self.camera_url.text().strip())
         s.setValue(KEY_FFMPEG, self.ffmpeg.text().strip())
         s.setValue(KEY_CAMERA_WIDTH, self.camera_width.value())
+        s.setValue(KEY_RECORD_JOBS, self.record_jobs.isChecked())
         s.setValue(KEY_NOTIFY_DOCK, self.notify_dock.isChecked())
         s.setValue(KEY_HISTORY, self.record_history.isChecked())
         s.setValue(KEY_ADVANCED, self.chk_advanced.isChecked())

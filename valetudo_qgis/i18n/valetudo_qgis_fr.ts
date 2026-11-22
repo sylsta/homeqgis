@@ -3627,5 +3627,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Share the tokens and passwords with this profile (same authentication database)</source>
         <translation>Partager les jetons et mots de passe avec ce profil (même base d'authentification)</translation>
     </message>
+    <message>
+        <source>Record the camera during each job, until the robot is back on its dock (videos folder next to the project)</source>
+        <translation>Enregistrer la caméra pendant chaque tâche, jusqu'au retour du robot sur sa base (dossier videos à côté du projet)</translation>
+    </message>
 </context>
 </TS>

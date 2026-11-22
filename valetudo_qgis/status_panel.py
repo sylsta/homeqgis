@@ -39,7 +39,7 @@ except ImportError:
     from qgis.PyQt.QtWidgets import QShortcut   # Qt 5
 from qgis.gui import QgsDockWidget
 
-from .camera_widget import CameraWidget
+from .camera_widget import CameraWidget, job_videos_folder
 from . import room_groups
 from .i18n import tr
 from . import host_info
@@ -148,6 +148,9 @@ def _on_port(url, port):
     return f"{parts.scheme() or 'http'}://{parts.host()}:{port}/"
 
 
+# A job starts when the robot goes from one of AT_REST_STATES to one of JOB_STATES
+JOB_STATES = ("cleaning", "moving")
+AT_REST_STATES = ("docked", "idle", "error")
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
 ACTIVE_STATES = {"cleaning", "returning", "moving", "manual_control"}
 LOW_PERCENT = 10
@@ -452,6 +455,7 @@ class ValetudoPanel(QgsDockWidget):
 
         # -- the big button: Start / Pause / Resume, after the robot's state ------------
         self._state = None
+        self._flag = None
         self.btn_primary.clicked.connect(self._on_primary)
         self._update_primary()
 
@@ -2214,11 +2218,17 @@ class ValetudoPanel(QgsDockWidget):
         if current is not None:
             combo.setCurrentIndex(max(0, combo.findData(current)))
 
-    def _follow_recording(self, state, flag):
-        """A recording stops once the robot is back on its dock at the end of its job.
-        A return in the middle of the job (washing the mops, clean water, emptying:
-        Valetudo then says "docked" with the "resumable" flag) does not stop it, nor
-        does starting a recording while the robot is on its dock."""
+    def _follow_recording(self, state, flag, previous=None, previous_flag=None):
+        """A job that starts (scheduled or sent by hand: the robot leaves its dock to
+        clean or to go somewhere) is recorded, if set. A recording stops once the robot
+        is back on its dock at the end of its job. A return in the middle of the job
+        (washing the mops, clean water, emptying: Valetudo then says "docked" with the
+        "resumable" flag) neither stops one nor starts a new one, nor does starting a
+        recording by hand while the robot is on its dock."""
+        if (state in JOB_STATES and previous in AT_REST_STATES
+                and previous_flag != "resumable" and not self.camera.is_recording()
+                and load_settings()["record_jobs"]):
+            self._record_job()
         if not self.camera.is_recording():
             self._away_while_recording = False
             return
@@ -2227,6 +2237,14 @@ class ValetudoPanel(QgsDockWidget):
         elif flag != "resumable" and self._away_while_recording:
             self._away_while_recording = False
             self.camera.stop_recording()
+            self._update_camera()   # the stream stops too if the Camera tab is not shown
+
+    def _record_job(self):
+        """Start the camera (if it is not playing) and record into the videos folder."""
+        if not self.camera.stream.is_running():
+            self.camera.play()
+            self._update_camera()   # not shown: stops a while after the recording
+        self.camera.record_to(job_videos_folder())
 
     def _on_attributes(self, attributes):
         states, flags = _state_labels(), _flag_labels()
@@ -2245,8 +2263,9 @@ class ValetudoPanel(QgsDockWidget):
                     text += f" ({_label(flags, flag)})"
                 self.lbl_state.setText(text)
                 self._set_badge(state)
-                self._state = state
-                self._follow_recording(state, flag)
+                previous = (self._state, self._flag)
+                self._state, self._flag = state, flag
+                self._follow_recording(state, flag, *previous)
                 err = attr.get("error") or {}
                 error_text = (err.get("message") if isinstance(err, dict) else "") \
                     or (attr.get("metaData") or {}).get("error_description", "")

@@ -12,6 +12,8 @@ history/
 map/
     robot_map.gpkg               the robot's current map (rooms, zones)
     robot_map_a3f9c2e1.gpkg      one per version of the map
+videos/
+    valetudo_job_20261122_093012.mp4   the camera, during each job
 wifi/
     robot_wifi.gpkg              the Wi-Fi survey points
     robot_wifi_signal.tif        the last Wi-Fi map built

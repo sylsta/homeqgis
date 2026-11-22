@@ -8,7 +8,7 @@ import time
 
 import os
 
-from qgis.PyQt.QtCore import QDateTime, Qt, QTimer
+from qgis.PyQt.QtCore import QDateTime, QStandardPaths, Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import (
     QFileDialog,
@@ -25,10 +25,23 @@ from qgis.core import QgsSettings
 from .camera import CameraStream
 from .camera_recorder import CameraRecorder
 from .i18n import tr
+from .project_layers import project_folder
 from .settings import load_settings
 
 DEFAULT_ASPECT = 9 / 16   # height / width until the first image tells the real one
 KEY_RECORD_DIR = "valetudo/camera_record_dir"   # folder of the last recording
+JOB_VIDEOS = "videos"   # the recordings of jobs, next to the project
+
+
+def job_videos_folder():
+    """Where jobs are recorded: <project folder>/videos; while the project has never
+    been saved, the folder of the last recording, else the user's videos folder."""
+    folder = (project_folder(JOB_VIDEOS)
+              or QgsSettings().value(KEY_RECORD_DIR, "", type=str)
+              or QStandardPaths.writableLocation(QStandardPaths.StandardLocation.MoviesLocation)
+              or os.path.expanduser("~"))
+    os.makedirs(folder, exist_ok=True)
+    return folder
 
 
 class CameraWidget(QWidget):
@@ -199,6 +212,14 @@ class CameraWidget(QWidget):
         """Stop (the video is finished and saved) when the job is over."""
         if self.recorder.is_recording():
             self.recorder.stop()
+
+    def record_to(self, folder):
+        """Record without asking (a job that starts): valetudo_job_<date>.mp4."""
+        if self.recorder.is_recording():
+            return
+        name = "valetudo_job_{}.mp4".format(
+            QDateTime.currentDateTime().toString("yyyyMMdd_HHmmss"))
+        self.recorder.start(os.path.join(folder, name), load_settings()["ffmpeg"])
 
     def toggle_recording(self, *_):
         if self.recorder.is_recording():
