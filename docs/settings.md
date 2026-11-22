@@ -94,6 +94,8 @@ map opacity, clipping to the rooms. See [Wi-Fi](robot/wifi.md).
   *Advanced tools*).
 - **Status strip**: servers as a coloured dot instead of an *On the air* / *Off the
   air* label.
+- **Map**: *Keep the robot in view while Show on map is on* recentres the map when
+  the robot nears the edge. Off by default: the map stays where you put it.
 
 ## Backup
 

@@ -33,8 +33,8 @@ from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
 from .manual import open_manual
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import (KEY_ADVANCED, PLUGIN_NAME, TOOLBAR_CHOICES, has_ha_token,
-                       load_settings, toolbar_keys)
+from .settings import (KEY_ADVANCED, PLUGIN_NAME, TOOLBAR_CHOICES, follow_robot,
+                       has_ha_token, load_settings, toolbar_keys)
 from .sensors import SensorManager
 from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
@@ -219,7 +219,7 @@ class ValetudoPlugin:
         # The settings are a page of Settings › Options; "Settings…" opens it.
         self.options_factory = ValetudoOptionsFactory(self._on_settings_applied)
         self.iface.registerOptionsWidgetFactory(self.options_factory)
-        # One switch for the map: load it, track the robot live and keep it in view.
+        # One switch for the map: load it and track the robot live (in view, if asked).
         self._new_action("live", tr("Show on map"), self.toggle_live, checkable=True)
         self.act["live"].setIcon(icon("show_map"))   # (a map with the robot)
         self._new_action("start", tr("Clean everything"), lambda *_: self.control("start"))
@@ -1628,8 +1628,9 @@ class ValetudoPlugin:
             canvas.refresh()
         if self.sensors is not None:   # draw the sensors with their latest known values
             self.layers.update_sensors(self.sensors.items())
-        if self.act.get("live") is not None and self.act["live"].isChecked():
-            self._center_on_robot(map_json)   # keep the robot in view while tracking
+        if (self.act.get("live") is not None and self.act["live"].isChecked()
+                and follow_robot()):
+            self._center_on_robot(map_json)   # keep the robot in view, if asked
 
     def _prepare_project(self):
         """Switch the project to "No CRS", silently: we work in the robot's own frame."""

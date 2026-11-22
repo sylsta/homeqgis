@@ -2244,10 +2244,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Sol, murs, pièces, robot, station, trajet et trajet prévu en couches QGIS</translation>
     </message>
     <message>
-        <source>Live tracking that keeps the robot in view, status card on the map</source>
-        <translation>Suivi en direct qui garde le robot en vue, carte d’état sur la carte</translation>
-    </message>
-    <message>
         <source>Shown by itself when QGIS starts with an empty project</source>
         <translation>Affichée d’elle-même quand QGIS démarre avec un projet vide</translation>
     </message>
@@ -3450,6 +3446,22 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Year</source>
         <translation>Année</translation>
+    </message>
+    <message>
+        <source>Keep the robot in view while Show on map is on</source>
+        <translation>Garder le robot en vue quand Afficher sur la carte est actif</translation>
+    </message>
+    <message>
+        <source>Recentres the map when the robot nears the edge of the view. Off: the map stays where you put it.</source>
+        <translation>Recentre la carte quand le robot approche du bord de la vue. Décoché : la carte reste où vous l'avez mise.</translation>
+    </message>
+    <message>
+        <source>Live tracking, optionally keeping the robot in view; status card on the map</source>
+        <translation>Suivi en direct, en gardant le robot en vue si souhaité ; fiche d'état sur la carte</translation>
+    </message>
+    <message>
+        <source>Map</source>
+        <translation>Carte</translation>
     </message>
 </context>
 </TS>

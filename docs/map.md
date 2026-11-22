@@ -15,8 +15,10 @@ centimetres, no CRS), in a *Valetudo* group:
 
 ## Show on map
 
-**🗺 Show on map** (in the status strip) loads the map, refreshes the robot live and
-keeps it in view, recentring only when it nears the edge. Click again to stop.
+**🗺 Show on map** (in the status strip) loads the map and refreshes the robot live.
+The map stays where you put it; to keep the robot in view (recentring only when it
+nears the edge), tick *Keep the robot in view* in the settings, *UI configuration*.
+Click again to stop.
 
 It turns on by itself when QGIS starts with an empty project and the robot answers
 within a minute (settings, *Robot* tab, *General*). A project with layers is left

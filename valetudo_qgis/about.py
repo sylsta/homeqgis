@@ -37,7 +37,7 @@ def sections():
     return [
         (tr("Robot: map"), [
             tr("Floor, walls, rooms, robot, dock, path and planned path as QGIS layers"),
-            tr("Live tracking that keeps the robot in view, status card on the map"),
+            tr("Live tracking, optionally keeping the robot in view; status card on the map"),
             tr("Shown by itself when QGIS starts with an empty project"),
         ]),
         (tr("Robot: cleaning"), [

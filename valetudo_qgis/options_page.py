@@ -24,7 +24,7 @@ from .servers_editor import ServersEditor
 from .settings import (
     DEFAULT_CAMERA_PORT, KEY_ADVANCED, KEY_CAMERA_URL, KEY_CAMERA_WIDTH, KEY_FFMPEG,
     KEY_HISTORY, KEY_INTERVAL, KEY_LIVE_AT_START, KEY_NOTIFY_DOCK, KEY_RDP_COMMAND,
-    KEY_STRIP_DOTS, KEY_TAB_ORDER, KEY_TOOLBAR, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, TOOLBAR_CHOICES,
+    KEY_FOLLOW_ROBOT, KEY_STRIP_DOTS, KEY_TAB_ORDER, KEY_TOOLBAR, KEY_VNC_COMMAND, PANEL_TABS, PLUGIN_NAME, TOOLBAR_CHOICES,
     WIFI_DEFAULTS, tab_order, toolbar_keys,
     active_robot_id, default_camera_url, load_settings, save_servers, set_secret,
 )
@@ -82,6 +82,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         for key, box in self.toolbar_boxes.items():
             box.setChecked(key in chosen)
         self.chk_strip_dots.setChecked(cfg["strip_dots"])
+        self.chk_follow_robot.setChecked(cfg["follow_robot"])
         for key, (_, kind) in WIFI_DEFAULTS.items():
             widget = getattr(self, key)
             if kind is bool:
@@ -144,6 +145,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         self.chk_strip_dots = QCheckBox(tr("Servers as a coloured dot instead of an "
                                            "On the air / Off the air label"))
         self.chk_strip_dots.setToolTip(tr("Takes less room; hover the dot for the details."))
+        self.chk_follow_robot = QCheckBox(tr("Keep the robot in view while Show on map is on"))
+        self.chk_follow_robot.setToolTip(tr("Recentres the map when the robot nears the edge "
+                                            "of the view. Off: the map stays where you put it."))
         note = QLabel(tr("The map tools (right column) appear while Show on map is on; the "
                          "advanced ones only with Advanced tools."))
         note.setWordWrap(True)
@@ -151,6 +155,9 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         layout.addSpacing(8)
         layout.addWidget(QLabel("<b>" + tr("Status strip") + "</b>"))
         layout.addWidget(self.chk_strip_dots)
+        layout.addSpacing(8)
+        layout.addWidget(QLabel("<b>" + tr("Map") + "</b>"))
+        layout.addWidget(self.chk_follow_robot)
         layout.addStretch(1)
         self.tabs.insertTab(self.tabs.count() - 2, page, tr("UI configuration"))
 
@@ -318,6 +325,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         s.setValue(KEY_TOOLBAR, ",".join(key for key, box in self.toolbar_boxes.items()
                                          if box.isChecked()))
         s.setValue(KEY_STRIP_DOTS, self.chk_strip_dots.isChecked())
+        s.setValue(KEY_FOLLOW_ROBOT, self.chk_follow_robot.isChecked())
         secrets_changed, failed = False, False
         for key, value in editor.secret_changes():
             if set_secret(key, value):

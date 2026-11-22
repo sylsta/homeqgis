@@ -26,6 +26,7 @@ KEY_TAB_ORDER = "valetudo/panel_tab_order"   # the robot's side tabs, comma-sepa
 PANEL_TABS = ("clean", "schedule", "history", "camera", "wifi", "maintenance")
 # (their default order; Status and Terminal are in the panel's Servers section)
 KEY_STRIP_DOTS = "valetudo/strip_dots"   # servers in the strip: a dot instead of a label
+KEY_FOLLOW_ROBOT = "valetudo/follow_robot"   # Show on map recentres on the robot
 KEY_TOOLBAR = "valetudo/toolbar"   # the commands in the plugin's toolbar, comma-separated
 # The commands the toolbar can show, in its order; the map tools (last four) only
 # while "Show on map" is on.
@@ -131,6 +132,11 @@ def tab_order():
     return order + [key for key in PANEL_TABS if key not in order]
 
 
+def follow_robot():
+    """True if Show on map keeps the robot in view (read alone: called on each map)."""
+    return QgsSettings().value(KEY_FOLLOW_ROBOT, False, type=bool)
+
+
 def load_settings():
     """The settings: the plugin's options, and the servers' values under the names
     the plugin has always read (robot address, Pi host…; see servers.legacy_config),
@@ -161,6 +167,7 @@ def _stored_settings():
         "history": s.value(KEY_HISTORY, True, type=bool),
         "advanced_tools": s.value(KEY_ADVANCED, False, type=bool),
         "strip_dots": s.value(KEY_STRIP_DOTS, False, type=bool),
+        "follow_robot": s.value(KEY_FOLLOW_ROBOT, False, type=bool),
         "vnc_command": s.value(KEY_VNC_COMMAND, "", type=str).strip(),
         "rdp_command": s.value(KEY_RDP_COMMAND, "", type=str).strip(),
         **{key: s.value(f"valetudo/{key}", default, type=kind)
