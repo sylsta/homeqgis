@@ -18,7 +18,7 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import QgsNetworkAccessManager
 from qgis.gui import QgsAuthConfigSelect
 
-from . import host_info, remote_desktop
+from . import host_info, remote_desktop, wol
 from . import servers as model
 from .client import ValetudoClient
 from .ha_client import UNAUTHORISED, HomeAssistantClient
@@ -53,7 +53,7 @@ def field_labels(kind):
               "log_command": tr("Log command"), "password": tr("Password"),
               "rd_protocol": tr("Remote desktop"), "vnc_port": tr("VNC port"),
               "rdp_port": tr("RDP port"), "rd_user": tr("Remote desktop user"),
-              "rd_ssh": "", "ssh": ""}
+              "rd_ssh": "", "ssh": "", "mac": tr("MAC address (Wake-on-LAN)")}
     if kind == "kodi":
         labels["user"] = tr("Username")
     return labels
@@ -451,6 +451,21 @@ class ServersEditor(QWidget):
             widget.textChanged.connect(lambda text: self._set(server, field, text.strip()))
         if example:
             widget.setPlaceholderText(str(example))
+        if field == "mac":
+            widget.setPlaceholderText(tr("Optional: aa:bb:cc:dd:ee:ff"))
+            tip = tr("The MAC address of its network card: the panel then shows a Wake-on-LAN "
+                     "button. Wake-on-LAN must be allowed in its BIOS/UEFI and on its network "
+                     "card, usually on a wired connection.")
+            if kind == "text" and server["type"] not in model.HOST_TYPES:
+                tip += "\n" + tr("When it runs on a computer of the list, that computer's "
+                                  "MAC address is used if this one is empty.")
+            widget.setToolTip(tip)
+
+            def check(text, w=widget):
+                w.setStyleSheet("" if not text.strip() or wol.parse_mac(text)
+                                else "color: #c62828;")
+            widget.textChanged.connect(check)
+            check(widget.text())
         return widget
 
     def _set(self, server, field, value, relist=True):

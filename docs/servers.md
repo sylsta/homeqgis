@@ -23,9 +23,13 @@ the ⚠.
 
 ## Buttons
 
-Each frame has up to three buttons, shown only where there is something to open
+Each frame has up to four buttons, shown only where there is something to open
 (hover them for the address or command):
 
+- **⏻ Wake-on-LAN** wakes the machine from sleep or power-off, when its MAC address
+  is set (see [Settings › Wake-on-LAN](settings.md#wake-on-lan)). The packet is
+  broadcast on the local network; the frame checks the server again 30 s and 1 min
+  later.
 - **🌐 Web interface**, in your browser: Valetudo for the robot, Home Assistant (its
   arrow also opens the **Supervisor**, port 4327), Kodi's web interface, a web
   service, or the *Web address* you set for a computer (Cockpit, Uptime Kuma,

@@ -48,23 +48,28 @@ DEFAULT_HA_LOG_COMMAND = "ha core logs -n 200 -f"
 SECRET_PREFIX = "valetudo/server"           # valetudo/server/<id>/<field>
 
 # type -> [(field, kind, default)]; kind: url, text, port, secret, authcfg, server
+# ("mac": the MAC address that wakes the machine with Wake-on-LAN)
 TYPE_FIELDS = {
     "valetudo": [("url", "url", ""), ("authcfg", "authcfg", ""),
                  ("ssh_user", "text", "root"), ("ssh_port", "port", 22)],
-    "rpi": [("host", "text", ""), ("user", "text", "pi"), ("port", "port", 22),
-            ("wifi_dir", "text", "valetudo_wifi"), ("web_url", "url", ""),
+    "rpi": [("host", "text", ""), ("mac", "text", ""), ("user", "text", "pi"),
+            ("port", "port", 22), ("wifi_dir", "text", "valetudo_wifi"), ("web_url", "url", ""),
             *_remote_desktop("none", True)],
     "ha": [("url", "url", "http://localhost:8123/"), ("runs_on", "server", ""),
+           ("mac", "text", ""),
            ("token", "secret", ""), ("ssh_host", "text", ""), ("ssh_user", "text", "root"),
            ("ssh_password", "secret", ""), ("ssh_port", "port", 22),
            ("log_command", "text", DEFAULT_HA_LOG_COMMAND)],
     "kodi": [("url", "url", "http://localhost:8080/"), ("runs_on", "server", ""),
+             ("mac", "text", ""),
              ("user", "text", "kodi"), ("password", "secret", "")],
-    "linux": [("host", "text", ""), ("user", "text", "root"), ("port", "port", 22),
+    "linux": [("host", "text", ""), ("mac", "text", ""), ("user", "text", "root"),
+              ("port", "port", 22),
               ("log_command", "text", ""), ("web_url", "url", ""),
               *_remote_desktop("none", True)],
-    "windows": [("host", "text", ""), ("ssh", "bool", False), ("user", "text", ""),
-                ("port", "port", 22), ("web_url", "url", ""), *_remote_desktop("rdp", False)],
+    "windows": [("host", "text", ""), ("mac", "text", ""), ("ssh", "bool", False),
+                ("user", "text", ""), ("port", "port", 22), ("web_url", "url", ""),
+                *_remote_desktop("rdp", False)],
     "web": [("url", "url", ""), ("runs_on", "server", "")],
 }
 DEFAULT_PORTS = {"ha": 8123, "kodi": 8080}
@@ -159,6 +164,19 @@ def address(servers, server):
         return on_host(url, ssh_address(value(target, "host"), "", 22)[0],
                        DEFAULT_PORTS.get(server["type"], 80))
     return url
+
+
+def wake_target(servers, server):
+    """(MAC address, host) to wake a server with Wake-on-LAN: its own MAC, else that
+    of the computer it runs on; None when there is none."""
+    for machine in (server, host_server(servers, server)):
+        if machine is not None and value(machine, "mac"):
+            if machine["type"] in HOST_TYPES:
+                host = ssh_address(value(machine, "host"), "", 22)[0]
+            else:
+                host = url_host(address(servers, machine))
+            return value(machine, "mac"), host
+    return None
 
 
 def ssh_address(text, user, port):

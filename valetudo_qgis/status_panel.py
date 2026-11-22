@@ -31,7 +31,7 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qgis.core import QgsApplication, QgsSettings
+from qgis.core import Qgis, QgsApplication, QgsSettings
 
 try:
     from qgis.PyQt.QtGui import QShortcut   # Qt 6
@@ -55,9 +55,9 @@ from .panel_widgets import Sparkline, VideoWindow, badge_icon, signal_color
 from .schedule_view import WeekView
 from . import schedule
 from .rooms_tree import RoomsTree
-from .settings import (KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, active_robot_id, has_secret,
-                       load_settings, secret, tab_order)
-from . import remote_desktop
+from .settings import (KEY_ADVANCED, NUC_AUTO_LOG_COMMAND, PLUGIN_NAME, active_robot_id,
+                       has_secret, load_settings, secret, tab_order)
+from . import remote_desktop, wol
 from . import servers as servers_model
 from .remote_desktop import RemoteDesktop
 from .ha_block import HaBlock
@@ -137,6 +137,7 @@ STATE_COLORS = {
 ACTIVE_INTERVAL_MS = 5_000
 IDLE_INTERVAL_MS = 30_000
 HA_SUPERVISOR_PORT = 4327   # the Supervisor's web interface, on Home Assistant's host
+WAKE_CHECK_MS = 30_000      # after a Wake-on-LAN, the server is checked again then (twice)
 
 
 def _on_port(url, port):
@@ -1647,6 +1648,8 @@ class ValetudoPanel(QgsDockWidget):
                 port=HA_SUPERVISOR_PORT), lambda: self.open_web(sid, supervisor=True))
             frame.btn_web.setMenu(menu)
             frame.btn_web.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        frame.btn_wake.setIcon(icon("wake"))
+        frame.btn_wake.clicked.connect(lambda _=False: self.wake(sid))
         frame.btn_rd.setIcon(icon("remote_desktop"))
         frame.btn_rd.clicked.connect(lambda _=False: self.open_remote_desktop(sid))
         frame.btn_ssh.setIcon(icon("tab_terminal"))
@@ -1795,6 +1798,13 @@ class ValetudoPanel(QgsDockWidget):
                     command=system_terminal.describe(*target)))
             if rd is not None:
                 self._update_rd_button(sid, rd)
+        for entry in self._server_entries:
+            server = servers_model.find(self._servers(), entry["id"]) or entry["server"]
+            target = servers_model.wake_target(self._servers(), server)
+            button = entry["frame"].btn_wake
+            button.setVisible(target is not None)
+            if target is not None:
+                button.setToolTip(tr("Wake it up (Wake-on-LAN): {mac}").format(mac=target[0]))
 
     def _update_rd_button(self, sid, button):
         desktops = self._remote_desktops(sid)
@@ -1838,6 +1848,35 @@ class ValetudoPanel(QgsDockWidget):
         url = self._server_web(sid, supervisor)
         if url:
             QDesktopServices.openUrl(QUrl(url))
+
+    def wake(self, sid):
+        """Send the Wake-on-LAN packet; the frame says when it answers."""
+        entry = self._entry(sid)
+        server = servers_model.find(self._servers(), sid)
+        target = servers_model.wake_target(self._servers(), server) if server else None
+        if entry is None or target is None:
+            return
+        problem = wol.wake(*target)
+        if problem == "bad_mac":
+            text, level = tr("{name}: “{mac}” is not a MAC address (settings, Servers)."), \
+                Qgis.MessageLevel.Warning
+        elif problem:
+            text, level = tr("{name}: Wake-on-LAN not sent: {error}"), Qgis.MessageLevel.Warning
+        else:
+            text, level = tr("{name}: Wake-on-LAN sent to {mac}. It may take a minute to "
+                             "answer."), Qgis.MessageLevel.Info
+            for delay in (WAKE_CHECK_MS, 2 * WAKE_CHECK_MS):
+                QTimer.singleShot(delay, lambda: self._refresh_server(sid))
+        from qgis.utils import iface
+        if iface is not None:
+            iface.messageBar().pushMessage(
+                PLUGIN_NAME, text.format(name=entry["name"], mac=target[0], error=problem),
+                level=level, duration=6)
+
+    def _refresh_server(self, sid):
+        entry = self._entry(sid)   # (the frames may have been rebuilt since)
+        if entry is not None:
+            entry["block"].refresh()
 
     def open_ssh(self, sid):
         target = self._server_ssh(sid)

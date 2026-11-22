@@ -3511,5 +3511,37 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Its own QGIS project, opened with the map when QGIS starts, if asked</source>
         <translation>Son propre projet QGIS, ouvert avec la carte au démarrage de QGIS, si souhaité</translation>
     </message>
+    <message>
+        <source>MAC address (Wake-on-LAN)</source>
+        <translation>Adresse MAC (Wake-on-LAN)</translation>
+    </message>
+    <message>
+        <source>The MAC address of its network card: the panel then shows a Wake-on-LAN button. Wake-on-LAN must be allowed in its BIOS/UEFI and on its network card, usually on a wired connection.</source>
+        <translation>L'adresse MAC de sa carte réseau : le panneau affiche alors un bouton Wake-on-LAN. Le Wake-on-LAN doit être autorisé dans son BIOS/UEFI et sur sa carte réseau, en général sur une connexion filaire.</translation>
+    </message>
+    <message>
+        <source>Optional: aa:bb:cc:dd:ee:ff</source>
+        <translation>Facultatif : aa:bb:cc:dd:ee:ff</translation>
+    </message>
+    <message>
+        <source>When it runs on a computer of the list, that computer's MAC address is used if this one is empty.</source>
+        <translation>S'il tourne sur un ordinateur de la liste, l'adresse MAC de cet ordinateur est utilisée si celle-ci est vide.</translation>
+    </message>
+    <message>
+        <source>{name}: “{mac}” is not a MAC address (settings, Servers).</source>
+        <translation>{name} : « {mac} » n'est pas une adresse MAC (paramètres, Serveurs).</translation>
+    </message>
+    <message>
+        <source>{name}: Wake-on-LAN not sent: {error}</source>
+        <translation>{name} : Wake-on-LAN non envoyé : {error}</translation>
+    </message>
+    <message>
+        <source>{name}: Wake-on-LAN sent to {mac}. It may take a minute to answer.</source>
+        <translation>{name} : Wake-on-LAN envoyé à {mac}. Il peut mettre une minute à répondre.</translation>
+    </message>
+    <message>
+        <source>Wake it up (Wake-on-LAN): {mac}</source>
+        <translation>Le réveiller (Wake-on-LAN) : {mac}</translation>
+    </message>
 </context>
 </TS>

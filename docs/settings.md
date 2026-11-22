@@ -24,11 +24,11 @@ begin with.
 | Type | Fields |
 |---|---|
 | Valetudo robot | address; authentication (optional, if Valetudo's HTTP login is on); SSH user and port (for the reboot, console and log; `root`, 22) |
-| Raspberry Pi | address; SSH user (`pi`) and port; Wi-Fi maps folder; web address; remote desktop |
-| Linux computer | address; SSH user (`root`) and port; log command (empty: automatic); web address; remote desktop |
-| Windows computer | address; OpenSSH server (tick it if it runs one), SSH user and port; web address; remote desktop (RDP by default) |
-| Home Assistant | address; runs on; access token; SSH address, user (`root`), password and port; log command |
-| Kodi | address; runs on; username and password |
+| Raspberry Pi | address; MAC address; SSH user (`pi`) and port; Wi-Fi maps folder; web address; remote desktop |
+| Linux computer | address; MAC address; SSH user (`root`) and port; log command (empty: automatic); web address; remote desktop |
+| Windows computer | address; MAC address; OpenSSH server (tick it if it runs one), SSH user and port; web address; remote desktop (RDP by default) |
+| Home Assistant | address; runs on; MAC address; access token; SSH address, user (`root`), password and port; log command |
+| Kodi | address; runs on; MAC address; username and password |
 | Web service | address; runs on |
 
 An SSH address can be typed with a user or port (`root@ha.lan:2222`): they are
@@ -39,6 +39,15 @@ taken from it.
 Home Assistant, Kodi and web services can **run on** a Linux computer, a Pi or a
 Windows computer of the list. Their address then takes that computer's host, with
 their own port, and their SSH and remote desktop go to that computer.
+
+### Wake-on-LAN
+
+The **MAC address** of a machine (`aa:bb:cc:dd:ee:ff`; `-` or no separator are
+fine too, shown in red until it is a valid one) adds a **Wake-on-LAN** button to its
+frame. A server that *runs on* a computer of the list uses that computer's MAC
+address when its own is empty. The machine must allow it: Wake-on-LAN on in its
+BIOS/UEFI and on its network card (on Linux, `ethtool -s <card> wol g`), usually on
+a wired connection.
 
 ### Remote desktop
 

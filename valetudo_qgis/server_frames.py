@@ -7,7 +7,7 @@ block of its type:
     windows      PortBlock: its SSH, RDP or VNC port answers or not
     web          WebBlock: its address answers or not
 
-    ┌ (logo) NUC   ● Connected · updated 3 s ago            [🌐] [🖥] [>_] ┐
+    ┌ (logo) NUC   ● Connected · updated 3 s ago        [⏻] [🌐] [🖥] [>_] ┐
     │ nuc · Linux 6.1 …                                                   │
     │ 192.168.50.2 · 20/11/2026 20:32 · up 3 d 2 h                        │
     │ load 0.4 / 4 CPUs · RAM 3.1 / 15 GB · disk 120 / 450 GB · 45 °C     │
@@ -54,11 +54,12 @@ class ServerFrame(QFrame):
         self.title.setFont(font)
         self.connection = QLabel()
         self.connection.setTextFormat(Qt.TextFormat.RichText)
+        self.btn_wake = QToolButton()   # Wake-on-LAN
         self.btn_web, self.btn_rd, self.btn_ssh = QToolButton(), QToolButton(), QToolButton()
         row.addWidget(self.logo)
         row.addWidget(self.title)
         row.addWidget(self.connection, 1)
-        for button in (self.btn_web, self.btn_rd, self.btn_ssh):
+        for button in (self.btn_wake, self.btn_web, self.btn_rd, self.btn_ssh):
             button.setAutoRaise(True)
             button.setVisible(False)
             row.addWidget(button)
