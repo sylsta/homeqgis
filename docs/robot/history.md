@@ -20,6 +20,13 @@ that crosses midnight stays in the file of the day it started), with three layer
 - `job_type`: `vacuum`, `mop` or `both`.
 - `scheduled`: the outing started within two minutes of one of the robot's timers,
   and not from the plugin.
+- `rooms`: the rooms Valetudo was asked to clean, or, for a whole-home cleaning, the
+  rooms the outing's line spent some time in (at least 3 m and 5 % of its length).
+- Lines: the readings come every few seconds, so on their own they cut straight
+  across the room. When an outing ends, the outing and its segments take the
+  precise line of Valetudo's own path of the job, cut where the activity changed.
+  The points stay the readings themselves. Outings recorded before this change
+  keep their straight lines.
 - Time on the dock is not recorded.
 
 !!! note "Save the project first"
@@ -55,5 +62,5 @@ Layers already on the map are refreshed as new readings are written.
   and the times are corrected when the robot's clock is off. These outings have no
   job type, rooms or result: the recorder only sees the robot move.
 - **From Valetudo's path**: when QGIS starts while the robot is out, or misses part
-  of an outing, the outing's line is taken from Valetudo's own path of the job when
-  it is longer (`source` = `live+path`).
+  of an outing, the outing's line is taken from Valetudo's own path of the job
+  (`source` = `live+path`).

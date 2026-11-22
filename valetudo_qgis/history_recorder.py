@@ -18,6 +18,7 @@ from qgis.core import Qgis, QgsMessageLog
 
 from .coords import v2q
 from .history_logic import (PATH_LONGER, OutingTracker, active_rooms, clock_offset, job_type,
+                            refine_segments, rooms_on_path,
                             map_fingerprint, map_path, path_length_m, robot_runs)
 from .history_store import HistoryStore, history_folder, recorded_intervals
 
@@ -49,6 +50,7 @@ class HistoryRecorder(QObject):
         self._last_write = 0.0
         self._pos = None
         self._rooms = []
+        self._map = None
         self._map_id = ""
         self._wifi = None
         self._presets = {}
@@ -137,6 +139,7 @@ class HistoryRecorder(QObject):
                 self._pos = (point.x(), point.y())
                 break
         self._rooms = active_rooms(map_json)
+        self._map = map_json   # its rooms, for the rooms of an outing
         self._path = map_path(map_json)
         self._map_id = map_fingerprint(map_json) or self._map_id
 
@@ -189,17 +192,42 @@ class HistoryRecorder(QObject):
             self._write(force=True)   # the outing just ended
 
     def _complete_from_path(self):
-        """The outing that just ended: when we saw only part of it (QGIS started while
-        the robot was out, readings missed), take its line from Valetudo's own path
-        of the job, which has no times but all the way."""
+        """The outing that just ended, with Valetudo's own path of the job (all the
+        way, but no times):
+        - its line, when we saw only part of it (QGIS started while the robot was
+          out, readings missed);
+        - its segments, which join readings a few seconds apart, follow the path;
+        - its rooms, when Valetudo marked none (whole-home cleaning): those the
+          line went through."""
         path = [(p.x(), p.y()) for p in (v2q(x, y) for x, y in self._path)]
-        if len(path) < 2:
-            return
-        length = round(path_length_m(path), 2)
+        folder = history_folder()
         for outing in self.tracker._outings:
-            if self._partial or length > (outing.get("distance_m") or 0) * PATH_LONGER:
-                outing.update(geometry=path, distance_m=length, source="live+path")
+            if len(path) >= 2:
+                length = round(path_length_m(path), 2)
+                live = outing.get("distance_m") or 0
+                refined = refine_segments(outing, path)   # the path is this outing's
+                if self._partial or length > live * PATH_LONGER or (refined and length >= live):
+                    outing.update(geometry=path, distance_m=length, source="live+path")
+                if refined:
+                    self._replace_segments(folder, outing)
+            if not outing.get("rooms") and outing.get("geometry"):
+                outing["rooms"] = rooms_on_path(self._map,
+                                                [(x, -y) for x, y in outing["geometry"]])
         self._partial = False
+
+    def _replace_segments(self, folder, outing):
+        """The outing's segments, refined: those still waiting are written as they are
+        now; those already in the file are replaced."""
+        spans = outing.get("spans") or []
+        self.tracker._segments = [s for s in self.tracker._segments
+                                  if s.get("outing") != outing["outing"]]
+        if folder is None:   # nothing written yet: written once the project is saved
+            self.tracker._segments += spans
+            return
+        try:
+            self.store.replace_segments(folder, outing["outing"], spans, self._outing_days)
+        except OSError as exc:
+            QgsMessageLog.logMessage(f"History: {exc}", LOG_TAG, Qgis.MessageLevel.Warning)
 
     # -- the recorder on the robot ---------------------------------------------------
 

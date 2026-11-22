@@ -14,8 +14,8 @@ import os
 from datetime import datetime, timedelta
 
 from qgis.PyQt.QtCore import QDateTime, QMetaType
-from qgis.core import (Qgis, QgsCoordinateReferenceSystem, QgsFeature, QgsField, QgsFields,
-                       QgsGeometry, QgsPointXY, QgsProject, QgsVectorFileWriter,
+from qgis.core import (Qgis, QgsCoordinateReferenceSystem, QgsFeature, QgsFeatureRequest,
+                       QgsField, QgsFields, QgsGeometry, QgsPointXY, QgsProject, QgsVectorFileWriter,
                        QgsVectorLayer)
 
 FOLDER = "history"
@@ -132,6 +132,22 @@ class HistoryStore:
         ok, _added = layer.dataProvider().addFeatures(features)
         if not ok:
             raise OSError(f"cannot write to {path} ({name})")
+
+    def replace_segments(self, folder, outing_id, segments, outing_days=None):
+        """Replace the segments of an outing already written (their precise line once
+        the outing is over) by segments."""
+        start = (outing_days or {}).get(outing_id) or min(s["start"] for s in segments)
+        path = day_path(folder, start)
+        if os.path.exists(path):
+            layer = self._layer(path, "segments")
+            request = QgsFeatureRequest().setFilterExpression(
+                "\"outing\" = '{}'".format(str(outing_id).replace("'", "''")))
+            request.setNoAttributes().setFlags(QgsFeatureRequest.Flag.NoGeometry)
+            ids = [f.id() for f in layer.getFeatures(request)]
+            if ids and not layer.dataProvider().deleteFeatures(ids):
+                raise OSError(f"cannot write to {path} (segments)")
+        return self.write(folder, segments=segments,
+                          outing_days={outing_id: start})
 
     def write(self, folder, points=(), segments=(), outings=(), outing_days=None):
         """Append records. Each goes to the file of its outing's first day

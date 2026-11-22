@@ -215,6 +215,7 @@ class OutingTracker:
     def _start(self, t, map_id):
         self.outing = {"outing": datetime.fromtimestamp(t).strftime("%Y-%m-%dT%H:%M:%S"),
                        "start": t, "end": None, "path": [], "activities": [], "job_type": "",
+                       "times": [], "spans": [],   # for refine_segments(), not written
                        "rooms": [], "had_error": False, "still_since": None,
                        "scheduled": is_scheduled(t, self.timers, self.plugin_started_at),
                        "map_id": map_id, "area_m2": None}
@@ -226,7 +227,9 @@ class OutingTracker:
         start_path = [self._last_point["pos"]] if self._last_point else []
         self.segment = {"key": key, "outing": self.outing["outing"], "activity": activity,
                         "detail": detail, "job_type": job, "start": t, "end": t,
-                        "path": list(start_path), "scheduled": self.outing["scheduled"]}
+                        "path": list(start_path), "scheduled": self.outing["scheduled"],
+                        # its first position in the outing's path (shared with the previous)
+                        "first_i": max(0, len(self.outing["path"]) - len(start_path))}
         if activity not in self.outing["activities"]:
             self.outing["activities"].append(activity)
         if job and not self.outing["job_type"]:
@@ -239,7 +242,9 @@ class OutingTracker:
         segment["end"] = t
         path = segment.pop("path")
         segment.pop("key")
+        segment["last_i"] = segment["first_i"] + len(path) - 1
         if len(path) >= 2:
+            self.outing["spans"].append(segment)
             segment["geometry"] = path
             segment["duration_s"] = int(round(segment["end"] - segment["start"]))
             segment["distance_m"] = round(sum(_distance_m(a, b) for a, b in zip(path, path[1:])), 2)
@@ -260,6 +265,7 @@ class OutingTracker:
         if moved or not segment["path"]:
             segment["path"].append(pos)
             self.outing["path"].append(pos)
+            self.outing["times"].append(t)
         out = dict(point)
         out.pop("key")
         self._points.append(out)
@@ -269,6 +275,7 @@ class OutingTracker:
         outing, self.outing = self.outing, None
         self._override = None
         path = outing.pop("path")
+        outing["samples"] = path   # the readings' positions, for refine_segments()
         distance = round(sum(_distance_m(a, b) for a, b in zip(path, path[1:])), 2)
         outing.pop("still_since")
         had_error = outing.pop("had_error")
@@ -337,6 +344,89 @@ def format_duration(seconds):
 
 
 # -- other sources: the Valetudo path, the recorder on the robot ---------------------
+
+MAX_SPEED_M_S = 0.6          # the robot cannot go further than this along its path…
+SLACK_M = 1.5                # …plus this, between two readings
+ALIGN_TOLERANCE_M = 0.5      # readings further than this from the path, on average: no match
+
+
+def align_to_path(samples, times, path):
+    """Index in path (a line of many vertices) of each sample (a position read every
+    few seconds, at times), going forward only: each sample matches the nearest
+    vertex within the distance the robot can have covered since the previous one.
+    None when the samples do not follow the path (another job, another map)."""
+    if not samples or len(path) < 2:
+        return None
+    lengths = [0.0]   # cumulative length along the path, in m
+    for a, b in zip(path, path[1:]):
+        lengths.append(lengths[-1] + _distance_m(a, b))
+    indexes, total, start = [], 0.0, 0
+    for k, sample in enumerate(samples):
+        if k == 0:   # the first one anywhere (the recording may start late)
+            candidates = range(len(path))
+        else:
+            reach = lengths[start] + MAX_SPEED_M_S * max(0.0, times[k] - times[k - 1]) + SLACK_M
+            end = start
+            while end + 1 < len(path) and lengths[end + 1] <= reach:
+                end += 1
+            candidates = range(start, end + 1)
+        best = min(candidates, key=lambda i: _distance_m(path[i], sample))
+        total += _distance_m(path[best], sample)
+        indexes.append(best)
+        start = best
+    return indexes if total / len(samples) <= ALIGN_TOLERANCE_M else None
+
+
+def refine_segments(outing, path):
+    """Give the outing's segments (outing["spans"]) the precise line of Valetudo's
+    path between their first and last readings. Returns the segments changed."""
+    indexes = align_to_path(outing.get("samples") or [], outing.get("times") or [], path)
+    if indexes is None:
+        return []
+    changed = []
+    for segment in outing.get("spans") or []:
+        a, b = segment.get("first_i"), segment.get("last_i")
+        if a is None or b is None or b >= len(indexes):
+            continue
+        line = path[indexes[a]:indexes[b] + 1]
+        if len(line) >= 2:
+            segment["geometry"] = line
+            segment["distance_m"] = round(path_length_m(line), 2)
+            changed.append(segment)
+    return changed
+
+
+def rooms_on_path(map_json, path, min_m=3.0, min_share=0.05):
+    """Names of the rooms a path (Valetudo coordinates) spent at least min_m and
+    min_share of its length in, in the order it reached them: the rooms cleaned
+    when Valetudo marks none (whole-home cleaning)."""
+    map_json = map_json or {}
+    size = map_json.get("pixelSize", 5)
+    rows = {}   # pixel row -> [(x from, x to, name)]
+    for layer in map_json.get("layers", []):
+        if layer.get("type") != "segment":
+            continue
+        meta = layer.get("metaData") or {}
+        name = str(meta.get("name") or meta.get("segmentId"))
+        cp = layer.get("compressedPixels")
+        runs = ([(cp[i], cp[i + 1], cp[i + 2]) for i in range(0, len(cp) - 2, 3)] if cp is not None
+                else [(x, y, 1) for x, y in zip(*[iter(layer.get("pixels") or [])] * 2)])
+        for x, y, n in runs:
+            rows.setdefault(y, []).append((x, x + n, name))
+    if not rows or len(path) < 2:
+        return []
+    metres, order, total = {}, [], 0.0
+    for a, b in zip(path, path[1:]):
+        step = _distance_m(a, b)
+        total += step
+        px, py = int((a[0] + b[0]) / 2 // size), int((a[1] + b[1]) / 2 // size)
+        name = next((n for x0, x1, n in rows.get(py, ()) if x0 <= px < x1), None)
+        if name is not None:
+            if name not in metres:
+                order.append(name)
+            metres[name] = metres.get(name, 0.0) + step
+    return [n for n in order if metres[n] >= max(min_m, min_share * total)]
+
 
 ROBOT_RUN_GAP_S = 5 * 60     # robot readings further apart than this: separate outings
 OVERLAP_MARGIN_S = 60        # a robot run this close to a recorded outing is the same one
