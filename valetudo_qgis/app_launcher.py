@@ -29,7 +29,7 @@ import stat
 import subprocess
 import sys
 
-from qgis.PyQt.QtCore import QCoreApplication, QSettings, QStandardPaths
+from qgis.PyQt.QtCore import QCoreApplication, QProcess, QSettings, QStandardPaths
 from qgis.core import QgsApplication, QgsSettings
 
 from .icons import APP_ICON, icon
@@ -65,19 +65,55 @@ def qgis_command():
     return [program]
 
 
+def home_profile():
+    """The profile the launcher was created from, if it still exists ("" if not).
+    (Profiles made by the first version of the launcher do not say: "default".)"""
+    home = QgsSettings().value(KEY_HOME_PROFILE, "", type=str) or "default"
+    if os.path.isdir(os.path.join(profiles_root(), home)) and "/" not in home \
+            and "\\" not in home:
+        return home
+    return ""
+
+
 def restore_last_profile():
     """QGIS remembers the last profile used (profiles.ini, core/lastProfile) and opens it
-    when started alone: after the app, that would be the app's. In the app's profile,
-    give it back to the profile the launcher was created from."""
-    # (profiles made by the first version of the launcher do not say: "default")
-    home = QgsSettings().value(KEY_HOME_PROFILE, "", type=str) or "default"
-    if not home or not os.path.isdir(os.path.join(profiles_root(), home)):
+    when started alone: after the app, that would be the app's. Give it back to the
+    usual profile now (QGIS started alone while the app runs)…"""
+    home = home_profile()
+    if not home:
         return
     profiles = QSettings(os.path.join(profiles_root(), "profiles.ini"),
                          QSettings.Format.IniFormat)
     if profiles.value("core/lastProfile", "") != home:
         profiles.setValue("core/lastProfile", home)
         profiles.sync()
+
+
+def restore_last_profile_after_exit():
+    """…and once QGIS has exited: QGIS writes the app's profile there while it exits,
+    after any plugin could. A small process, detached, waits for this QGIS to be gone
+    and writes the usual profile back. Connected to QApplication.aboutToQuit."""
+    home = home_profile()
+    if not home:
+        return
+    path = os.path.join(profiles_root(), "profiles.ini")
+    pid = QCoreApplication.applicationPid()
+    if platform.system() == "Windows":
+        def ps(text):
+            return "'" + text.replace("'", "''") + "'"
+        script = (f"Wait-Process -Id {pid} -ErrorAction SilentlyContinue; "
+                  f"$f = {ps(path)}; "
+                  "(Get-Content -LiteralPath $f) -replace '^lastProfile=.*', "
+                  f"{ps('lastProfile=' + home)} | Set-Content -LiteralPath $f")
+        program, arguments = "powershell", ["-NoProfile", "-NonInteractive",
+                                            "-WindowStyle", "Hidden", "-Command", script]
+    else:
+        file = shlex.quote(path)
+        script = (f"while kill -0 {pid} 2>/dev/null; do sleep 1; done; "
+                  f"t=$(mktemp) && sed 's/^lastProfile=.*/lastProfile={home}/' {file} > \"$t\" "
+                  f"&& cat \"$t\" > {file}; rm -f \"$t\"")
+        program, arguments = "sh", ["-c", script]
+    QProcess.startDetached(program, arguments)
 
 
 def launch_command(profile, project):

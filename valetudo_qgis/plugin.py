@@ -304,6 +304,11 @@ class ValetudoPlugin:
         for key in MENU:
             if key is not None and key in self.act:
                 self.iface.addPluginToMenu(self.menu, self.act[key])
+        if QgsSettings().contains(KEY_APP_MODE):   # the app's profile
+            # QGIS started alone must open the usual profile, not this one
+            app_launcher.restore_last_profile()
+            QgsApplication.instance().aboutToQuit.connect(
+                app_launcher.restore_last_profile_after_exit)
         if self.act.get("app_mode") is not None and self.act["app_mode"].isChecked():
             # Once QGIS has restored its window (and now, if the plugin is enabled later)
             self.iface.initializationCompleted.connect(self._enter_app_mode)
@@ -419,7 +424,11 @@ class ValetudoPlugin:
     def unload(self):
         self._unloaded = True   # before anything else: removing the panel emits signals
         if QgsSettings().contains(KEY_APP_MODE):
-            app_launcher.restore_last_profile()   # (again, at QGIS exit)
+            try:
+                QgsApplication.instance().aboutToQuit.disconnect(
+                    app_launcher.restore_last_profile_after_exit)
+            except (TypeError, RuntimeError):
+                pass
         project = QgsProject.instance()
         for signal, slot in ((project.readProject, self._on_project_read),
                              (project.homePathChanged, self._persist_layers),
@@ -1016,7 +1025,6 @@ class ValetudoPlugin:
         return bars, docks
 
     def _enter_app_mode(self, *_):
-        app_launcher.restore_last_profile()   # QGIS started alone opens the usual profile
         if self._unloaded or self.act.get("app_mode") is None \
                 or not self.act["app_mode"].isChecked():
             return

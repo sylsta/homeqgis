@@ -51,9 +51,10 @@ run the command again from it.
 - Only the map, the DomotiQGIS panel and toolbar, and the map navigation toolbar
   are shown. The menus stay.
 - The robot project opens and **Show on map** turns on once the robot answers.
-- QGIS remembers the last profile used and opens it when started on its own. The app
-  gives that back to your usual profile (the one the launcher was created from), so
-  that starting QGIS normally still opens your usual QGIS.
+- QGIS remembers the last profile used and opens it when started on its own; it
+  writes it when it exits. Once the app has exited, a small background task gives
+  it back to your usual profile (the one the launcher was created from), so that
+  starting QGIS normally still opens your usual QGIS.
 - *Plugins › DomotiQGIS › **App mode*** (only in the app's profile): untick it to
   show QGIS's toolbars and the Layers and Browser panels again; tick it to hide them.
 
