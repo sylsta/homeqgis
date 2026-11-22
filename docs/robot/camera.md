@@ -21,3 +21,8 @@ For robots that expose a raw H.264 stream over TCP (by default
   gets no second connection. Recording goes on after leaving the tab. The file is a
   fragmented MP4: if QGIS is killed, it stays readable up to its last seconds. Needs
   ffmpeg 5.1 or newer, with libx264.
+- A recording also **stops by itself when the robot is back on its dock at the end
+  of its job**. A return in the middle of the job (washing the mops, clean water…;
+  Valetudo says *Docked (Resumable)*) does not stop it, nor does starting a
+  recording while the robot is on its dock: it stops after the robot has left and
+  come back for good.

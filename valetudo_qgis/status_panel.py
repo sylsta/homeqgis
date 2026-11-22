@@ -497,6 +497,7 @@ class ValetudoPanel(QgsDockWidget):
         self.lbl_position.setText(tr("Waiting for the robot position…"))
         self.camera_page = self.tab_camera
         self.camera = CameraWidget()
+        self._away_while_recording = False   # see _follow_recording
         self.camera_layout.insertWidget(0, self.camera)
         # Coming back to the tab soon after leaving it shows the video at once,
         # instead of reconnecting and waiting for the robot's next full image.
@@ -2213,6 +2214,20 @@ class ValetudoPanel(QgsDockWidget):
         if current is not None:
             combo.setCurrentIndex(max(0, combo.findData(current)))
 
+    def _follow_recording(self, state, flag):
+        """A recording stops once the robot is back on its dock at the end of its job.
+        A return in the middle of the job (washing the mops, clean water, emptying:
+        Valetudo then says "docked" with the "resumable" flag) does not stop it, nor
+        does starting a recording while the robot is on its dock."""
+        if not self.camera.is_recording():
+            self._away_while_recording = False
+            return
+        if state != "docked":
+            self._away_while_recording = True
+        elif flag != "resumable" and self._away_while_recording:
+            self._away_while_recording = False
+            self.camera.stop_recording()
+
     def _on_attributes(self, attributes):
         states, flags = _state_labels(), _flag_labels()
         attachments = []
@@ -2231,6 +2246,7 @@ class ValetudoPanel(QgsDockWidget):
                 self.lbl_state.setText(text)
                 self._set_badge(state)
                 self._state = state
+                self._follow_recording(state, flag)
                 err = attr.get("error") or {}
                 error_text = (err.get("message") if isinstance(err, dict) else "") \
                     or (attr.get("metaData") or {}).get("error_description", "")

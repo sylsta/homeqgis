@@ -195,6 +195,11 @@ class CameraWidget(QWidget):
     def is_recording(self):
         return self.recorder.is_recording()
 
+    def stop_recording(self):
+        """Stop (the video is finished and saved) when the job is over."""
+        if self.recorder.is_recording():
+            self.recorder.stop()
+
     def toggle_recording(self, *_):
         if self.recorder.is_recording():
             self.recorder.stop()
