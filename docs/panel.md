@@ -15,7 +15,7 @@ The panel holds everything; the QGIS menu and toolbar stay minimal.
 │📶│ Wi-Fi        signal, surveys, maps                             │
 │🔧│ Maintenance  robot, consumables, dock, statistics, events      │
 ├──┴───────────────────────────────────────────────────────────────┤
-│ [ Start cleaning all rooms ]  [Dock]                             │  big button
+│ [ Start cleaning all rooms ]  [Return to dock]                   │  big button
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -61,8 +61,9 @@ the page scrolls. The order of the robot's side tabs is set in the settings
 ## The big button
 
 At the bottom, after the robot's state: **Start cleaning all rooms** when docked
-or idle, **Pause** while it works, **Resume** when paused, and **Dock** next to it
-while the robot is away from its dock.
+or idle, **Pause** while it works, **Resume** when paused, and **Return to dock**
+next to it while the robot is away from its dock (after a *Go to*, for example). It
+can also be added to the toolbar (settings, *UI configuration*).
 
 ## Compact mode
 

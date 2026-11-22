@@ -237,7 +237,7 @@ class ValetudoPlugin:
         self.act["live"].setIcon(icon("show_map"))   # (a map with the robot)
         self._new_action("start", tr("Clean everything"), lambda *_: self.control("start"))
         self._new_action("pause", labels["pause"], lambda *_: self.control("pause"))
-        self._new_action("home", tr("Dock"), lambda *_: self.control("home"))
+        self._new_action("home", tr("Return to dock"), lambda *_: self.control("home"))
         self._new_action("zone", tr("Clean a zone…"), self.activate_zone_tool, checkable=True)
         self._new_action("goto", tr("Go to…"), self.activate_goto_tool, checkable=True)
         dock_labels = {"locate": tr("Locate"), "empty_dock": tr("Empty bin"),

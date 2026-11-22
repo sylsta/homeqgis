@@ -135,7 +135,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         layout.addWidget(QLabel("<b>" + tr("Toolbar") + "</b>"))
         labels = {"status_panel": tr("{name} panel").format(name=PLUGIN_NAME),
                   "live": tr("Show on map"), "start": tr("Clean everything"),
-                  "home": tr("Dock"), "zone": tr("Clean a zone…"), "goto": tr("Go to…"),
+                  "home": tr("Return to dock"), "zone": tr("Clean a zone…"), "goto": tr("Go to…"),
                   "settings": tr("Settings…"), "pick_rooms": tr("Pick rooms on the map"),
                   "place_sensor": tr("Place a sensor on the map"),
                   "edit_restrictions": tr("Edit no-go zones and walls"),
