@@ -3543,5 +3543,89 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Wake it up (Wake-on-LAN): {mac}</source>
         <translation>Le réveiller (Wake-on-LAN) : {mac}</translation>
     </message>
+    <message>
+        <source>DomotiQGIS as an app</source>
+        <translation>DomotiQGIS en application</translation>
+    </message>
+    <message>
+        <source>Creates a launcher that starts QGIS like an app: in a profile of its own, with the robot project, the robot on the map and the DomotiQGIS panel, the other toolbars and panels hidden. Your usual QGIS is not changed.</source>
+        <translation>Crée un lanceur qui démarre QGIS comme une application : dans un profil à part, avec le projet du robot, le robot sur la carte et le panneau DomotiQGIS, les autres barres d'outils et panneaux masqués. Votre QGIS habituel n'est pas modifié.</translation>
+    </message>
+    <message>
+        <source>The QGIS profile of the app: its plugins and settings are kept apart from your usual QGIS.</source>
+        <translation>Le profil QGIS de l'application : ses extensions et ses paramètres sont séparés de votre QGIS habituel.</translation>
+    </message>
+    <message>
+        <source>Profile</source>
+        <translation>Profil</translation>
+    </message>
+    <message>
+        <source>Copy the settings (servers, options, room groups)</source>
+        <translation>Copier les paramètres (serveurs, options, groupes de pièces)</translation>
+    </message>
+    <message>
+        <source>Copy the tokens and passwords (QGIS's authentication database, if the profile has none)</source>
+        <translation>Copier les jetons et mots de passe (base d'authentification de QGIS, si le profil n'en a pas)</translation>
+    </message>
+    <message>
+        <source>Shortcut on the desktop</source>
+        <translation>Raccourci sur le bureau</translation>
+    </message>
+    <message>
+        <source>Entry in the applications menu</source>
+        <translation>Entrée dans le menu des applications</translation>
+    </message>
+    <message>
+        <source>Run this again after changing the settings here to copy them again. In the app, Plugins › DomotiQGIS › App mode shows QGIS's toolbars and panels again.</source>
+        <translation>Relancez ceci après avoir modifié les paramètres ici pour les recopier. Dans l'application, Extensions › DomotiQGIS › Mode application réaffiche les barres d'outils et panneaux de QGIS.</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Créer</translation>
+    </message>
+    <message>
+        <source>Create the app launcher…</source>
+        <translation>Créer le lanceur d'application…</translation>
+    </message>
+    <message>
+        <source>App mode</source>
+        <translation>Mode application</translation>
+    </message>
+    <message>
+        <source>Only the map and DomotiQGIS on screen; untick to show QGIS's toolbars and panels.</source>
+        <translation>Seulement la carte et DomotiQGIS à l'écran ; décochez pour afficher les barres d'outils et panneaux de QGIS.</translation>
+    </message>
+    <message>
+        <source>The plugin was copied into it (no link possible here): run this again after updating the plugin.</source>
+        <translation>L'extension y a été copiée (pas de lien possible ici) : relancez ceci après chaque mise à jour de l'extension.</translation>
+    </message>
+    <message>
+        <source>Tokens and passwords copied.</source>
+        <translation>Jetons et mots de passe copiés.</translation>
+    </message>
+    <message>
+        <source>Choose another profile than the one in use.</source>
+        <translation>Choisissez un autre profil que celui en cours.</translation>
+    </message>
+    <message>
+        <source>Profile: {folder}</source>
+        <translation>Profil : {folder}</translation>
+    </message>
+    <message>
+        <source>Launcher: {path}</source>
+        <translation>Lanceur : {path}</translation>
+    </message>
+    <message>
+        <source>No launcher: start it with {command}</source>
+        <translation>Pas de lanceur : démarrez-le avec {command}</translation>
+    </message>
+    <message>
+        <source>App launcher not created: {error}</source>
+        <translation>Lanceur d'application non créé : {error}</translation>
+    </message>
+    <message>
+        <source>A launcher that starts it like an app, in a QGIS profile of its own</source>
+        <translation>Un lanceur qui le démarre comme une application, dans un profil QGIS à part</translation>
+    </message>
 </context>
 </TS>

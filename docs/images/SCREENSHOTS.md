@@ -22,3 +22,4 @@ and the manual uses it at the next build: nothing else to change.
 | `servers.png` | the Servers section: several frames (robot, Home Assistant, Pi, Linux…) |
 | `terminal.png` | the Terminal with a console on a server |
 | `settings-servers.png` | the settings, Servers tab, a server selected |
+| `app-launcher.png` | the “Create the app launcher” dialog |

@@ -90,6 +90,7 @@ def sections():
             tr("Tokens and passwords kept encrypted"),
             tr("Timestamped backups of the configuration, reset"),
             tr("English and French"),
+            tr("A launcher that starts it like an app, in a QGIS profile of its own"),
         ]),
     ]
 

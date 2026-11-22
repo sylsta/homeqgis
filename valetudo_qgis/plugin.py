@@ -9,7 +9,8 @@ import os
 
 from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
 from qgis.PyQt.QtWidgets import (
-    QAction, QCheckBox, QFileDialog, QInputDialog, QMessageBox, QPushButton, QToolButton,
+    QAction, QCheckBox, QDockWidget, QFileDialog, QInputDialog, QMessageBox, QPushButton,
+    QToolBar, QToolButton,
 )
 from qgis.core import (
     QgsApplication,
@@ -31,6 +32,8 @@ from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool,
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
 from . import pi_maps, robot_survey
 from .robot_survey import RobotSurvey
+from . import app_launcher
+from .app_launcher import KEY_APP_MODE
 from .manual import open_manual
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
 from .settings import (KEY_ADVANCED, KEY_ROBOT_PROJECT, PLUGIN_NAME, TOOLBAR_CHOICES, follow_robot,
@@ -91,7 +94,8 @@ MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
 ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
                     "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
-MENU = ["status_panel", "settings", "setup", "manual"]
+MENU = ["status_panel", "settings", "setup", "app_launcher", "app_mode", "manual"]
+APP_TOOLBARS = ("ValetudoToolbar", "mMapNavToolBar")   # kept on screen in app mode
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
 
@@ -214,6 +218,14 @@ class ValetudoPlugin:
             stored.setValue(KEY_ADVANCED, bool(load_settings()["url"]))
         self._new_action("settings", tr("Settings…"), self.configure)
         self._new_action("setup", tr("Setup assistant…"), self.run_setup)
+        self._new_action("app_launcher", tr("Create the app launcher…"), self.create_app_launcher)
+        self.act["app_launcher"].setIcon(icon(APP_ICON))
+        # In the app's profile only: QGIS's other toolbars and panels hidden, or not
+        if QgsSettings().contains(KEY_APP_MODE):
+            self._new_action("app_mode", tr("App mode"), self._on_app_mode, checkable=True)
+            self.act["app_mode"].setToolTip(tr("Only the map and DomotiQGIS on screen; "
+                                               "untick to show QGIS's toolbars and panels."))
+            self.act["app_mode"].setChecked(QgsSettings().value(KEY_APP_MODE, True, type=bool))
         self._new_action("manual", tr("User manual"), lambda *_: open_manual())
         self.act["manual"].setIcon(QgsApplication.getThemeIcon("/mActionHelpContents.svg"))
         # The settings are a page of Settings › Options; "Settings…" opens it.
@@ -290,8 +302,12 @@ class ValetudoPlugin:
         self.toolbar = self.iface.addToolBar(PLUGIN_NAME)
         self.toolbar.setObjectName("ValetudoToolbar")   # filled by _build_toolbar()
         for key in MENU:
-            if key is not None:
+            if key is not None and key in self.act:
                 self.iface.addPluginToMenu(self.menu, self.act[key])
+        if self.act.get("app_mode") is not None and self.act["app_mode"].isChecked():
+            # Once QGIS has restored its window (and now, if the plugin is enabled later)
+            self.iface.initializationCompleted.connect(self._enter_app_mode)
+            QTimer.singleShot(0, self._enter_app_mode)
         # QGIS creates the plugin's submenu of Plugins without an icon: give it the logo.
         for entry in self.iface.pluginMenu().actions():
             if entry.text() == self.menu and entry.menu() is not None:
@@ -404,7 +420,8 @@ class ValetudoPlugin:
         self._unloaded = True   # before anything else: removing the panel emits signals
         project = QgsProject.instance()
         for signal, slot in ((project.readProject, self._on_project_read),
-                             (project.homePathChanged, self._persist_layers)):
+                             (project.homePathChanged, self._persist_layers),
+                             (self.iface.initializationCompleted, self._enter_app_mode)):
             try:
                 signal.disconnect(slot)
             except (TypeError, RuntimeError):
@@ -946,6 +963,72 @@ class ValetudoPlugin:
         self._update_map_tool_entries()
         if self.panel is not None:
             self.panel.set_advanced(on)
+
+    # -- the app ------------------------------------------------------------------------
+
+    def create_app_launcher(self, *_):
+        from .app_launcher_dialog import AppLauncherDialog
+        dialog = AppLauncherDialog(self.iface.mainWindow())
+        if not dialog.exec():
+            return
+        values = dialog.values()
+        try:
+            result = app_launcher.create(**values)
+        except ValueError:
+            self._message(tr("Choose another profile than the one in use."),
+                          Qgis.MessageLevel.Warning)
+            return
+        except OSError as exc:
+            self._message(tr("App launcher not created: {error}").format(error=exc),
+                          Qgis.MessageLevel.Critical)
+            return
+        lines = [tr("Profile: {folder}").format(folder=result["profile"])]
+        if result["plugin"] == "copy":
+            lines.append(tr("The plugin was copied into it (no link possible here): run "
+                            "this again after updating the plugin."))
+        if result["secrets"]:
+            lines.append(tr("Tokens and passwords copied."))
+        lines += [tr("Launcher: {path}").format(path=path) for path in result["launchers"]]
+        if not result["launchers"]:
+            lines.append(tr("No launcher: start it with {command}").format(
+                command=" ".join(app_launcher.launch_command(values["profile"],
+                                                             values["project"]))))
+        QMessageBox.information(self.iface.mainWindow(), tr("DomotiQGIS as an app"),
+                                "\n".join(lines))
+
+    def _on_app_mode(self, checked):
+        QgsSettings().setValue(KEY_APP_MODE, checked)
+        self._enter_app_mode() if checked else self._leave_app_mode()
+
+    def _main_window_parts(self):
+        """The toolbars and panels of QGIS's window itself (not those inside panels)."""
+        win = self.iface.mainWindow()
+        bars = [b for b in win.findChildren(QToolBar) if b.parentWidget() is win]
+        docks = [d for d in win.findChildren(QDockWidget) if d.parentWidget() is win]
+        return bars, docks
+
+    def _enter_app_mode(self, *_):
+        if self._unloaded or self.act.get("app_mode") is None \
+                or not self.act["app_mode"].isChecked():
+            return
+        bars, docks = self._main_window_parts()
+        for bar in bars:
+            if bar.objectName() not in APP_TOOLBARS:
+                bar.hide()
+        for dock in docks:
+            if dock is not self.panel:
+                dock.hide()
+        if self.panel is not None:
+            self.panel.show()
+            self.panel.raise_()
+
+    def _leave_app_mode(self):
+        bars, docks = self._main_window_parts()
+        for bar in bars:
+            bar.show()
+        for dock in docks:
+            if dock.objectName() in ("Layers", "Browser"):
+                dock.show()
 
     def run_setup(self, *_):
         """The setup assistant: robot address, other servers; then show the robot."""
