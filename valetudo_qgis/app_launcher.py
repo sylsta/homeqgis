@@ -125,6 +125,7 @@ def create(profile, project, copy_settings=True, copy_secrets=True, desktop=True
             if os.path.exists(path):
                 shutil.copy2(path, os.path.join(folder, name))
     target.setValue(f"PythonPlugins/{PLUGIN_FOLDER}", True)
+    target.setValue("PythonPlugins/processing", True)   # the Wi-Fi map's interpolation
     target.setValue(KEY_APP_MODE, True)
     target.setValue("valetudo/live_at_start", True)
     target.setValue("valetudo/robot_project", project)

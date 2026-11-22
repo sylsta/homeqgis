@@ -28,6 +28,7 @@ from .project_layers import adopt, make_permanent, new_feature, project_folder, 
 WIFI_FOLDER = "wifi"
 WIFI_FILE = "robot_wifi.gpkg"        # the survey points (layer "points")
 WIFI_RASTER = "robot_wifi_signal.tif"
+IDW_ALGORITHM = "qgis:idwinterpolation"   # from the Processing plugin
 ROLE = "wifi/points"
 ENGLISH_NAME = "Wi-Fi survey"
 
@@ -210,6 +211,23 @@ class WifiSurvey(QObject):
 # Interpolation
 # ---------------------------------------------------------------------------
 
+def _ensure_processing():
+    """The interpolation comes from QGIS's Processing plugin. A profile where it is not
+    enabled (e.g. a new one, as the app's) has not registered its algorithms:
+    initialise Processing here, which works without the plugin's own interface."""
+    from qgis.core import QgsApplication
+    if QgsApplication.processingRegistry().algorithmById(IDW_ALGORITHM) is not None:
+        return
+    try:
+        from processing.core.Processing import Processing
+        Processing.initialize()
+    except Exception as exc:   # Processing not installed at all (rare)
+        raise RuntimeError(str(exc)) from exc
+    if QgsApplication.processingRegistry().algorithmById(IDW_ALGORITHM) is None:
+        raise RuntimeError(f"{IDW_ALGORITHM}: enable the Processing plugin "
+                           "(Plugins › Manage and Install Plugins)")
+
+
 def build_wifi_map(points, rooms, cfg, project):
     """Interpolate the survey points into a styled raster layer added to the project.
 
@@ -218,6 +236,7 @@ def build_wifi_map(points, rooms, cfg, project):
     RuntimeError(details) if Processing fails.
     """
     from qgis import processing   # imported late: Processing may be disabled at startup
+    _ensure_processing()
 
     source = points
     if points.selectedFeatureCount() > 0:
@@ -234,7 +253,7 @@ def build_wifi_map(points, rooms, cfg, project):
         if rooms is not None and rooms.featureCount():
             extent = rooms.extent().buffered(margin)
         try:
-            result = processing.run("qgis:idwinterpolation", {
+            result = processing.run(IDW_ALGORITHM, {
                 "INTERPOLATION_DATA": f"{source.id()}::~::0::~::{field}::~::0",
                 "DISTANCE_COEFFICIENT": cfg["wifi_idw_power"],
                 "EXTENT": extent,
