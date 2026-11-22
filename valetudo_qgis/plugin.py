@@ -305,8 +305,8 @@ class ValetudoPlugin:
             if key is not None and key in self.act:
                 self.iface.addPluginToMenu(self.menu, self.act[key])
         if QgsSettings().contains(KEY_APP_MODE):   # the app's profile
-            # QGIS started alone must open the usual profile, not this one
-            app_launcher.restore_last_profile()
+            # QGIS started alone must open the profile used before, not this one
+            app_launcher.remember_previous_profile()
             QgsApplication.instance().aboutToQuit.connect(
                 app_launcher.restore_last_profile_after_exit)
         if self.act.get("app_mode") is not None and self.act["app_mode"].isChecked():

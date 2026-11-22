@@ -40,8 +40,10 @@ PLUGIN_FOLDER = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
 # This profile is the app: only the plugin on screen. Outside "valetudo/", so that it
 # is never copied to another profile nor saved in a configuration backup.
 KEY_APP_MODE = "domotiqgis/app_mode"
-# The profile the launcher was created from: QGIS started alone opens it, not the app's
+# The profile the launcher was created from, and the one used before the app was last
+# started: QGIS started alone opens the latter again, not the app's
 KEY_HOME_PROFILE = "domotiqgis/home_profile"
+KEY_PREVIOUS_PROFILE = "domotiqgis/previous_profile"
 SETTINGS_GROUP = "valetudo/"
 PROFILE_FILES = ("valetudo_room_groups.ini",)   # the plugin's own files in a profile
 
@@ -65,35 +67,42 @@ def qgis_command():
     return [program]
 
 
-def home_profile():
-    """The profile the launcher was created from, if it still exists ("" if not).
-    (Profiles made by the first version of the launcher do not say: "default".)"""
-    home = QgsSettings().value(KEY_HOME_PROFILE, "", type=str) or "default"
-    if os.path.isdir(os.path.join(profiles_root(), home)) and "/" not in home \
-            and "\\" not in home:
-        return home
+def _profile_exists(name):
+    return bool(name) and "/" not in name and "\\" not in name \
+        and os.path.isdir(os.path.join(profiles_root(), name))
+
+
+def _profiles_ini():
+    return QSettings(os.path.join(profiles_root(), "profiles.ini"), QSettings.Format.IniFormat)
+
+
+def remember_previous_profile():
+    """At the app's start: the last profile QGIS recorded is still the one used before
+    the app (QGIS records it when it exits). Keep it, to give it back at exit."""
+    this = os.path.basename(current_profile_folder())
+    last = _profiles_ini().value("core/lastProfile", "")
+    if last and last != this and _profile_exists(last):
+        QgsSettings().setValue(KEY_PREVIOUS_PROFILE, last)
+
+
+def previous_profile():
+    """The profile used before the app: remembered at start, else the one the launcher
+    was created from, else "default" (launchers of the first version)."""
+    settings = QgsSettings()
+    for name in (settings.value(KEY_PREVIOUS_PROFILE, "", type=str),
+                 settings.value(KEY_HOME_PROFILE, "", type=str), "default"):
+        if _profile_exists(name):
+            return name
     return ""
 
 
-def restore_last_profile():
-    """QGIS remembers the last profile used (profiles.ini, core/lastProfile) and opens it
-    when started alone: after the app, that would be the app's. Give it back to the
-    usual profile now (QGIS started alone while the app runs)…"""
-    home = home_profile()
-    if not home:
-        return
-    profiles = QSettings(os.path.join(profiles_root(), "profiles.ini"),
-                         QSettings.Format.IniFormat)
-    if profiles.value("core/lastProfile", "") != home:
-        profiles.setValue("core/lastProfile", home)
-        profiles.sync()
-
-
 def restore_last_profile_after_exit():
-    """…and once QGIS has exited: QGIS writes the app's profile there while it exits,
-    after any plugin could. A small process, detached, waits for this QGIS to be gone
-    and writes the usual profile back. Connected to QApplication.aboutToQuit."""
-    home = home_profile()
+    """QGIS remembers the last profile used (profiles.ini, core/lastProfile) and opens
+    it when started alone; it writes it while it exits, after any plugin could: after
+    the app, that would be the app's profile. A small process, detached, waits for
+    this QGIS to be gone and writes back the profile used before the app.
+    Connected to QApplication.aboutToQuit."""
+    home = previous_profile()
     if not home:
         return
     path = os.path.join(profiles_root(), "profiles.ini")
