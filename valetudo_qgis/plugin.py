@@ -58,6 +58,7 @@ KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
 KEY_ROBOT_SURVEY_DIR = "valetudo/robot_survey_dir"   # set once the survey is on the robot
 MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
 WATCH_INTERVAL_MS = 60_000  # background check of the dock station, panel open or not
+PI_WARNING_S = 20   # a Wi-Fi map from the Pi that could not be loaded: shown this long
 LIVE_AT_START_DELAY_MS = 3_000   # after QGIS has opened a project given at launch
 LIVE_AT_START_WINDOW_MS = 60_000  # robot answering later than that: no automatic start
 SENSOR_POLL_MS = 15_000           # how often Home Assistant sensor values are refreshed
@@ -1693,14 +1694,16 @@ class ValetudoPlugin:
             action.setToolTip(command_hints()["pi_wifi_map"] if has_pi else
                               tr("Set the Raspberry Pi in Settings › Options › {name} first.").format(name=PLUGIN_NAME))
 
-    def load_pi_wifi_map(self, full=None):
-        """full: the map of all runs (None: as last chosen)."""
-        if full is not None:
+    def load_pi_wifi_map(self, full=None, instead=False):
+        """full: the map of all runs (None: as last chosen). instead: the latest run,
+        asked for because there is no map of all runs yet (the choice is kept)."""
+        if full is not None and not instead:
             QgsSettings().setValue(KEY_PI_MAP_FULL, bool(full))
         cfg = load_settings()
         if not cfg["pi_host"]:
             return
-        full = QgsSettings().value(KEY_PI_MAP_FULL, False, type=bool)
+        self._pi_instead = instead
+        full = False if instead else QgsSettings().value(KEY_PI_MAP_FULL, False, type=bool)
         if self.pi_ssh.run("pi_map", cfg["pi_host"], cfg["pi_user"], cfg["pi_port"],
                            pi_maps.fetch_command(cfg["pi_wifi_dir"], full)):
             self._update_pi_actions()
@@ -1722,12 +1725,15 @@ class ValetudoPlugin:
             "error=no_full_map": tr("no full map in “{folder}” yet (the Pi builds it after "
                                     "its next run; update its script if needed)"),
         }
+        instead, self._pi_instead = getattr(self, "_pi_instead", False), False
+        if not data and detail == "error=no_full_map" and not instead:
+            # No map of all runs yet: the latest run is better than nothing
+            QTimer.singleShot(0, lambda: self.load_pi_wifi_map(full=False, instead=True))
+            return
         if not data:
             text = problems.get(detail, tr("SSH failed: {detail}")).format(
                 folder=cfg["pi_wifi_dir"], detail=detail)
-            self.iface.messageBar().pushMessage(
-                PLUGIN_NAME, tr("No Wi-Fi map loaded: {problem}.").format(problem=text),
-                level=Qgis.MessageLevel.Warning, duration=0)
+            self._pi_warning(tr("No Wi-Fi map loaded: {problem}.").format(problem=text))
             return
         try:
             run, tif, csv_path, png = pi_maps.unpack(data)
@@ -1737,17 +1743,33 @@ class ValetudoPlugin:
             raster, points = pi_maps.add_to_project(QgsProject.instance(), run, tif, csv_path,
                                                     cfg)
         except Exception as exc:   # damaged archive, unreadable GeoTIFF…
-            self.iface.messageBar().pushMessage(
-                PLUGIN_NAME, tr("No Wi-Fi map loaded: {problem}.").format(problem=str(exc)),
-                level=Qgis.MessageLevel.Warning, duration=0)
+            self._pi_warning(tr("No Wi-Fi map loaded: {problem}.").format(problem=str(exc)))
             return
         if not self.layers.exists():   # nothing else on the map yet: show the Wi-Fi map
             canvas = self.iface.mapCanvas()
             canvas.setExtent(raster.extent())
             canvas.refresh()
         count = points.featureCount() if points is not None else 0
-        self._message(tr("Wi-Fi map of {run} loaded ({n} reading(s)).").format(
-            run=pi_maps.run_label(run), n=count), Qgis.MessageLevel.Success)
+        text = tr("Wi-Fi map of {run} loaded ({n} reading(s)).").format(
+            run=pi_maps.run_label(run), n=count)
+        if instead:
+            text = tr("No map of all runs on the Pi yet (it builds one after its next run): "
+                      "{loaded}").format(loaded=text)
+        self._message(text, Qgis.MessageLevel.Success)
+
+    def _pi_warning(self, text):
+        """Shown for a while, replacing the previous one (not left behind the others)."""
+        bar = self.iface.messageBar()
+        previous = getattr(self, "_pi_bar_item", None)
+        if previous is not None:
+            try:
+                bar.popWidget(previous)
+            except RuntimeError:   # already closed
+                pass
+        self._pi_bar_item = bar.createMessage(PLUGIN_NAME, text)
+        bar.pushWidget(self._pi_bar_item, Qgis.MessageLevel.Warning, PI_WARNING_S)
+        if self.panel is not None:
+            self.panel.show_feedback(text, "warning")
 
     # -- boot monitor -------------------------------------------------------------
 

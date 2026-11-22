@@ -3631,5 +3631,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Record the camera during each job, until the robot is back on its dock (videos folder next to the project)</source>
         <translation>Enregistrer la caméra pendant chaque tâche, jusqu'au retour du robot sur sa base (dossier videos à côté du projet)</translation>
     </message>
+    <message>
+        <source>No map of all runs on the Pi yet (it builds one after its next run): {loaded}</source>
+        <translation>Pas encore de carte de tous les passages sur le Pi (il en construit une après son prochain passage) : {loaded}</translation>
+    </message>
 </context>
 </TS>

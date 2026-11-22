@@ -41,5 +41,7 @@ So that QGIS does not have to stay open: see
 ## Maps built on a Raspberry Pi
 
 A Pi can fetch each run and build its map by itself; **Load Wi-Fi map from the
-Pi** brings the newest one (or the full map of all runs) into QGIS. See
+Pi** brings the newest one (or the full map of all runs) into QGIS; the toolbar
+button loads the one you chose last (*Latest run* or *Full map*, Wi-Fi tab). While
+the Pi has no map of all runs yet, it loads the latest run instead. See
 [Wi-Fi maps on a Raspberry Pi](../extras/pi-wifi-maps.md).
