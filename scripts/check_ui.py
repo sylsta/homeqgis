@@ -74,6 +74,7 @@ def install_qgis_stand_ins(QtWidgets):
     gui = types.ModuleType("qgis.gui")
     gui.QgsCollapsibleGroupBox = type("QgsCollapsibleGroupBox", (QtWidgets.QGroupBox,), {})
     gui.QgsAuthConfigSelect = type("QgsAuthConfigSelect", (QtWidgets.QWidget,), {})
+    gui.QgsFileWidget = type("QgsFileWidget", (QtWidgets.QWidget,), {})
     qgis = types.ModuleType("qgis")
     qgis.gui = gui
     sys.modules["qgis"] = qgis
