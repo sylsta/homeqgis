@@ -291,6 +291,26 @@ def week_days(day):
     return [monday + timedelta(days=i) for i in range(7)]
 
 
+def month_days(day):
+    """Every date of the month of a datetime.date."""
+    first = day.replace(day=1)
+    following = (first + timedelta(days=32)).replace(day=1)
+    return [first + timedelta(days=i) for i in range((following - first).days)]
+
+
+def year_days(day):
+    """Every date of the year of a datetime.date."""
+    first = day.replace(month=1, day=1)
+    return [first + timedelta(days=i)
+            for i in range((first.replace(year=first.year + 1) - first).days)]
+
+
+def period_days(day, period):
+    """The dates of the "day", "week", "month" or "year" around a datetime.date."""
+    return {"week": week_days, "month": month_days, "year": year_days}.get(
+        period, lambda d: [d])(day)
+
+
 def week_key(day):
     """(ISO year, ISO week number) of a datetime.date."""
     year, week, _ = day.isocalendar()

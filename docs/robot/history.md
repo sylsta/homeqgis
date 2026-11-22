@@ -30,11 +30,14 @@ Turn it off in the settings: tab *Robot*, *History*.
 
 ## The History tab
 
-The outings of a **day** or a **week** (◀ ▶, *Today*): start (⏰ when a schedule
-started it), duration, activities, job, rooms, how it ended, and the totals.
+The outings of a **day**, a **week**, a **month** or a **year** (◀ ▶, *Today*):
+start (⏰ when a schedule started it), duration, activities, job, rooms, how it
+ended, and the totals. A week or a month is grouped by day; a year by month, folded,
+with the date in front of each outing.
 
 - **Selecting** an outing already on the map selects it there and zooms to it.
-- **Load on map** (or a double-click) adds the day, or the whole week, under
+- **Load on map** (or a double-click) adds the day, or the whole week, month or
+  year (only the selected outing's day in a month or a year), under
   *Robot history › Week NN · YYYY › day*: segments coloured by activity over a light
   halo of each outing, and the points, hidden at first.
 - **Replay** plays the selected outing (or the day) in QGIS's **Temporal

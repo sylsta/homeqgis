@@ -1,4 +1,4 @@
-"""History tab of the panel: browse the robot's recorded outings by day or week,
+"""History tab of the panel: browse the robot's recorded outings by day, week, month or year,
 load them on the map (one layer group per week) and replay one with the
 Temporal Controller.
 
@@ -20,7 +20,7 @@ from qgis.core import (
     QgsVectorLayer,
 )
 
-from .history_logic import format_duration, summarize, week_days, week_key
+from .history_logic import format_duration, period_days, summarize, week_key
 from .history_store import day_path, history_folder, read_outings
 from .i18n import tr
 
@@ -91,10 +91,14 @@ class HistoryTab(QWidget):
         self.mode = QComboBox()
         self.mode.addItem(tr("Day"), "day")
         self.mode.addItem(tr("Week"), "week")
-        self.btn_prev = self._tool("◀", tr("Previous day or week"), lambda: self._step(-1))
+        self.mode.addItem(tr("Month"), "month")
+        self.mode.addItem(tr("Year"), "year")
+        self.btn_prev = self._tool("◀", tr("Previous day, week, month or year"),
+                                   lambda: self._step(-1))
         self.date = QDateEdit()
         self.date.setCalendarPopup(True)
-        self.btn_next = self._tool("▶", tr("Next day or week"), lambda: self._step(1))
+        self.btn_next = self._tool("▶", tr("Next day, week, month or year"),
+                                   lambda: self._step(1))
         self.btn_today = self._tool(tr("Today"), tr("Back to today"),
                                     lambda: self.date.setDate(QDate.currentDate()))
         for widget in (self.mode, self.btn_prev, self.date, self.btn_next, self.btn_today):
@@ -116,8 +120,10 @@ class HistoryTab(QWidget):
 
         buttons = QHBoxLayout()
         self.btn_load = self._tool(tr("Load on map"),
-                                   tr("Add the day (or the week) to the map, in a group per "
-                                      "week; the points layer starts hidden"),
+                                   tr("Add the day (or the week, month or year) to the map, "
+                                      "in a group per week; the points layer starts hidden. "
+                                      "With an outing selected in a month or a year, only "
+                                      "its day"),
                                    lambda: self.load(zoom=True), "/mActionAddLayer.svg")
         self.btn_replay = self._tool(tr("Replay"),
                                      tr("Replay the selected outing (or the whole day) with "
@@ -194,7 +200,7 @@ class HistoryTab(QWidget):
 
     def _days(self):
         day = self._selected_day()
-        return week_days(day) if self.mode.currentData() == "week" else [day]
+        return period_days(day, self.mode.currentData())
 
     @staticmethod
     def _t(day):
@@ -205,8 +211,10 @@ class HistoryTab(QWidget):
         return history_folder()
 
     def _step(self, sign):
-        self.date.setDate(self.date.date().addDays(sign * (7 if self.mode.currentData() == "week"
-                                                           else 1)))
+        d, period = self.date.date(), self.mode.currentData()
+        self.date.setDate(d.addYears(sign) if period == "year"
+                          else d.addMonths(sign) if period == "month"
+                          else d.addDays(sign * (7 if period == "week" else 1)))
 
     def refresh(self, *_):
         self.tree.clear()
@@ -218,28 +226,39 @@ class HistoryTab(QWidget):
                                      "history folder next to the project file."))
             self._update_buttons()
             return
-        week = self.mode.currentData() == "week"
-        self.tree.setRootIsDecorated(week)
+        period = self.mode.currentData()
+        self.tree.setRootIsDecorated(period != "day")
         everything = []
+        by_group = {}   # group key -> (title, [(outing, day)]), in order
         for day in self._days():
             outings = read_outings(day_path(folder, self._t(day)))
             everything += outings
+            for outing in outings:
+                self._outings[outing["outing"]] = (outing, day)
+            if not outings:
+                continue
+            if period == "year":   # a group per month, the day shown on each outing
+                key = day.month
+                title = QLocale().standaloneMonthName(day.month, QLocale.FormatType.LongFormat)
+            else:
+                key, title = day, _short_day(day)
+            by_group.setdefault(key, (title, []))[1].extend((o, day) for o in outings)
+        for title, rows in by_group.values():
             parent = None
-            if week:
-                if not outings:
-                    continue
-                parent = QTreeWidgetItem([f"{_short_day(day)} — {_summary_text(outings)}"])
+            if period != "day":
+                parent = QTreeWidgetItem([f"{title} — {_summary_text([o for o, _d in rows])}"])
                 font = parent.font(0)
                 font.setBold(True)
                 parent.setFont(0, font)
                 self.tree.addTopLevelItem(parent)
                 parent.setFirstColumnSpanned(True)
-            for outing in outings:
+            for outing, day in rows:
                 item = self._outing_item(outing)
-                self._outings[outing["outing"]] = (outing, day)
+                if period == "year":
+                    item.setText(0, f"{_short_day(day)} {item.text(0)}")
                 (parent.addChild(item) if parent is not None else self.tree.addTopLevelItem(item))
             if parent is not None:
-                parent.setExpanded(True)
+                parent.setExpanded(period != "year")
         self.lbl_summary.setText(_summary_text(everything))
         self.lbl_info.setText("" if everything or os.path.isdir(folder)
                               else tr("Nothing recorded yet in {folder}.").format(folder=folder))
@@ -366,7 +385,9 @@ class HistoryTab(QWidget):
 
     def load(self, zoom=False):
         selected = self._selected_outing()
-        days = [selected[1]] if selected and self.mode.currentData() == "day" else self._days()
+        period = self.mode.currentData()
+        days = ([selected[1]] if selected and period in ("day", "month", "year")
+                else self._days())
         loaded = {}
         for day in days:
             layers = self._load_day(day)

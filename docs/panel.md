@@ -10,7 +10,7 @@ The panel holds everything; the QGIS menu and toolbar stay minimal.
 ├──┬────────────┴───────────────┴──────────────────────────────────┤
 │🧹│ Clean        rooms, groups, cleaning profile                   │  the robot's
 │📅│ Schedule     week view and list                                │  side tabs
-│🕘│ History      outings by day or week                            │
+│🕘│ History      outings by day, week, month or year               │
 │📷│ Camera                                                        │
 │📶│ Wi-Fi        signal, surveys, maps                             │
 │🔧│ Maintenance  robot, consumables, dock, statistics, events      │

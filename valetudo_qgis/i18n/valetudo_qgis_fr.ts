@@ -2612,14 +2612,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Semaine</translation>
     </message>
     <message>
-        <source>Previous day or week</source>
-        <translation>Jour ou semaine précédents</translation>
-    </message>
-    <message>
-        <source>Next day or week</source>
-        <translation>Jour ou semaine suivants</translation>
-    </message>
-    <message>
         <source>Today</source>
         <translation>Aujourd'hui</translation>
     </message>
@@ -2630,10 +2622,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Load on map</source>
         <translation>Charger sur la carte</translation>
-    </message>
-    <message>
-        <source>Add the day (or the week) to the map, in a group per week; the points layer starts hidden</source>
-        <translation>Ajoute le jour (ou la semaine) à la carte, dans un groupe par semaine ; la couche des points est d'abord masquée</translation>
     </message>
     <message>
         <source>Replay</source>
@@ -3442,6 +3430,26 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Raspberry Pi</source>
         <translation>Raspberry Pi</translation>
+    </message>
+    <message>
+        <source>Previous day, week, month or year</source>
+        <translation>Jour, semaine, mois ou année précédent</translation>
+    </message>
+    <message>
+        <source>Next day, week, month or year</source>
+        <translation>Jour, semaine, mois ou année suivant</translation>
+    </message>
+    <message>
+        <source>Add the day (or the week, month or year) to the map, in a group per week; the points layer starts hidden. With an outing selected in a month or a year, only its day</source>
+        <translation>Ajoute le jour (ou la semaine, le mois, l'année) à la carte, dans un groupe par semaine ; la couche des points est d'abord masquée. Avec une sortie sélectionnée dans un mois ou une année, seulement son jour</translation>
+    </message>
+    <message>
+        <source>Month</source>
+        <translation>Mois</translation>
+    </message>
+    <message>
+        <source>Year</source>
+        <translation>Année</translation>
     </message>
 </context>
 </TS>
