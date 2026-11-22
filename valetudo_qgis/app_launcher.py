@@ -9,13 +9,15 @@ create() sets up, from the profile in use:
         QGIS/QGIS3.ini                         the plugin enabled, "app mode" on, the robot
                                                project opened with the map; the plugin's
                                                settings copied, if asked
-        qgis-auth.db                           tokens and passwords, copied if asked
         domotiqgis.png / .ico                  the launcher's icon
 
 and a launcher: a .desktop file (Linux), a .lnk shortcut (Windows) or a small .app
 (macOS), on the desktop and in the applications menu. It runs
 
-    qgis --profile DomotiQGIS --profiles-path <path> --nologo --project <robot project>
+    qgis --profile DomotiQGIS --profiles-path <path> --nologo
+         --authdbdirectory <this profile> --project <robot project>
+
+(--authdbdirectory: the tokens and passwords of this profile, shared if asked.)
 
 In the profile, the plugin sees "app mode" (KEY_APP_MODE) and hides QGIS's other
 toolbars and panels (plugin.py, _apply_app_mode).
@@ -125,12 +127,16 @@ def restore_last_profile_after_exit():
     QProcess.startDetached(program, arguments)
 
 
-def launch_command(profile, project):
+def launch_command(profile, project, auth_folder=""):
+    """auth_folder: the folder of the authentication database to use (that of the
+    usual profile: same tokens and passwords, same master password in the wallet)."""
     root = profiles_root()
     # --profiles-path takes the folder that contains "profiles"
     base = os.path.dirname(root) if os.path.basename(root) == "profiles" else root
-    return qgis_command() + ["--profile", profile, "--profiles-path", base, "--nologo",
-                             "--project", project]
+    command = qgis_command() + ["--profile", profile, "--profiles-path", base, "--nologo"]
+    if auth_folder:
+        command += ["--authdbdirectory", auth_folder]
+    return command + ["--project", project]
 
 
 # -- the profile ----------------------------------------------------------------------
@@ -194,13 +200,13 @@ def create(profile, project, copy_settings=True, copy_secrets=True, desktop=True
     target.setValue("valetudo/robot_project", project)
     target.sync()
 
-    auth = os.path.join(current_profile_folder(), "qgis-auth.db")
-    auth_target = os.path.join(folder, "qgis-auth.db")
-    if copy_secrets and os.path.exists(auth) and not os.path.exists(auth_target):
-        shutil.copy2(auth, auth_target)
-        result["secrets"] = True
-
-    command = launch_command(profile, project)
+    # Tokens and passwords: the app uses this profile's authentication database itself
+    # (QGIS's --authdbdirectory): kept in step, and the master password stored in the
+    # wallet for it serves both (QGIS names its wallet entry after that folder).
+    auth_folder = current_profile_folder() if copy_secrets else ""
+    result["secrets"] = bool(auth_folder)
+    command = launch_command(profile, project, auth_folder)
+    result["command"] = command
     png, ico = _write_icons(folder)
     if desktop:
         result["launchers"] += _launchers(_location(QStandardPaths.StandardLocation

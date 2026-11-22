@@ -15,15 +15,10 @@ It is still QGIS underneath: QGIS must be installed, and it starts as fast as QG
   else the current one).
 - **Profile**: the QGIS profile of the app, `DomotiQGIS` by default.
 - **Copy the settings**: servers, options and room groups, as they are now.
-- **Copy the tokens and passwords**: QGIS's authentication database, when the
-  app's profile has none yet. It holds all your QGIS authentication settings, not
-  only DomotiQGIS's.
+- **Share the tokens and passwords**: the app uses the authentication database of
+  your usual profile itself (QGIS's `--authdbdirectory`), so they stay in step, and
+  the master password stored in your wallet for it serves the app too.
 - **Shortcut on the desktop** and **Entry in the applications menu**.
-
-!!! note "The master password"
-    With the tokens and passwords copied, the app's first start asks for QGIS's
-    **master password**: the same as in your usual QGIS. Tick *Store/update the
-    master password in your Wallet/KeyRing* so that it is not asked again.
 
 ![The app launcher dialog](images/app-launcher.png)
 
@@ -40,7 +35,8 @@ What it creates:
 The launcher runs:
 
 ```
-qgis --profile DomotiQGIS --profiles-path <QGIS folder> --nologo --project <robot project>
+qgis --profile DomotiQGIS --profiles-path <QGIS folder> --nologo
+     --authdbdirectory <usual profile> --project <robot project>
 ```
 
 The app's settings are its own from then on. To copy those of your usual QGIS again,

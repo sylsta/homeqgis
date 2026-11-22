@@ -3564,10 +3564,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Copier les paramètres (serveurs, options, groupes de pièces)</translation>
     </message>
     <message>
-        <source>Copy the tokens and passwords (QGIS's authentication database, if the profile has none)</source>
-        <translation>Copier les jetons et mots de passe (base d'authentification de QGIS, si le profil n'en a pas)</translation>
-    </message>
-    <message>
         <source>Shortcut on the desktop</source>
         <translation>Raccourci sur le bureau</translation>
     </message>
@@ -3624,8 +3620,12 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Un lanceur qui le démarre comme une application, dans un profil QGIS à part</translation>
     </message>
     <message>
-        <source>Tokens and passwords copied. At the first start, QGIS asks for its master password (the same as here): tick the box that stores it in your wallet, so that it is not asked again.</source>
-        <translation>Jetons et mots de passe copiés. Au premier démarrage, QGIS demande son mot de passe principal (le même qu'ici) : cochez la case qui l'enregistre dans votre wallet, pour qu'il ne soit plus demandé.</translation>
+        <source>Tokens and passwords: shared with this profile.</source>
+        <translation>Jetons et mots de passe : partagés avec ce profil.</translation>
+    </message>
+    <message>
+        <source>Share the tokens and passwords with this profile (same authentication database)</source>
+        <translation>Partager les jetons et mots de passe avec ce profil (même base d'authentification)</translation>
     </message>
 </context>
 </TS>

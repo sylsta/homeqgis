@@ -9,8 +9,8 @@ import os
 
 from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
 from qgis.PyQt.QtWidgets import (
-    QAction, QCheckBox, QDockWidget, QFileDialog, QInputDialog, QMessageBox, QPushButton,
-    QToolBar, QToolButton,
+    QAction, QApplication, QCheckBox, QDockWidget, QFileDialog, QInputDialog, QMessageBox,
+    QPushButton, QToolBar, QToolButton,
 )
 from qgis.core import (
     QgsApplication,
@@ -378,6 +378,13 @@ class ValetudoPlugin:
         self._live_at_start = False
         QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._start_live_at_start)
 
+        # Setting up the panel and its layers' watchers can mark the empty start-up
+        # project as modified: QGIS, opening a project given at launch (--project, as
+        # the app's launcher does) right after, would ask to save that empty project.
+        project = QgsProject.instance()
+        if not project.fileName() and not project.mapLayers():
+            project.setDirty(False)
+
     def _schedule_groups_reload(self, *_):
         if not self._unloaded:
             self._groups_timer.start()
@@ -601,6 +608,9 @@ class ValetudoPlugin:
         """At QGIS start-up: connect quietly; _on_reachable() turns "Show on map" on."""
         cfg = load_settings()
         if self._unloaded:
+            return
+        if QApplication.activeModalWidget() is not None:   # e.g. QGIS asking something
+            QTimer.singleShot(1000, self._start_live_at_start)   # while it opens a project
             return
         if not cfg["url"]:
             self._propose_settings()
@@ -1002,14 +1012,11 @@ class ValetudoPlugin:
             lines.append(tr("The plugin was copied into it (no link possible here): run "
                             "this again after updating the plugin."))
         if result["secrets"]:
-            lines.append(tr("Tokens and passwords copied. At the first start, QGIS asks for "
-                            "its master password (the same as here): tick the box that "
-                            "stores it in your wallet, so that it is not asked again."))
+            lines.append(tr("Tokens and passwords: shared with this profile."))
         lines += [tr("Launcher: {path}").format(path=path) for path in result["launchers"]]
         if not result["launchers"]:
             lines.append(tr("No launcher: start it with {command}").format(
-                command=" ".join(app_launcher.launch_command(values["profile"],
-                                                             values["project"]))))
+                command=" ".join(result["command"])))
         QMessageBox.information(self.iface.mainWindow(), tr("DomotiQGIS as an app"),
                                 "\n".join(lines))
 

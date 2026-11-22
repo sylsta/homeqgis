@@ -38,8 +38,8 @@ class AppLauncherDialog(QDialog):
         form.addRow(tr("Profile"), self.profile)
         layout.addLayout(form)
         self.copy_settings = QCheckBox(tr("Copy the settings (servers, options, room groups)"))
-        self.copy_secrets = QCheckBox(tr("Copy the tokens and passwords (QGIS's "
-                                         "authentication database, if the profile has none)"))
+        self.copy_secrets = QCheckBox(tr("Share the tokens and passwords with this profile "
+                                         "(same authentication database)"))
         self.desktop = QCheckBox(tr("Shortcut on the desktop"))
         self.menu = QCheckBox(tr("Entry in the applications menu"))
         for box in (self.copy_settings, self.copy_secrets, self.desktop, self.menu):
