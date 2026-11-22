@@ -428,6 +428,7 @@ class ValetudoPanel(QgsDockWidget):
         # -- Status tab: the robot's frame (from the .ui), then a frame per server of the
         # settings, built by _build_server_frames()
         self._server_entries = []   # see _build_server_frames
+        self._available = {}       # server id -> {"web", "ssh", "rd", "wake"}: buttons it has
         self._ssh_passwords = {}    # server id -> SSH target its password was given for
         self._terminal_entries = []   # "Console / Log in QGIS": advanced tools
         self.btn_robot_web.setIcon(icon("web"))
@@ -1779,7 +1780,9 @@ class ValetudoPanel(QgsDockWidget):
         return servers_model.remote_desktops(self._servers(), server) if server else []
 
     def _update_server_buttons(self):
-        """Each button only where there is something to open; the tooltip says what."""
+        """Each button only where there is something to open; the tooltip says what.
+        Which are available is kept: _apply_server_state() then shows them according
+        to whether the server is up."""
         rows = [("robot", self.btn_robot_web, None, self.btn_robot_ssh)]
         rows += [(e["id"], e["frame"].btn_web, e["frame"].btn_rd, e["frame"].btn_ssh)
                  for e in self._server_entries]
@@ -1798,13 +1801,32 @@ class ValetudoPanel(QgsDockWidget):
                     command=system_terminal.describe(*target)))
             if rd is not None:
                 self._update_rd_button(sid, rd)
+            self._available[sid] = {"web": bool(url), "ssh": target is not None,
+                                    "rd": rd is not None and bool(self._remote_desktops(sid))}
         for entry in self._server_entries:
             server = servers_model.find(self._servers(), entry["id"]) or entry["server"]
             target = servers_model.wake_target(self._servers(), server)
-            button = entry["frame"].btn_wake
-            button.setVisible(target is not None)
+            self._available[entry["id"]]["wake"] = target is not None
             if target is not None:
-                button.setToolTip(tr("Wake it up (Wake-on-LAN): {mac}").format(mac=target[0]))
+                entry["frame"].btn_wake.setToolTip(
+                    tr("Wake it up (Wake-on-LAN): {mac}").format(mac=target[0]))
+        self._apply_server_state()
+
+    def _apply_server_state(self):
+        """A server that does not answer: no web, remote desktop or SSH button, but
+        Wake-on-LAN; one that answers: the opposite. Before the first answer, both."""
+        rows = [("robot", self._reachable, self.btn_robot_web, None, self.btn_robot_ssh, None)]
+        rows += [(e["id"], e["block"].ok, e["frame"].btn_web, e["frame"].btn_rd,
+                  e["frame"].btn_ssh, e["frame"].btn_wake) for e in self._server_entries]
+        for sid, ok, web, rd, ssh, wake in rows:
+            available = self._available.get(sid, {})
+            up, down = ok is not False, ok is not True
+            web.setVisible(available.get("web", False) and up)
+            ssh.setVisible(available.get("ssh", False) and up)
+            if rd is not None:
+                rd.setVisible(available.get("rd", False) and up)
+            if wake is not None:
+                wake.setVisible(available.get("wake", False) and down)
 
     def _update_rd_button(self, sid, button):
         desktops = self._remote_desktops(sid)
@@ -2098,6 +2120,7 @@ class ValetudoPanel(QgsDockWidget):
         for entry in self._server_entries:
             entry["block"].render()   # "updated N s ago"
         self._update_strip_servers()
+        self._apply_server_state()
         if self.client is None or self._reachable is None:
             return
         if self._reachable:

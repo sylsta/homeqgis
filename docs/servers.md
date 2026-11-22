@@ -24,7 +24,9 @@ the ⚠.
 ## Buttons
 
 Each frame has up to four buttons, shown only where there is something to open
-(hover them for the address or command):
+(hover them for the address or command). A server that does not answer only shows
+**⏻ Wake-on-LAN**; one that answers shows the others, without it (before the
+first check, all of them):
 
 - **⏻ Wake-on-LAN** wakes the machine from sleep or power-off, when its MAC address
   is set (see [Settings › Wake-on-LAN](settings.md#wake-on-lan)). The packet is
