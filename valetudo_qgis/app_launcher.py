@@ -40,6 +40,8 @@ PLUGIN_FOLDER = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
 # This profile is the app: only the plugin on screen. Outside "valetudo/", so that it
 # is never copied to another profile nor saved in a configuration backup.
 KEY_APP_MODE = "domotiqgis/app_mode"
+# The profile the launcher was created from: QGIS started alone opens it, not the app's
+KEY_HOME_PROFILE = "domotiqgis/home_profile"
 SETTINGS_GROUP = "valetudo/"
 PROFILE_FILES = ("valetudo_room_groups.ini",)   # the plugin's own files in a profile
 
@@ -61,6 +63,21 @@ def qgis_command():
         return ["flatpak", "run", flatpak]
     program = QCoreApplication.applicationFilePath() or sys.executable
     return [program]
+
+
+def restore_last_profile():
+    """QGIS remembers the last profile used (profiles.ini, core/lastProfile) and opens it
+    when started alone: after the app, that would be the app's. In the app's profile,
+    give it back to the profile the launcher was created from."""
+    # (profiles made by the first version of the launcher do not say: "default")
+    home = QgsSettings().value(KEY_HOME_PROFILE, "", type=str) or "default"
+    if not home or not os.path.isdir(os.path.join(profiles_root(), home)):
+        return
+    profiles = QSettings(os.path.join(profiles_root(), "profiles.ini"),
+                         QSettings.Format.IniFormat)
+    if profiles.value("core/lastProfile", "") != home:
+        profiles.setValue("core/lastProfile", home)
+        profiles.sync()
 
 
 def launch_command(profile, project):
@@ -127,6 +144,7 @@ def create(profile, project, copy_settings=True, copy_secrets=True, desktop=True
     target.setValue(f"PythonPlugins/{PLUGIN_FOLDER}", True)
     target.setValue("PythonPlugins/processing", True)   # the Wi-Fi map's interpolation
     target.setValue(KEY_APP_MODE, True)
+    target.setValue(KEY_HOME_PROFILE, os.path.basename(current_profile_folder()))
     target.setValue("valetudo/live_at_start", True)
     target.setValue("valetudo/robot_project", project)
     target.sync()

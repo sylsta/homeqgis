@@ -418,6 +418,8 @@ class ValetudoPlugin:
 
     def unload(self):
         self._unloaded = True   # before anything else: removing the panel emits signals
+        if QgsSettings().contains(KEY_APP_MODE):
+            app_launcher.restore_last_profile()   # (again, at QGIS exit)
         project = QgsProject.instance()
         for signal, slot in ((project.readProject, self._on_project_read),
                              (project.homePathChanged, self._persist_layers),
@@ -600,6 +602,7 @@ class ValetudoPlugin:
         if not project.fileName() and not project.mapLayers():   # QGIS opened without one
             path = cfg["robot_project"]
             if path and os.path.exists(path):
+                project.setDirty(False)   # nothing to save in it: no "save?" question
                 self.iface.addProject(path)
             else:
                 self._offer_robot_project()
@@ -810,8 +813,11 @@ class ValetudoPlugin:
         return False
 
     def _open_robot_project(self, path):
+        project = QgsProject.instance()
+        if not project.fileName() and not project.mapLayers():
+            project.setDirty(False)   # an empty project: nothing worth saving
         # Changes to the current project: QGIS asks whether to save them first
-        if QgsProject.instance().isDirty() and not self.iface.newProject(True):
+        elif project.isDirty() and not self.iface.newProject(True):
             return False
         return bool(self.iface.addProject(path)) and bool(QgsProject.instance().fileName())
 
@@ -1010,6 +1016,7 @@ class ValetudoPlugin:
         return bars, docks
 
     def _enter_app_mode(self, *_):
+        app_launcher.restore_last_profile()   # QGIS started alone opens the usual profile
         if self._unloaded or self.act.get("app_mode") is None \
                 or not self.act["app_mode"].isChecked():
             return
