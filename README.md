@@ -11,14 +11,14 @@ Available in English and French (the UI follows the QGIS interface language).
 
 **From a build (recommended):** each push to `main` builds a ready-to-install zip,
 with compiled translations, in the *Actions* tab of this repository (artifact
-`homeqgis`). Unzip the downloaded artifact once to get `homeqgis.zip`,
+`homeQGIS`). Unzip the downloaded artifact once to get `homeQGIS.zip`,
 then in QGIS: *Plugins > Manage and Install Plugins > Install from ZIP*.
 
 **For development:**
 
 1. In QGIS: *Settings > User Profiles > Open Active Profile Folder*.
 2. Go to `python/plugins/` (create it if needed).
-3. Copy the `homeqgis` folder of this repository there, or better, symlink it
+3. Copy the `homeQGIS` folder of this repository there, or better, symlink it
    so that every `git pull` is picked up directly.
 4. Optional, for the French UI: run `scripts/compile_translations.sh`
    (needs Qt's `lrelease`).
@@ -27,7 +27,7 @@ then in QGIS: *Plugins > Manage and Install Plugins > Install from ZIP*.
 Tip: install the **Plugin Reloader** plugin to reload the code after each change
 without restarting QGIS.
 
-**Building the zip:** `make zip` gives `dist/homeqgis-<version>.zip` (checks,
+**Building the zip:** `make zip` gives `dist/homeQGIS-<version>.zip` (checks,
 French translation and manual included); `make` lists the other commands
 (`check`, `install`, `release`, `clean`).
 
@@ -134,7 +134,7 @@ lists them; replace a placeholder PNG with the real one under the same name.
 ## Editing the forms
 
 The settings page and the status panel are laid out in Qt Designer files
-(`homeqgis/ui/*.ui`); open them with Qt Designer, or with *QGIS Designer*
+(`homeQGIS/ui/*.ui`); open them with Qt Designer, or with *QGIS Designer*
 (shipped with QGIS, it knows the QGIS widgets). The Python code only fills them
 at run time (rooms, consumables, dock components, the command buttons) and wires
 them.
@@ -151,10 +151,10 @@ them.
 ## Translations
 
 - Every user-facing string is written in English and wrapped in `tr("...")`
-  (from `homeqgis/i18n.py`), with a string literal as argument, or typed in a
+  (from `homeQGIS/i18n.py`), with a string literal as argument, or typed in a
   Qt Designer form.
   Use named placeholders and `.format()`: `tr("Command “{command}” sent.").format(command=...)`.
-- Add each new string to `homeqgis/i18n/homeqgis_fr.ts` (by hand or with
+- Add each new string to `homeQGIS/i18n/homeqgis_fr.ts` (by hand or with
   Qt Linguist).
 - `python3 scripts/check_translations.py` lists missing translations (also run in CI).
 - `python3 scripts/check_names.py` reports undefined names, e.g. a missing import

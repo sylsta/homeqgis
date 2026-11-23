@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PLUGIN = ROOT / "homeqgis"
+PLUGIN = ROOT / "homeQGIS"
 CONTEXT = "ValetudoQgis"
 
 
@@ -61,7 +61,7 @@ def main():
     sources = source_strings()
     ts_files = sorted((PLUGIN / "i18n").glob("*.ts"))
     if not ts_files:
-        print("No .ts file found in homeqgis/i18n/")
+        print("No .ts file found in homeQGIS/i18n/")
         return 1
     ok = True
     for ts in ts_files:

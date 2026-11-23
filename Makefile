@@ -2,7 +2,7 @@
 #
 #   make            this help
 #   make check      the same checks as the CI (syntax, names, translations, forms)
-#   make zip        dist/homeqgis-<version>.zip, ready for QGIS
+#   make zip        dist/homeQGIS-<version>.zip, ready for QGIS
 #                   (Plugins › Manage and Install Plugins › Install from ZIP)
 #   make release    the zip, from a clean and pushed main, tagged v<version>
 #   make install    the plugin into a QGIS profile (PROFILE=default), for testing
@@ -12,7 +12,7 @@
 # with mkdocs-material (pip install "mkdocs>=1.6,<2" "mkdocs-material>=9.5,<10").
 # PyQt5 for the forms check (python3-pyqt5); without it, that check is skipped.
 
-PLUGIN  := homeqgis
+PLUGIN  := homeQGIS
 PYTHON  ?= python3
 VERSION := $(shell sed -n 's/^version=//p' $(PLUGIN)/metadata.txt)
 DIST    := dist

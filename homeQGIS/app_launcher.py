@@ -4,7 +4,7 @@ and only what the plugin needs on screen.
 create() sets up, from the profile in use:
 
     <profiles>/HomeQGIS/                     the profile (QGIS treats any folder there as one)
-        python/plugins/homeqgis           the plugin: a link to this one (a copy where
+        python/plugins/homeQGIS           the plugin: a link to this one (a copy where
                                                links are not possible)
         QGIS/QGIS3.ini                         the plugin enabled, "app mode" on, the robot
                                                project opened with the map; the plugin's

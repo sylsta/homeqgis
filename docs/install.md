@@ -21,8 +21,8 @@ and this manual included.
 
 1. On the [repository's *Actions* page](https://github.com/sylsta/homeqgis/actions),
    open the latest successful **Build plugin** run.
-2. Download the **homeqgis** artifact and unzip it once: you get
-   `homeqgis.zip`.
+2. Download the **homeQGIS** artifact and unzip it once: you get
+   `homeQGIS.zip`.
 3. In QGIS: *Plugins › Manage and Install Plugins › Install from ZIP*, choose that
    file, then **Install Plugin**.
 
@@ -30,7 +30,7 @@ and this manual included.
 
 1. In QGIS: *Settings › User Profiles › Open Active Profile Folder*.
 2. Go to `python/plugins/` (create it if needed).
-3. Copy the `homeqgis` folder of the repository there, or better, make a
+3. Copy the `homeQGIS` folder of the repository there, or better, make a
    symbolic link to it, so that every `git pull` is picked up.
 4. Optional, for the French interface: `scripts/compile_translations.sh` (needs
    Qt's `lrelease`).
@@ -50,7 +50,7 @@ mkdocs-material):
 |---|---|
 | `make` | lists the commands, with the version |
 | `make check` | the same checks as GitHub (syntax, names, translations, forms) |
-| `make zip` | `dist/homeqgis-<version>.zip`: checks, French translation, user manual inside |
+| `make zip` | `dist/homeQGIS-<version>.zip`: checks, French translation, user manual inside |
 | `make install` | copies the plugin into a QGIS profile (`PROFILE=default`) |
 | `make release` | the zip of a committed and pushed `main`, tagged `v<version>` (raise `version` in `metadata.txt` first) |
 | `make clean` | removes what the build made |
@@ -65,8 +65,10 @@ groups and history are kept. Before a big update, a
 [configuration backup](settings.md#backup) does no harm.
 
 !!! note "From DomotiQGIS"
-    The plugin was called **DomotiQGIS** (folder `valetudo_qgis`). HomeQGIS is
+    The plugin was called **DomotiQGIS** (folder `valetudo_qgis`). HomeQGIS (folder `homeQGIS`) is
     installed beside it, not over it: uninstall DomotiQGIS in *Plugins › Manage and
     Install Plugins › Installed* (HomeQGIS reminds you while both are there). Your
-    settings, tokens, projects, history and backups are kept. If you used the
+    settings, tokens, projects, history and backups are kept. The same goes for a
+    copy installed in a `homeqgis` folder (lower case) for a short while: uninstall
+    it, or delete that folder. If you used the
     [app launcher](app.md), create it again: it now uses a *HomeQGIS* profile.

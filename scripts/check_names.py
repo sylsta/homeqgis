@@ -34,7 +34,7 @@ def undefined_names(source):
 
 def main():
     ok = True
-    for path in sorted((ROOT / "homeqgis").glob("**/*.py")):
+    for path in sorted((ROOT / "homeQGIS").glob("**/*.py")):
         missing = undefined_names(path.read_text(encoding="utf-8"))
         if missing:
             ok = False

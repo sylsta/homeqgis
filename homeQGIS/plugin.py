@@ -66,7 +66,8 @@ KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
 KEY_ROBOT_SURVEY_DIR = "valetudo/robot_survey_dir"   # set once the survey is on the robot
 MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
 WATCH_INTERVAL_MS = 60_000  # background check of the dock station, panel open or not
-OLD_PLUGIN_FOLDER = "valetudo_qgis"   # the plugin's folder when it was called DomotiQGIS
+# The plugin's earlier folders: "valetudo_qgis" (as DomotiQGIS), then "homeqgis"
+OLD_PLUGIN_FOLDERS = ("valetudo_qgis", "homeqgis")
 PI_WARNING_S = 20   # a Wi-Fi map from the Pi that could not be loaded: shown this long
 LIVE_AT_START_DELAY_MS = 3_000   # after QGIS has opened a project given at launch
 LIVE_AT_START_WINDOW_MS = 60_000  # robot answering later than that: no automatic start
@@ -841,17 +842,28 @@ class ValetudoPlugin:
                 return
 
     def _warn_old_plugin(self):
-        """The plugin was called DomotiQGIS, in a "valetudo_qgis" folder: if that one is
-        still installed, both run (two panels, two toolbars, the robot polled twice)."""
+        """An earlier copy of the plugin, in another folder (OLD_PLUGIN_FOLDERS), still
+        installed: both would run (two panels, two toolbars, the robot polled twice)."""
         from qgis.utils import plugins
-        old = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                           OLD_PLUGIN_FOLDER)
-        if self._unloaded or (OLD_PLUGIN_FOLDER not in plugins and not os.path.isdir(old)):
+        here = os.path.dirname(os.path.abspath(__file__))
+        parent = os.path.dirname(here)
+        found = []
+        for name in OLD_PLUGIN_FOLDERS:
+            path = os.path.join(parent, name)
+            if name in plugins or os.path.isdir(path):
+                try:   # (a case-insensitive disk sees "homeqgis" in "homeQGIS" itself)
+                    if os.path.isdir(path) and os.path.samefile(path, here):
+                        continue
+                except OSError:
+                    pass
+                found.append(name)
+        if self._unloaded or not found:
             return
         self.iface.messageBar().pushMessage(
-            PLUGIN_NAME, tr("The plugin's previous version, DomotiQGIS, is still installed: "
-                            "uninstall it (Plugins › Manage and Install Plugins › Installed). "
-                            "Your settings and projects are kept."),
+            PLUGIN_NAME, tr("An earlier copy of the plugin is still installed (folder {folders}): "
+                            "uninstall it, DomotiQGIS or HomeQGIS, in Plugins › Manage and "
+                            "Install Plugins › Installed, or delete that folder. Your settings "
+                            "and projects are kept.").format(folders=", ".join(found)),
             level=Qgis.MessageLevel.Warning, duration=0)
 
     # -- the robot project ------------------------------------------------------------

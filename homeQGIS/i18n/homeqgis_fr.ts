@@ -4232,8 +4232,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Retour à la base (filmé par la caméra)</translation>
     </message>
     <message>
-        <source>The plugin's previous version, DomotiQGIS, is still installed: uninstall it (Plugins › Manage and Install Plugins › Installed). Your settings and projects are kept.</source>
-        <translation>La version précédente de l'extension, DomotiQGIS, est encore installée : désinstallez-la (Extensions › Installer/Gérer les extensions › Installées). Vos réglages et projets sont conservés.</translation>
+        <source>An earlier copy of the plugin is still installed (folder {folders}): uninstall it, DomotiQGIS or HomeQGIS, in Plugins › Manage and Install Plugins › Installed, or delete that folder. Your settings and projects are kept.</source>
+        <translation>Une copie précédente de l'extension est encore installée (dossier {folders}) : désinstallez-la, DomotiQGIS ou HomeQGIS, dans Extensions › Installer/Gérer les extensions › Installées, ou supprimez ce dossier. Vos réglages et projets sont conservés.</translation>
     </message>
 </context>
 </TS>
