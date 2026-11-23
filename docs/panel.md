@@ -66,7 +66,10 @@ the page scrolls. The order of the robot's side tabs is set in the settings
 At the bottom, after the robot's state: **Start cleaning all rooms** when docked
 or idle, **Pause** while it works, **Resume** when paused, and **Return to dock**
 next to it while the robot is away from its dock (after a *Go to*, for example). It
-can also be added to the toolbar (settings, *UI configuration*).
+is also in the status line (⌂, next to the camera, while the robot is out) and can
+be added to the toolbar (settings, *UI configuration*). The trip home is always
+filmed: the camera records until the robot is on its dock, even with automatic
+recording off.
 
 ## Compact mode
 

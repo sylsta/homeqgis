@@ -4227,5 +4227,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>The robot's video could not be recorded: {error}</source>
         <translation>La vidéo du robot n'a pas pu être enregistrée : {error}</translation>
     </message>
+    <message>
+        <source>Return to dock (recorded by the camera)</source>
+        <translation>Retour à la base (filmé par la caméra)</translation>
+    </message>
 </context>
 </TS>

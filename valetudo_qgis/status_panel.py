@@ -758,7 +758,15 @@ class ValetudoPanel(QgsDockWidget):
         for key in ("start", "pause"):
             if key in act:
                 act[key].changed.connect(self._update_primary)
-        # Strip: [Show on map] then [⚙] Settings (icons only), before the ⋮ menu
+        # Strip: [⌂ Return to dock] while the robot is out, then [Show on map]…
+        if "home" in act:
+            self.btn_strip_home = QToolButton()
+            self.btn_strip_home.setDefaultAction(act["home"])
+            self.btn_strip_home.setAutoRaise(True)
+            self.btn_strip_home.setToolTip(tr("Return to dock (recorded by the camera)"))
+            self.btn_strip_home.setVisible(False)   # see _update_primary
+            self.strip_layout.insertWidget(self.strip_layout.indexOf(self.btn_strip_camera),
+                                           self.btn_strip_home)
         if "live" in act:
             live = QToolButton()
             live.setDefaultAction(act["live"])
@@ -1019,9 +1027,9 @@ class ValetudoPanel(QgsDockWidget):
         self.btn_primary.setToolTip(tip)
         self.btn_primary.setEnabled(self.client is not None and key in act
                                     and act[key].isEnabled())
-        dock = getattr(self, "_dock_button", None)
-        if dock is not None:
-            dock.setVisible(state not in ("docked", None))
+        for dock in (getattr(self, "_dock_button", None), getattr(self, "btn_strip_home", None)):
+            if dock is not None:
+                dock.setVisible(state not in ("docked", None))
 
     def _on_primary(self, *_):
         action = getattr(self, "act", {}).get(getattr(self, "_primary_key", "start"))
@@ -1354,6 +1362,7 @@ class ValetudoPanel(QgsDockWidget):
         client.presetsReceived.connect(self._on_presets)
         client.segmentsReceived.connect(self._on_segments)
         client.toggleReceived.connect(self._on_toggle)
+        client.commandSent.connect(self._on_command_sent)
         client.mapPeeked.connect(self.update_map)
         client.hostInfoReceived.connect(self._on_host_info)
         client.timersReceived.connect(self._on_timers)
@@ -2336,6 +2345,21 @@ class ValetudoPanel(QgsDockWidget):
         if state == "docked" and flag != "resumable":
             self._recording_declined = False   # the job is over: the next one is recorded
             self._last_auto_record = -RETRY_RECORDING_S
+
+    def _on_command_sent(self, key):
+        """Return to dock: the trip home is always recorded (even with the setting off,
+        or a recording stopped by hand earlier); it ends on the dock."""
+        if key != "home" or self.camera.is_recording() or self._state in ("docked", None):
+            return   # (already home: nothing to film)
+        self._recording_declined = False
+        self._last_auto_record = time.monotonic()
+        self._auto_starting = True
+        try:
+            self._record_job()
+        finally:
+            self._auto_starting = False
+        self._auto_recording = self.camera.is_recording()
+        self._away_while_recording = self._auto_recording   # it stops once docked
 
     def _on_record_state(self, state, detail):
         """An automatic recording that fails says so (not only in the Camera tab)."""
