@@ -8,7 +8,7 @@ import time
 
 import os
 
-from qgis.PyQt.QtCore import QDateTime, QStandardPaths, Qt, QTimer
+from qgis.PyQt.QtCore import QDateTime, QStandardPaths, Qt, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import (
     QFileDialog,
@@ -30,6 +30,8 @@ from .settings import load_settings
 
 DEFAULT_ASPECT = 9 / 16   # height / width until the first image tells the real one
 KEY_RECORD_DIR = "valetudo/camera_record_dir"   # folder of the last recording
+KEY_SNAPSHOT_DIR = "valetudo/camera_snapshot_dir"   # folder of the last snapshot
+SNAPSHOTS = "photos"   # snapshots go to <project>/photos by default
 JOB_VIDEOS = "videos"   # the recordings of jobs, next to the project
 
 
@@ -45,6 +47,8 @@ def job_videos_folder():
 
 
 class CameraWidget(QWidget):
+    snapshotSaved = pyqtSignal(str)   # path of a snapshot just saved
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._image = None
@@ -282,8 +286,15 @@ class CameraWidget(QWidget):
         if self._image is None:
             return
         name = "valetudo_{}.png".format(QDateTime.currentDateTime().toString("yyyyMMdd_HHmmss"))
+        settings = QgsSettings()
+        folder = project_folder(SNAPSHOTS) or settings.value(KEY_SNAPSHOT_DIR, "", type=str)
+        if folder:
+            os.makedirs(folder, exist_ok=True)
+            name = os.path.join(folder, name)
         path, _ = QFileDialog.getSaveFileName(self, tr("Save snapshot"), name,
                                               tr("PNG images (*.png)"))
         if path:
             self._image.save(path, "PNG")
+            settings.setValue(KEY_SNAPSHOT_DIR, os.path.dirname(path))
+            self.snapshotSaved.emit(path)
             self.lbl_status.setText(tr("Snapshot saved: {path}").format(path=path))

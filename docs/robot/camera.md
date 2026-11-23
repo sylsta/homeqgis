@@ -12,7 +12,8 @@ For robots that expose a raw H.264 stream over TCP (by default
 - After leaving the tab, the stream keeps running for a minute, so that coming back
   is instant. It reconnects by itself if it drops.
 - **Camera light**: the robot's light, when it has one.
-- **Save snapshot** (or **Ctrl+Shift+S** in the tab) saves the image as PNG.
+- **Save snapshot** (or **Ctrl+Shift+S** in the tab) saves the image as PNG, by
+  default into `photos/` next to the project (else the folder of the last one).
 - **Full screen** shows the video in its own window (Esc or a double-click closes
   it).
 - **Record** saves the video to an MP4 file (H.264) until **Stop recording**; the
@@ -36,3 +37,21 @@ For robots that expose a raw H.264 stream over TCP (by default
   back for good.
 - Untick *Record the camera whenever the robot runs* in the settings (*Robot* tab, camera)
   to stop all this. QGIS must be running with the plugin, and ffmpeg installed.
+
+## Recordings
+
+The **Recordings** group under the video (folded by default) shows what has been
+saved, newest first, as thumbnails with their date and size:
+
+- **Videos**: `videos/` next to the project and the folder of your last recording
+  made by hand. A video's thumbnail is an image taken by ffmpeg one second in, kept
+  in a cache of the QGIS profile.
+- **Snapshots**: `photos/` next to the project and the folder of your last one.
+- **Camera views**: the frames taken along the way (`views/<date>/`).
+- **Obstacle photos**: the photos of the obstacle diary (`map/obstacles/`).
+
+A double-click opens one in your system's player or image viewer. Its right-click
+menu opens its folder or deletes it (after asking). **Folder** opens the folder of
+the newest one; the list refreshes by itself when a video or snapshot is saved and
+when you come back to the tab, or with **Refresh**. Only the newest 300 of each kind
+are shown.

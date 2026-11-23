@@ -4235,5 +4235,45 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>An earlier copy of the plugin is still installed (folder {folders}): uninstall it, DomotiQGIS or HomeQGIS, in Plugins › Manage and Install Plugins › Installed, or delete that folder. Your settings and projects are kept.</source>
         <translation>Une copie précédente de l'extension est encore installée (dossier {folders}) : désinstallez-la, DomotiQGIS ou HomeQGIS, dans Extensions › Installer/Gérer les extensions › Installées, ou supprimez ce dossier. Vos réglages et projets sont conservés.</translation>
     </message>
+    <message>
+        <source>Videos</source>
+        <translation>Vidéos</translation>
+    </message>
+    <message>
+        <source>Snapshots</source>
+        <translation>Captures</translation>
+    </message>
+    <message>
+        <source>Obstacle photos</source>
+        <translation>Photos d'obstacles</translation>
+    </message>
+    <message>
+        <source>Recordings</source>
+        <translation>Enregistrements</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Actualiser</translation>
+    </message>
+    <message>
+        <source>Nothing yet.</source>
+        <translation>Rien pour l'instant.</translation>
+    </message>
+    <message>
+        <source>Open its folder</source>
+        <translation>Ouvrir son dossier</translation>
+    </message>
+    <message>
+        <source>Delete…</source>
+        <translation>Supprimer…</translation>
+    </message>
+    <message>
+        <source>Delete {name}?</source>
+        <translation>Supprimer {name} ?</translation>
+    </message>
+    <message>
+        <source>Open the folder of the newest one</source>
+        <translation>Ouvrir le dossier du plus récent</translation>
+    </message>
 </context>
 </TS>

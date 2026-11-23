@@ -39,6 +39,7 @@ except ImportError:
     from qgis.PyQt.QtWidgets import QShortcut   # Qt 5
 from qgis.gui import QgsDockWidget
 
+from .recordings import RecordingsBox
 from .camera_widget import CameraWidget, job_videos_folder
 from .robot_settings import RobotSettingsBox
 from .valetudo_box import ValetudoBox
@@ -74,6 +75,7 @@ from .timer_dialog import TimerDialog, day_names, format_offset, utc_offset_minu
 from .ui_loader import load_ui, set_row_visible as _set_row_visible
 
 KEY_TAB = "valetudo/panel_tab"
+KEY_RECORDINGS_COLLAPSED = "valetudo/recordings_collapsed"
 KEY_TOP_TAB = "valetudo/panel_section"   # robot, home or servers
 TOP_TABS = ("robot", "home", "servers")
 SERVER_TABS = ("status", "terminal")     # side tabs of the Servers section
@@ -527,6 +529,12 @@ class ValetudoPanel(QgsDockWidget):
         self._idle_stop.setInterval(STOP_IDLE_MS)
         self._idle_stop.timeout.connect(self._stop_idle_recording)
         self.camera_layout.insertWidget(0, self.camera)
+        # The recordings (videos, snapshots, camera views, obstacle photos), above the spacer
+        self.recordings = RecordingsBox()
+        self.recordings.setCollapsed(QgsSettings().value(KEY_RECORDINGS_COLLAPSED, True, type=bool))
+        self.recordings.collapsedStateChanged.connect(self._on_recordings_collapsed)
+        self.camera_layout.insertWidget(self.camera_layout.count() - 1, self.recordings)
+        self.camera.snapshotSaved.connect(lambda *_: self.recordings.refresh())
         # Coming back to the tab soon after leaving it shows the video at once,
         # instead of reconnecting and waiting for the robot's next full image.
         self._camera_grace = QTimer(self)
@@ -2070,6 +2078,7 @@ class ValetudoPanel(QgsDockWidget):
         CAMERA_GRACE_MS after that, so that a quick return is instant."""
         if self.isVisible() and self._page_shown(self.camera_page):
             self._camera_grace.stop()
+            self.recordings.refresh(force=False)
             if not self.camera.stream.is_running():
                 self.camera.play()
         elif self.camera.stream.is_running() and not self._camera_grace.isActive():
@@ -2361,8 +2370,15 @@ class ValetudoPanel(QgsDockWidget):
         self._auto_recording = self.camera.is_recording()
         self._away_while_recording = self._auto_recording   # it stops once docked
 
+    def _on_recordings_collapsed(self, collapsed):
+        QgsSettings().setValue(KEY_RECORDINGS_COLLAPSED, collapsed)
+        if not collapsed:
+            self.recordings.refresh(force=False)
+
     def _on_record_state(self, state, detail):
         """An automatic recording that fails says so (not only in the Camera tab)."""
+        if state == "saved":
+            self.recordings.refresh()
         if (self._auto_recording or self._auto_starting) and state in ("failed",
                                                                        "ffmpeg_missing"):
             self.show_feedback(tr("The robot's video could not be recorded: {error}").format(
