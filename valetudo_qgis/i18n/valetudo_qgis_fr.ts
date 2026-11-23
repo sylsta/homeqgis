@@ -4223,5 +4223,9 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Record the camera whenever the robot runs, until it is back on its dock (videos folder next to the project)</source>
         <translation>Enregistrer la caméra dès que le robot roule, jusqu'à son retour sur la base (dossier videos à côté du projet)</translation>
     </message>
+    <message>
+        <source>The robot's video could not be recorded: {error}</source>
+        <translation>La vidéo du robot n'a pas pu être enregistrée : {error}</translation>
+    </message>
 </context>
 </TS>

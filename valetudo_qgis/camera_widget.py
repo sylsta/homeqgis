@@ -109,14 +109,16 @@ class CameraWidget(QWidget):
         self._error_detail = ""
         self.stream.start(cfg["camera_url"], cfg["ffmpeg"], cfg["camera_width"])
 
-    def stop(self):
+    def stop(self, by_user=False):
+        if by_user and self.recorder.is_recording():
+            self.stopped_by_user = True
         self.recorder.stop()   # a recording ends with the video
         if self.stream.is_running():
             self.stream.stop()
 
     def toggle(self, *_):
         if self.stream.is_running():
-            self.stop()
+            self.stop(by_user=True)
         else:
             self.play()
 
@@ -208,6 +210,10 @@ class CameraWidget(QWidget):
     def is_recording(self):
         return self.recorder.is_recording()
 
+    # True once the user stopped a recording (Stop recording, or the camera's Stop),
+    # until the next automatic one: it is then not started again behind their back.
+    stopped_by_user = False
+
     def stop_recording(self):
         """Stop (the video is finished and saved) when the job is over."""
         if self.recorder.is_recording():
@@ -219,10 +225,12 @@ class CameraWidget(QWidget):
             return
         name = "valetudo_job_{}.mp4".format(
             QDateTime.currentDateTime().toString("yyyyMMdd_HHmmss"))
+        self.stopped_by_user = False
         self.recorder.start(os.path.join(folder, name), load_settings()["ffmpeg"])
 
     def toggle_recording(self, *_):
         if self.recorder.is_recording():
+            self.stopped_by_user = True   # (the robot's recording is not started again)
             self.recorder.stop()
             return
         settings = QgsSettings()

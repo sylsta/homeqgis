@@ -153,6 +153,7 @@ def _on_port(url, port):
 # A job starts when the robot goes from one of AT_REST_STATES to one of JOB_STATES
 JOB_STATES = ("cleaning", "moving")
 RUNNING_STATES = ("cleaning", "moving", "returning", "manual_control")   # recorded
+RETRY_RECORDING_S = 60      # an automatic recording that ended by itself: tried again
 STOP_IDLE_MS = 10 * 60_000   # paused or idle away from the dock this long: recording ends
 DOCK_TASKS = ("cleaning", "washing", "drying", "emptying", "pause", "error")
 AT_REST_STATES = ("docked", "idle", "error")
@@ -518,6 +519,9 @@ class ValetudoPanel(QgsDockWidget):
         self._away_while_recording = False   # see _follow_recording
         self._auto_recording = False         # the recording under way was started by us
         self._recording_declined = False     # stopped by hand: not again before the dock
+        self._last_auto_record = -RETRY_RECORDING_S   # time.monotonic() of the last try
+        self._auto_starting = False
+        self.camera.recorder.stateChanged.connect(self._on_record_state)
         self._idle_stop = QTimer(self)
         self._idle_stop.setSingleShot(True)
         self._idle_stop.setInterval(STOP_IDLE_MS)
@@ -2304,13 +2308,22 @@ class ValetudoPanel(QgsDockWidget):
             self.jobStarted.emit()   # a new job (the Wi-Fi recorder is checked)
         recording = self.camera.is_recording()
         if self._auto_recording and not recording and state != "docked":
-            self._auto_recording, self._recording_declined = False, True   # stopped by hand
+            # Ended under way: by hand (not again before the dock), or by itself
+            # (camera lost, ffmpeg error: tried again, at most every RETRY_RECORDING_S)
+            self._auto_recording = False
+            self._recording_declined = self.camera.stopped_by_user
         if state in RUNNING_STATES:
             self._idle_stop.stop()
             if (not recording and not self._recording_declined
+                    and time.monotonic() - self._last_auto_record >= RETRY_RECORDING_S
                     and load_settings()["record_jobs"]):
-                self._record_job()
-                recording = self._auto_recording = True
+                self._last_auto_record = time.monotonic()
+                self._auto_starting = True   # (a failure at once is said too)
+                try:
+                    self._record_job()
+                finally:
+                    self._auto_starting = False
+                recording = self._auto_recording = self.camera.is_recording()
         elif state in ("paused", "idle") and recording and self._auto_recording:
             if not self._idle_stop.isActive():
                 self._idle_stop.start()   # still not running then: the recording ends
@@ -2322,6 +2335,14 @@ class ValetudoPanel(QgsDockWidget):
             self._end_recording()
         if state == "docked" and flag != "resumable":
             self._recording_declined = False   # the job is over: the next one is recorded
+            self._last_auto_record = -RETRY_RECORDING_S
+
+    def _on_record_state(self, state, detail):
+        """An automatic recording that fails says so (not only in the Camera tab)."""
+        if (self._auto_recording or self._auto_starting) and state in ("failed",
+                                                                       "ffmpeg_missing"):
+            self.show_feedback(tr("The robot's video could not be recorded: {error}").format(
+                error=detail), "warning")
 
     def _end_recording(self):
         self._away_while_recording = self._auto_recording = False
@@ -2334,6 +2355,7 @@ class ValetudoPanel(QgsDockWidget):
         """Paused or idle away from the dock for STOP_IDLE_MS: the recording ends."""
         if self._state in ("paused", "idle") and self._auto_recording:
             self._end_recording()
+            self._last_auto_record = -RETRY_RECORDING_S   # a new one when it runs again
 
     def _record_job(self):
         """Start the camera (if it is not playing) and record into the videos folder."""
