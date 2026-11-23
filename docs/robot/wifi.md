@@ -28,6 +28,20 @@ thresholds, opacity, clipping) is in the settings, tab *Wi-Fi survey*.
 Once the project is saved, the points are kept in `wifi/robot_wifi.gpkg` and the
 map in `wifi/robot_wifi_signal.tif`, next to the project.
 
+## The other Wi-Fi networks
+
+Robots that can scan (Valetudo's Wi-Fi scan, on most Dreame, Roborock, Viomi and
+Midea robots) list every network they see, with its signal. During a survey, the
+plugin asks for a scan every 15 s once the robot has moved, and adds a point per
+network in *Wi-Fi networks seen* (`ssid`, `bssid` — one per access point or
+band —, `signal`, `time`). **Scan Wi-Fi networks here** (Wi-Fi tab) does one scan
+where the robot stands.
+
+Filter the layer on a `bssid` to see where an access point or a repeater is heard,
+or on an `ssid` for your neighbours' networks. Valetudo answers a scan within about
+2 s, with the previous scan if a new one takes longer: a point may then be a few
+seconds old. The networks seen are kept in `wifi/robot_wifi.gpkg` too.
+
 !!! tip
     Check first in Valetudo's Swagger UI (`http://<robot>/swagger/`) that
     `WifiConfigurationCapability` returns a fresh `signal` at each call. If it is

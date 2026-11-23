@@ -16,7 +16,7 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.core import (
     QgsApplication,
-    Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsProject, QgsSettings,
+    Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsPointXY, QgsProject, QgsSettings,
 )
 
 from . import room_groups
@@ -28,7 +28,7 @@ from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
-from . import map_changes
+from . import drive_dialog, map_changes
 from .map_layers import ValetudoLayers, map_folder
 from .map_overlay import MapOverlay
 from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
@@ -72,6 +72,7 @@ SENSOR_REMOVE_TOLERANCE_CM = 40   # right-click this close to a sensor removes i
 # "Go here" falls back to a tiny zone clean followed by a pause (see goto_emulation.py).
 ALTERNATIVE_CAPABILITIES = {
     "goto": ["ZoneCleaningCapability"],
+    "drive": ["ManualControlCapability"],
 }
 
 REQUIRED_CAPABILITY = {
@@ -87,6 +88,8 @@ REQUIRED_CAPABILITY = {
     "edit_restrictions": "CombinedVirtualRestrictionsCapability",
     "send_restrictions": "CombinedVirtualRestrictionsCapability",
     "wifi_survey": "WifiConfigurationCapability",
+    "wifi_scan": "WifiScanCapability",
+    "drive": "HighResolutionManualControlCapability",
 }
 
 
@@ -125,6 +128,11 @@ def command_hints():
         "reboot": tr("Reboot the robot over SSH (asks first)."),
         "wifi_survey": tr("Record the robot's Wi-Fi signal where it goes; "
                           "click again to stop and build the Wi-Fi map."),
+        "drive": tr("Drive the robot by hand, with the arrow keys or the buttons; the "
+                    "Camera tab shows where it goes."),
+        "wifi_scan": tr("List the Wi-Fi networks the robot sees where it stands, with their "
+                        "signal, in the “Wi-Fi networks seen” layer (a survey does it on its "
+                        "way, every 15 s)."),
         "robot_survey_install": tr("Install a Wi-Fi recorder on the robot: it records the "
                                    "signal whenever the robot moves, even when QGIS is closed."),
         "robot_survey_import": tr("Bring the readings recorded on the robot into the "
@@ -247,6 +255,7 @@ class ValetudoPlugin:
         self._new_action("home", tr("Return to dock"), lambda *_: self.control("home"))
         self._new_action("zone", tr("Clean a zone…"), self.activate_zone_tool, checkable=True)
         self._new_action("goto", tr("Go to…"), self.activate_goto_tool, checkable=True)
+        self._new_action("drive", tr("Drive by hand…"), self.drive_robot)
         dock_labels = {"locate": tr("Locate"), "empty_dock": tr("Empty bin"),
                        "mop_wash": tr("Wash mops"), "mop_dry": tr("Dry mops")}
         for key in ("locate", "empty_dock", "mop_wash", "mop_dry"):
@@ -260,6 +269,7 @@ class ValetudoPlugin:
         self._new_action("wifi_survey", tr("Record Wi-Fi survey"), self.toggle_wifi_survey,
                          checkable=True)
         self._new_action("wifi_map", tr("Build Wi-Fi map"), self.build_wifi_map)
+        self._new_action("wifi_scan", tr("Scan Wi-Fi networks here"), self.scan_wifi_here)
         self._new_action("robot_survey_install", tr("Record Wi-Fi on the robot…"),
                          self.install_robot_survey)
         self._new_action("robot_survey_import", tr("Import Wi-Fi from the robot"),
@@ -387,6 +397,7 @@ class ValetudoPlugin:
         self._live_at_start = False
         QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._start_live_at_start)
         self._job_survey_warned = False   # see _on_job_started
+        self._drive = None   # the remote control window, while open
 
         # Setting up the panel and its layers' watchers can mark the empty start-up
         # project as modified: QGIS, opening a project given at launch (--project, as
@@ -432,7 +443,7 @@ class ValetudoPlugin:
             return
         try:
             self.layers.persist()
-            if self.survey is not None and self.survey.layer() is not None:
+            if self.survey is not None:   # its points and the networks seen, if any
                 self.survey.persist()
         except OSError as exc:
             self._message(tr("Could not save the robot's layers next to the project: {error}")
@@ -554,6 +565,7 @@ class ValetudoPlugin:
         if self.panel is not None:
             self.panel.attach(self.client)
         self.client.fetch_capabilities(quiet=True)   # retried once the robot answers
+        self.client.start_streams()   # state and map pushed live by Valetudo
         self._ensure_robot_survey()   # started again if the robot has rebooted
         self._start_history()
         return self.client
@@ -669,7 +681,7 @@ class ValetudoPlugin:
         if not load_settings()["notify_dock"]:
             return
         client = self._get_client(prompt=False)
-        if client is not None:
+        if client is not None and not client.streaming("attributes"):
             client.fetch_attributes(quiet=True)
 
     def _on_attributes(self, attributes):
@@ -908,9 +920,58 @@ class ValetudoPlugin:
         if not self.layers.exists():
             client.fetch_map()   # points are only meaningful on top of the robot's map
         self._prepare_project()
-        self.survey.start(client, load_settings())
+        self.survey.start(client, load_settings(), scan=self.capabilities is not None
+                          and "WifiScanCapability" in self.capabilities)
         self._message(tr("Recording the Wi-Fi signal: start a cleaning, then click "
                          "“Record Wi-Fi survey” again when done."), Qgis.MessageLevel.Info)
+
+    def drive_robot(self, *_):
+        """The remote control window (one at a time)."""
+        client = self._get_client()
+        if not client:
+            return
+        if self._drive is not None:
+            try:
+                self._drive.raise_()
+                self._drive.activateWindow()
+                return
+            except RuntimeError:   # closed (deleted on close)
+                self._drive = None
+        caps = self.capabilities or set()
+        capability = (drive_dialog.STEPS if drive_dialog.HIGH_RES not in caps
+                      and drive_dialog.STEPS in caps else drive_dialog.HIGH_RES)
+        self._drive = drive_dialog.DriveDialog(client, capability, self.iface.mainWindow())
+        self._drive.destroyed.connect(lambda *_: setattr(self, "_drive", None))
+        self._drive.show()
+        if self.panel is not None:   # see where it goes
+            self.panel.show_tab("camera")
+
+    def scan_wifi_here(self, *_):
+        """One scan of the Wi-Fi networks, at the robot's position on the map."""
+        client = self._get_client()
+        if not client or not self._ensure_project():
+            return
+        robot = self.layers.layer("robot")
+        position = next((f.geometry().asPoint() for f in robot.getFeatures()
+                         if f["type"] == "robot_position"), None) if robot is not None else None
+        if position is None:
+            self._message(tr("Show the map first (Show on map)."), Qgis.MessageLevel.Info)
+            client.fetch_map()
+            return
+
+        def done(networks):
+            try:
+                client.wifiScanReceived.disconnect(done)
+            except (TypeError, RuntimeError):
+                pass
+            self.survey.cfg = self.survey.cfg or load_settings()
+            count = self.survey.add_networks(networks, QgsPointXY(position))
+            self._message(tr("{n} Wi-Fi network(s) seen by the robot here.").format(n=count),
+                          Qgis.MessageLevel.Success if count else Qgis.MessageLevel.Info)
+
+        client.wifiScanReceived.connect(done)
+        client.fetch_wifi_scan(quiet=False)
+        self._message(tr("Scanning the Wi-Fi networks from the robot…"), Qgis.MessageLevel.Info)
 
     def _on_wifi_sample(self, count):
         if self.panel is not None:

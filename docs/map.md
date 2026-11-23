@@ -16,7 +16,10 @@ centimetres, no CRS), in a *Valetudo* group:
 
 ## Show on map
 
-**🗺 Show on map** (in the status strip) loads the map and refreshes the robot live.
+**🗺 Show on map** (in the status strip) loads the map and refreshes the robot live:
+Valetudo pushes the map and the robot's state as they change, so the position, the
+status and the dock follow within a second (when that live stream cannot be
+opened, the plugin asks every few seconds instead, as before).
 The map stays where you put it; to keep the robot in view (recentring only when it
 nears the edge), tick *Keep the robot in view* in the settings, *UI configuration*.
 Click again to stop.

@@ -3743,5 +3743,57 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>{n} wall line(s) drawn, from the outline of the floor.</source>
         <translation>{n} ligne(s) de murs tracée(s), d'après le contour du sol.</translation>
     </message>
+    <message>
+        <source>Drive the robot</source>
+        <translation>Piloter le robot</translation>
+    </message>
+    <message>
+        <source>Switching manual control on…</source>
+        <translation>Activation du pilotage manuel…</translation>
+    </message>
+    <message>
+        <source>Manual control on.</source>
+        <translation>Pilotage manuel activé.</translation>
+    </message>
+    <message>
+        <source>Speed</source>
+        <translation>Vitesse</translation>
+    </message>
+    <message>
+        <source>The robot refused: {error}</source>
+        <translation>Le robot a refusé : {error}</translation>
+    </message>
+    <message>
+        <source>Drive by hand…</source>
+        <translation>Piloter à la main…</translation>
+    </message>
+    <message>
+        <source>Drive the robot by hand, with the arrow keys or the buttons; the Camera tab shows where it goes.</source>
+        <translation>Piloter le robot à la main, avec les flèches ou les boutons ; l'onglet Caméra montre où il va.</translation>
+    </message>
+    <message>
+        <source>List the Wi-Fi networks the robot sees where it stands, with their signal, in the “Wi-Fi networks seen” layer (a survey does it on its way, every 15 s).</source>
+        <translation>Lister les réseaux Wi-Fi que le robot voit là où il est, avec leur signal, dans la couche « Réseaux Wi-Fi vus » (un relevé le fait en chemin, toutes les 15 s).</translation>
+    </message>
+    <message>
+        <source>Scan Wi-Fi networks here</source>
+        <translation>Scanner les réseaux Wi-Fi ici</translation>
+    </message>
+    <message>
+        <source>Scanning the Wi-Fi networks from the robot…</source>
+        <translation>Scan des réseaux Wi-Fi depuis le robot…</translation>
+    </message>
+    <message>
+        <source>{n} Wi-Fi network(s) seen by the robot here.</source>
+        <translation>{n} réseau(x) Wi-Fi vu(s) par le robot ici.</translation>
+    </message>
+    <message>
+        <source>Wi-Fi networks seen</source>
+        <translation>Réseaux Wi-Fi vus</translation>
+    </message>
+    <message>
+        <source>Hold the arrow keys (or W A S D, Z Q S D), or the buttons. The robot stops when you let go, and stays where it is when this window closes.</source>
+        <translation>Maintenez les flèches (ou Z Q S D, W A S D), ou les boutons. Le robot s'arrête quand vous relâchez, et reste où il est quand cette fenêtre se ferme.</translation>
+    </message>
 </context>
 </TS>

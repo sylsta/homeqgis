@@ -17,6 +17,7 @@ from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import QgsApplication, QgsNetworkAccessManager, QgsPointXY
 
 from .coords import q2v
+from .sse import EventStream
 
 COMMAND_KEYS = ("start", "pause", "stop", "home", "segments", "zone", "goto",
                 "fan_speed", "water_usage", "camera_light",
@@ -54,6 +55,7 @@ class ValetudoClient(QObject):
     currentStatisticsReceived = pyqtSignal(list)
     totalStatisticsReceived = pyqtSignal(list)
     wifiReceived = pyqtSignal(dict)
+    wifiScanReceived = pyqtSignal(list)        # networks the robot sees: bssid, details
     eventsReceived = pyqtSignal(list)
     presetsReceived = pyqtSignal(str, list)   # capability name, preset names
     toggleReceived = pyqtSignal(str, bool)     # capability name, enabled
@@ -77,7 +79,14 @@ class ValetudoClient(QObject):
         self._map_pending = False
         self._peek_pending = False
         self._timer = QTimer(self)
-        self._timer.timeout.connect(lambda: self.fetch_map(quiet=True))
+        self._timer.timeout.connect(self._poll_map)
+        # Pushed by Valetudo as they change (sse.py); polling stays the fallback
+        self._streams = {}
+        for kind, path in (("attributes", "/robot/state/attributes/sse"),
+                           ("map", "/robot/state/map/sse")):
+            stream = EventStream(self.nam, lambda p=path: self._request(p), self)
+            stream.eventReceived.connect(lambda name, data, k=kind: self._on_event(k, data))
+            self._streams[kind] = stream
 
     # -- plumbing -----------------------------------------------------------
 
@@ -222,6 +231,26 @@ class ValetudoClient(QObject):
         self._get("/robot/capabilities/WifiConfigurationCapability",
                   lambda d: self.wifiReceived.emit(d or {}), quiet=quiet)
 
+    def manual_control(self, capability, action, velocity=None, angle=None, command=None,
+                       on_done=None, on_error=None):
+        """Valetudo's manual control (drive_dialog.py): action "enable", "disable" or
+        "move", with a vector (HighResolutionManualControlCapability) or a step
+        command (ManualControlCapability). Quiet: sent several times a second."""
+        payload = {"action": action}
+        if action == "move" and command is not None:
+            payload["movementCommand"] = command
+        elif action == "move":
+            payload["vector"] = {"velocity": float(velocity or 0), "angle": float(angle or 0)}
+        body = QByteArray(json.dumps(payload).encode())
+        self._track(self.nam.put(self._request(f"/robot/capabilities/{capability}"), body),
+                    on_done, quiet=True, on_error=on_error)
+
+    def fetch_wifi_scan(self, quiet=True):
+        """The Wi-Fi networks the robot sees (WifiScanCapability). Valetudo answers
+        within about 2 s, with the last finished scan if a new one takes longer."""
+        self._get("/robot/capabilities/WifiScanCapability",
+                  lambda d: self.wifiScanReceived.emit(self._as_list(d)), quiet=quiet)
+
     def fetch_events(self, quiet=False):
         self._get("/events", lambda d: self.eventsReceived.emit(self._as_list(d)), quiet=quiet)
 
@@ -293,6 +322,8 @@ class ValetudoClient(QObject):
         """Stop polling and cancel the requests under way, before deleting the client:
         their answers would otherwise arrive for an object that no longer exists."""
         self._timer.stop()
+        for stream in self._streams.values():
+            stream.stop()
         for reply in list(self._replies):
             try:
                 reply.finished.disconnect()
@@ -302,6 +333,34 @@ class ValetudoClient(QObject):
             except (TypeError, RuntimeError):   # already finished or deleted
                 pass
         self._replies.clear()
+
+    # -- live (server-sent events) -----------------------------------------------
+
+    def start_streams(self):
+        for stream in self._streams.values():
+            stream.start()
+
+    def streaming(self, kind):
+        """True while Valetudo pushes this ("attributes" or "map"): no need to poll it."""
+        stream = self._streams.get(kind)
+        return stream is not None and stream.alive()
+
+    def _on_event(self, kind, data):
+        try:
+            payload = json.loads(data)
+        except ValueError:
+            return
+        self.reachable.emit(True)
+        if kind == "attributes":
+            self.attributesReceived.emit(self._as_list(payload))
+        elif isinstance(payload, dict):
+            self.mapPeeked.emit(payload)
+            if self._timer.isActive():   # "Show on map": the layers follow it too
+                self.mapReceived.emit(payload)
+
+    def _poll_map(self):
+        if not self.streaming("map"):
+            self.fetch_map(quiet=True)
 
     def start_polling(self, interval_ms=2000):
         """Background map refresh: failures are reported through reachable() only."""

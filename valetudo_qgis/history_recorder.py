@@ -110,7 +110,8 @@ class HistoryRecorder(QObject):
         if self.tracker.outing is None:
             return
         self._ticks += 1
-        client.peek_map()
+        if not client.streaming("map"):   # else the position is pushed (mapPeeked)
+            client.peek_map()
         if self._ticks % WIFI_EVERY == 0:
             client.fetch_wifi(quiet=True)
         if self._ticks % STATISTICS_EVERY == 0 and \

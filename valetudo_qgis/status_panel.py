@@ -709,6 +709,7 @@ class ValetudoPanel(QgsDockWidget):
         # Clean: [Clean everything] [Clean room(s)], then [Clean a zone…] [Go to…]
         put(self.clean_grid, ["start"], row=0)
         put(self.clean_grid, ["zone", "goto"], row=1)
+        put(self.clean_grid, ["drive"], row=2, hide=True)   # if the robot can be driven
         # Action bar: [Dock] next to the big button
         if "home" in act:
             self._dock_button = self._button(act["home"])
@@ -764,6 +765,7 @@ class ValetudoPanel(QgsDockWidget):
             action.changed.connect(self._update_dock_group)
         # Wi-Fi: recording with QGIS open, recorder on the robot, maps from the Pi
         put(self.wifi_qgis_grid, ["wifi_survey", "wifi_map"])
+        put(self.wifi_qgis_grid, ["wifi_scan"], row=1, hide=True)   # if the robot can scan
         put(self.wifi_robot_grid, ["robot_survey_install", "robot_survey_import",
                                    "robot_survey_remove"], columns=1)
         if "pi_wifi_map" in act:
@@ -2072,11 +2074,14 @@ class ValetudoPanel(QgsDockWidget):
         client = self.client
         if client is None:
             return
-        client.fetch_attributes(quiet=True)
+        # (pushed by Valetudo as they change when its live streams are open)
+        if not client.streaming("attributes"):
+            client.fetch_attributes(quiet=True)
         client.fetch_events(quiet=True)
         client.fetch_host_info(quiet=True)
         # Position comes from the map: read it unless live tracking just delivered one.
-        if time.monotonic() - self._last_map >= self._timer.interval() / 1000 * 0.9:
+        if (not client.streaming("map")
+                and time.monotonic() - self._last_map >= self._timer.interval() / 1000 * 0.9):
             client.peek_map()
         caps = self.capabilities or set()
         if "ConsumableMonitoringCapability" in caps:

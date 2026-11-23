@@ -31,6 +31,9 @@ WIFI_RASTER = "robot_wifi_signal.tif"
 IDW_ALGORITHM = "qgis:idwinterpolation"   # from the Processing plugin
 ROLE = "wifi/points"
 ENGLISH_NAME = "Wi-Fi survey"
+NETWORKS_ROLE = "wifi/networks"   # every network the robot sees (WifiScanCapability)
+NETWORKS_LAYER = "networks"       # in WIFI_FILE
+SCAN_EVERY_S = 15                 # a scan takes a few seconds on the robot
 
 
 def wifi_folder():
@@ -42,7 +45,21 @@ COLOR_BAD, COLOR_FAIR, COLOR_GOOD = "#d7191c", "#fdd835", "#1a9641"
 
 
 def layer_names():
-    return {"points": tr("Wi-Fi survey"), "map": tr("Wi-Fi signal (dBm)")}
+    return {"points": tr("Wi-Fi survey"), "map": tr("Wi-Fi signal (dBm)"),
+            "networks": tr("Wi-Fi networks seen")}
+
+
+def network_rows(networks):
+    """Valetudo's scan (bssid, details: ssid, signal) -> rows, strongest first."""
+    rows = []
+    for net in networks or []:
+        details = net.get("details") or {}
+        signal = details.get("signal")
+        if not net.get("bssid") or signal is None:
+            continue
+        rows.append({"bssid": str(net["bssid"]).lower(),
+                     "ssid": str(details.get("ssid") or ""), "signal": int(signal)})
+    return sorted(rows, key=lambda row: -row["signal"])
 
 
 def _robot_position(map_json):
@@ -67,6 +84,11 @@ class WifiSurvey(QObject):
         self._pos, self._pos_t, self._last = None, 0.0, None
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
+        self._scan_timer = QTimer(self)   # the other networks, if the robot can scan
+        self._scan_timer.setInterval(SCAN_EVERY_S * 1000)
+        self._scan_timer.timeout.connect(self._scan)
+        self._networks_id = None
+        self._last_scan_pos = None
 
     # -- layer ----------------------------------------------------------------------
 
@@ -80,13 +102,64 @@ class WifiSurvey(QObject):
             self._layer_id = lyr.id() if lyr is not None else None
         return lyr
 
+    def networks_layer(self):
+        lyr = self.project.mapLayer(self._networks_id) if self._networks_id else None
+        if lyr is None:
+            lyr = adopt(self.project, NETWORKS_ROLE, {layer_names()["networks"]},
+                        Qgis.GeometryType.Point)
+            self._networks_id = lyr.id() if lyr is not None else None
+        return lyr
+
     def persist(self):
-        """Once the project is saved, the points go to wifi/robot_wifi.gpkg.
-        Raises OSError."""
+        """Once the project is saved, the points go to wifi/robot_wifi.gpkg (and the
+        networks seen, if any). Raises OSError."""
         folder = wifi_folder()
         if folder is None:
             return False
-        return make_permanent(self.layer(), os.path.join(folder, WIFI_FILE), "points")
+        path = os.path.join(folder, WIFI_FILE)
+        moved = make_permanent(self.layer(), path, "points") if self.layer() else False
+        if self.networks_layer() is not None:
+            moved |= make_permanent(self.networks_layer(), path, NETWORKS_LAYER)
+        return moved
+
+    def _ensure_networks_layer(self):
+        lyr = self.networks_layer()
+        if lyr is not None:
+            return lyr
+        lyr = QgsVectorLayer("Point", layer_names()["networks"], "memory")
+        lyr.setCrs(QgsCoordinateReferenceSystem())
+        lyr.dataProvider().addAttributes([
+            QgsField("ssid", QMetaType.Type.QString),
+            QgsField("bssid", QMetaType.Type.QString),
+            QgsField("signal", QMetaType.Type.Int),
+            QgsField("time", QMetaType.Type.QDateTime),
+        ])
+        lyr.updateFields()
+        tag(lyr, NETWORKS_ROLE)
+        style_wifi_points(lyr, self.cfg)
+        self.project.addMapLayer(lyr, False)
+        self.project.layerTreeRoot().insertLayer(0, lyr)
+        lyr.setCrs(QgsCoordinateReferenceSystem())
+        self._networks_id = lyr.id()
+        try:
+            self.persist()
+        except OSError:
+            pass
+        return lyr
+
+    def add_networks(self, networks, position):
+        """One scan, at position: a point per network. Returns how many."""
+        rows = network_rows(networks)
+        if not rows or position is None:
+            return 0
+        lyr = self._ensure_networks_layer()
+        now = QDateTime.currentDateTime()
+        features = [new_feature(lyr, QgsGeometry.fromPointXY(position),
+                                dict(row, time=now)) for row in rows]
+        lyr.dataProvider().addFeatures(features)
+        lyr.updateExtents()
+        lyr.triggerRepaint()
+        return len(features)
 
     def _ensure_layer(self):
         lyr = self.layer()
@@ -150,23 +223,30 @@ class WifiSurvey(QObject):
     def is_running(self):
         return self._timer.isActive()
 
-    def start(self, client, cfg):
+    def start(self, client, cfg, scan=False):
+        """scan: the robot can list the Wi-Fi networks it sees: record them too."""
         self.stop()
         self.client, self.cfg = client, cfg
         self._pos, self._pos_t, self._last = None, 0.0, None
+        self._last_scan_pos = None
         self._ensure_layer()
         client.mapReceived.connect(self._on_map)
         client.mapPeeked.connect(self._on_map)
         client.wifiReceived.connect(self._on_wifi)
         self._timer.start(int(cfg["wifi_interval_s"] * 1000))
+        if scan:
+            client.wifiScanReceived.connect(self._on_scan)
+            self._scan_timer.start()
         self._tick()
 
     def stop(self):
         self._timer.stop()
+        self._scan_timer.stop()
         if self.client is not None:
             for sig, slot in ((self.client.mapReceived, self._on_map),
                               (self.client.mapPeeked, self._on_map),
-                              (self.client.wifiReceived, self._on_wifi)):
+                              (self.client.wifiReceived, self._on_wifi),
+                              (self.client.wifiScanReceived, self._on_scan)):
                 try:
                     sig.disconnect(slot)
                 except (TypeError, RuntimeError):
@@ -178,6 +258,21 @@ class WifiSurvey(QObject):
             return
         self.client.peek_map()            # position (does not touch the map layers)
         self.client.fetch_wifi(quiet=True)
+
+    def _scan(self):
+        """A scan, if the robot has moved since the last one (else the same again)."""
+        if self.client is None or self._pos is None:
+            return
+        if self._last_scan_pos is not None and \
+                self._last_scan_pos.distance(self._pos) < self.cfg["wifi_min_step_cm"]:
+            return
+        self.client.fetch_wifi_scan()
+
+    def _on_scan(self, networks):
+        if self._pos is None or time.monotonic() - self._pos_t > self.cfg["wifi_max_pos_age_s"]:
+            return
+        if self.add_networks(networks, self._pos):
+            self._last_scan_pos = self._pos
 
     def _on_map(self, map_json):
         pos = _robot_position(map_json)

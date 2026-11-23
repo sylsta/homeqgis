@@ -37,6 +37,11 @@ They apply at once.
 - **Clean room(s)** — the ticked rooms.
 - **Clean a zone…** — draw a rectangle on the map.
 - **Go to…** — click a point on the map.
+- **Drive by hand…** — a remote control (robots that offer Valetudo's manual
+  control): hold the arrow keys (or W A S D, Z Q S D) or the window's buttons; the
+  robot stops when you let go. The speed is set in the window. The Camera tab opens
+  so that you see where it goes. Closing the window leaves the robot where it is
+  (**Return to dock** sends it home).
 - **Passes** (1 to 3) — for rooms and zones.
 
 *Clean a zone…* and *Go to…* stay pressed until you have drawn the zone or clicked

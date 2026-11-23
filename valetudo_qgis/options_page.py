@@ -136,6 +136,7 @@ class ValetudoOptionsPage(QgsOptionsPageWidget):
         labels = {"status_panel": tr("{name} panel").format(name=PLUGIN_NAME),
                   "live": tr("Show on map"), "start": tr("Clean everything"),
                   "home": tr("Return to dock"), "zone": tr("Clean a zone…"), "goto": tr("Go to…"),
+                  "drive": tr("Drive by hand…"),
                   "settings": tr("Settings…"), "pick_rooms": tr("Pick rooms on the map"),
                   "place_sensor": tr("Place a sensor on the map"),
                   "edit_restrictions": tr("Edit no-go zones and walls"),

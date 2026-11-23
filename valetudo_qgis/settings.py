@@ -32,7 +32,7 @@ KEY_FOLLOW_ROBOT = "valetudo/follow_robot"   # Show on map recentres on the robo
 KEY_TOOLBAR = "valetudo/toolbar"   # the commands in the plugin's toolbar, comma-separated
 # The commands the toolbar can show, in its order; the map tools (last four) only
 # while "Show on map" is on.
-TOOLBAR_CHOICES = ("status_panel", "live", "start", "home", "zone", "goto", "settings",
+TOOLBAR_CHOICES = ("status_panel", "live", "start", "home", "zone", "goto", "drive", "settings",
                    "pick_rooms", "place_sensor", "edit_restrictions", "send_restrictions")
 DEFAULT_TOOLBAR = ("status_panel", "pick_rooms", "place_sensor", "edit_restrictions",
                    "send_restrictions")
