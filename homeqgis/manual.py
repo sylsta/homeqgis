@@ -10,7 +10,7 @@ import os
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 
-ONLINE = "https://sylsta.github.io/qgis-valetudo/"
+ONLINE = "https://sylsta.github.io/homeqgis/"
 LOCAL = os.path.join(os.path.dirname(__file__), "doc")
 
 

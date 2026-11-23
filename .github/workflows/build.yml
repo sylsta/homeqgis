@@ -54,7 +54,7 @@ jobs:
           name: homeqgis
           path: dist/homeqgis.zip
 
-  # The manual on GitHub Pages: https://sylsta.github.io/qgis-valetudo/
+  # The manual on GitHub Pages: https://sylsta.github.io/homeqgis/
   pages:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

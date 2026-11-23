@@ -19,7 +19,7 @@
 Each change on GitHub builds a ready-to-install zip, with the French translation
 and this manual included.
 
-1. On the [repository's *Actions* page](https://github.com/sylsta/qgis-valetudo/actions),
+1. On the [repository's *Actions* page](https://github.com/sylsta/homeqgis/actions),
    open the latest successful **Build plugin** run.
 2. Download the **homeqgis** artifact and unzip it once: you get
    `homeqgis.zip`.

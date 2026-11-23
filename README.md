@@ -33,7 +33,7 @@ French translation and manual included); `make` lists the other commands
 
 ## User manual
 
-**[sylsta.github.io/qgis-valetudo](https://sylsta.github.io/qgis-valetudo/)**, also
+**[sylsta.github.io/homeqgis](https://sylsta.github.io/homeqgis/)**, also
 inside the plugin: *Plugins › HomeQGIS › User manual*, or *User manual* in the
 panel's ⋮ menu. Its sources are the Markdown files of [`docs/`](docs/), built with
 [MkDocs](https://www.mkdocs.org/) (Material theme) by the CI, which publishes them and

@@ -52,5 +52,5 @@ click *Show on map* again.
 ## Reporting a problem
 
 *⋮ › About… › Copy system information*, then open an issue on
-[GitHub](https://github.com/sylsta/qgis-valetudo/issues) with it, and what you did.
+[GitHub](https://github.com/sylsta/homeqgis/issues) with it, and what you did.
 The *HomeQGIS* tab of the QGIS *Log Messages* panel often says more.

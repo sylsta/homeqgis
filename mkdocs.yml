@@ -1,8 +1,8 @@
 site_name: HomeQGIS — user manual
 site_description: A home control centre in QGIS — Valetudo robot, Home Assistant, servers
-site_url: https://sylsta.github.io/qgis-valetudo/
-repo_url: https://github.com/sylsta/qgis-valetudo
-repo_name: sylsta/qgis-valetudo
+site_url: https://sylsta.github.io/homeqgis/
+repo_url: https://github.com/sylsta/homeqgis
+repo_name: sylsta/homeqgis
 edit_uri: edit/main/docs/
 copyright: Sylvain THÉRY — GPL-2.0-or-later
 
