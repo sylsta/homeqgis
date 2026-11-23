@@ -317,7 +317,8 @@ class ValetudoPlugin:
         # the toolbar, says "DomotiQGIS panel" and follows it.
         self.panel.setWindowTitle(PLUGIN_NAME)
         dock_toggle = self.panel.toggleViewAction()
-        action = QAction(icon(APP_ICON), tr("{name} panel").format(name=PLUGIN_NAME), win)
+        action = QAction(tr("{name} panel").format(name=PLUGIN_NAME), win)
+        action.setIcon(icon(APP_ICON))
         action.setCheckable(True)
         action.setToolTip(dock_toggle.toolTip() or action.text())
         action.triggered.connect(lambda _checked: dock_toggle.trigger())
