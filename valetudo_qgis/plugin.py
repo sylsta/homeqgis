@@ -312,9 +312,17 @@ class ValetudoPlugin:
         self._update_robot_survey_actions()   # the History tab's "From the robot"
         self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
         self.panel.hide()
-        self.act["status_panel"] = self.panel.toggleViewAction()
-        self.act["status_panel"].setText(tr("{name} panel").format(name=PLUGIN_NAME))
-        self.act["status_panel"].setIcon(icon(APP_ICON))
+        # The dock's own toggle keeps its title: QGIS lists it in View › Panels and adds
+        # "panel" itself ("DomotiQGIS panel panel" otherwise). Ours, for the menu and
+        # the toolbar, says "DomotiQGIS panel" and follows it.
+        self.panel.setWindowTitle(PLUGIN_NAME)
+        dock_toggle = self.panel.toggleViewAction()
+        action = QAction(icon(APP_ICON), tr("{name} panel").format(name=PLUGIN_NAME), win)
+        action.setCheckable(True)
+        action.setToolTip(dock_toggle.toolTip() or action.text())
+        action.triggered.connect(lambda _checked: dock_toggle.trigger())
+        dock_toggle.toggled.connect(action.setChecked)
+        self.act["status_panel"] = action
         self.panel.setWindowIcon(icon(APP_ICON))   # shown when the panel floats
 
         self.toolbar = self.iface.addToolBar(PLUGIN_NAME)
