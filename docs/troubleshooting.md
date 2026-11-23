@@ -53,4 +53,4 @@ click *Show on map* again.
 
 *⋮ › About… › Copy system information*, then open an issue on
 [GitHub](https://github.com/sylsta/qgis-valetudo/issues) with it, and what you did.
-The *DomotiQGIS* tab of the QGIS *Log Messages* panel often says more.
+The *HomeQGIS* tab of the QGIS *Log Messages* panel often says more.

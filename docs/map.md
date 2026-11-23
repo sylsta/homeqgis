@@ -35,7 +35,7 @@ you open yourself is left untouched.
 
 While it is on:
 
-- the **map tools** appear in the DomotiQGIS toolbar (those ticked in the settings'
+- the **map tools** appear in the HomeQGIS toolbar (those ticked in the settings'
   [UI configuration](settings.md#ui-configuration));
 - a small **status card** (state, battery, job) sits in the map's top right corner,
   so you can follow the robot with the panel closed.
@@ -116,7 +116,7 @@ metres keeps some hundreds of small images.
 
 ## What the history tells
 
-From *Plugins › DomotiQGIS*, over the last days you choose (30 by default):
+From *Plugins › HomeQGIS*, over the last days you choose (30 by default):
 
 - **Days since each place was cleaned…** — the floor coloured by how long since
   the robot last cleaned it: green today, then yellow, orange, red, and hatched
@@ -133,7 +133,7 @@ Both need the history, recorded by the plugin while QGIS runs (see
 ## Map changes
 
 The plugin keeps the first map of each day in `map/versions/` (once the project
-is saved). *Plugins › DomotiQGIS › **Compare the map with an earlier day…*** shows
+is saved). *Plugins › HomeQGIS › **Compare the map with an earlier day…*** shows
 in a *Map changes since …* layer what differs from the map of the day you choose:
 
 | Colour | Change |
@@ -149,14 +149,14 @@ gives each change's area in m².
 
 ## The walls as lines
 
-*Plugins › DomotiQGIS › **Draw the walls as lines*** draws the outline of the floor,
+*Plugins › HomeQGIS › **Draw the walls as lines*** draws the outline of the floor,
 simplified, in *Valetudo - wall lines*: the walls as seen from inside the rooms,
 with their length in m, for plans and measurements. It is kept in
 `map/robot_map.gpkg` once the project is saved; run it again after a new map.
 
 ## The robot's map itself
 
-In *Plugins › DomotiQGIS*, shown only for robots that offer them:
+In *Plugins › HomeQGIS*, shown only for robots that offer them:
 
 - **Map snapshots…** — the copies of its map the robot keeps (some Roborock
   robots): **Show on the map** draws one over the current map, in a *Map snapshot

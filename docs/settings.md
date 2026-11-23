@@ -1,6 +1,6 @@
 # Settings
 
-*Settings › Options › DomotiQGIS*, or **⚙** in the panel. As on every Options page,
+*Settings › Options › HomeQGIS*, or **⚙** in the panel. As on every Options page,
 **OK** applies and **Cancel** saves nothing.
 
 ## Servers
@@ -100,7 +100,7 @@ map opacity, clipping to the rooms. See [Wi-Fi](robot/wifi.md).
 
 - **Order of the robot's tabs**: drag them, or ▲ ▼; *Default order* (Clean,
   Schedule, History, Camera, Wi-Fi, Maintenance).
-- **Toolbar**: the commands the DomotiQGIS toolbar shows: the panel, *Show on map*,
+- **Toolbar**: the commands the HomeQGIS toolbar shows: the panel, *Show on map*,
   *Clean everything*, *Dock*, *Clean a zone…*, *Go to…*, *Settings…*, and the map
   tools (right column; shown while *Show on map* is on, the advanced ones only with
   *Advanced tools*).
@@ -112,7 +112,7 @@ map opacity, clipping to the rooms. See [Wi-Fi](robot/wifi.md).
 ## Backup
 
 - **Save now** writes the whole configuration to a new file,
-  `valetudo_qgis_config_YYYYMMDD_HHMMSS.json` (all the settings, the servers, the room
+  `homeqgis_config_YYYYMMDD_HHMMSS.json` (all the settings, the servers, the room
   groups, the panel's choices), in a folder of your choice (by default
   `valetudo_backups` in the QGIS profile folder). It first applies the values on
   screen, as OK does.

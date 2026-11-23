@@ -6,7 +6,7 @@ and the manual uses it at the next build: nothing else to change.
 
 | File | What to show |
 |---|---|
-| `overview.png` | QGIS with the DomotiQGIS panel docked and the robot's map shown |
+| `overview.png` | QGIS with the HomeQGIS panel docked and the robot's map shown |
 | `strip.png` | the panel's status strip (robot state, battery, camera and map buttons, servers, settings and menu) |
 | `panel.png` | the whole panel, Robot section, Clean tab |
 | `setup-assistant.png` | the setup assistant, second page (the servers) |

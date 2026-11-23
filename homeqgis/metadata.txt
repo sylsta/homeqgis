@@ -1,10 +1,10 @@
 [general]
-name=DomotiQGIS
+name=HomeQGIS
 qgisMinimumVersion=3.38
 qgisMaximumVersion=4.99
 supportsQt6=True
 description=Home control centre in QGIS: a Valetudo robot vacuum on the map, the Home Assistant devices of the home, and the servers around them
-about=DomotiQGIS controls a robot vacuum running Valetudo (local, cloud-free) from QGIS, with its map as real GIS layers: live tracking, cleaning by room, group or zone drawn on the map, Go to, rooms and no-go zones edited with the QGIS tools, Valetudo's schedule, cleaning history, camera with recording, Wi-Fi signal surveys and maps, consumables and dock station. A Home section shows the Home Assistant devices by room, with history charts, comparisons, exports and replay on the map. It also watches any number of servers (Raspberry Pi, Home Assistant, Kodi, Linux and Windows computers, web services): status, SSH console and log, remote desktop over VNC or RDP, Kodi playback. Settings in one Options page, tokens and passwords encrypted, timestamped backups, a user manual. Available in English and French.
+about=HomeQGIS controls a robot vacuum running Valetudo (local, cloud-free) from QGIS, with its map as real GIS layers: live tracking, cleaning by room, group or zone drawn on the map, Go to, rooms and no-go zones edited with the QGIS tools, Valetudo's schedule, cleaning history, camera with recording, Wi-Fi signal surveys and maps, consumables and dock station. A Home section shows the Home Assistant devices by room, with history charts, comparisons, exports and replay on the map. It also watches any number of servers (Raspberry Pi, Home Assistant, Kodi, Linux and Windows computers, web services): status, SSH console and log, remote desktop over VNC or RDP, Kodi playback. Settings in one Options page, tokens and passwords encrypted, timestamped backups, a user manual. Available in English and French.
 version=0.3.0
 changelog=
     0.3.0 - Renamed DomotiQGIS. Side-tab panel with a Status tab (robot, Raspberry Pi, Home Assistant, NUC, Kodi); Home Assistant, NUC and Kodi; SSH consoles and logs (robot, Pi, Home Assistant, NUC); schedule week view; Wi-Fi survey on the robot and maps on the Pi; camera recording; encrypted tokens and passwords; configuration backups and reset; About page
@@ -17,7 +17,7 @@ repository=https://github.com/sylsta/qgis-valetudo
 tracker=https://github.com/sylsta/qgis-valetudo/issues
 license=GPL-2.0-or-later
 category=Plugins
-icon=icons/domotiqgis.svg
+icon=icons/homeqgis.svg
 tags=valetudo,robot,vacuum,indoor,home automation,domotique,home assistant,raspberry pi,kodi,wifi,ssh
 experimental=True
 deprecated=False

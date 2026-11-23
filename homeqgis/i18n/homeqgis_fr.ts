@@ -2148,8 +2148,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Charger un fichier…</translation>
     </message>
     <message>
-        <source>Each save writes a new file named with its date and time (valetudo_qgis_config_YYYYMMDD_HHMMSS.json): all the settings of these tabs, the room groups and the panel's choices. Saving first applies the values on screen, as OK does. Loading a file replaces the current configuration at once, without waiting for OK.</source>
-        <translation>Chaque enregistrement écrit un nouveau fichier nommé avec sa date et son heure (valetudo_qgis_config_AAAAMMJJ_HHMMSS.json) : tous les paramètres de ces onglets, les groupes de pièces et les choix du panneau. L’enregistrement applique d’abord les valeurs affichées, comme OK. Charger un fichier remplace aussitôt la configuration actuelle, sans attendre OK.</translation>
+        <source>Each save writes a new file named with its date and time (homeqgis_config_YYYYMMDD_HHMMSS.json): all the settings of these tabs, the room groups and the panel's choices. Saving first applies the values on screen, as OK does. Loading a file replaces the current configuration at once, without waiting for OK.</source>
+        <translation>Chaque enregistrement écrit un nouveau fichier nommé avec sa date et son heure (homeqgis_config_AAAAMMJJ_HHMMSS.json) : tous les paramètres de ces onglets, les groupes de pièces et les choix du panneau. L’enregistrement applique d’abord les valeurs affichées, comme OK. Charger un fichier remplace aussitôt la configuration actuelle, sans attendre OK.</translation>
     </message>
     <message>
         <source>Reset config</source>
@@ -3360,8 +3360,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Manuel d'utilisation</translation>
     </message>
     <message>
-        <source>Display error: {error} (details in the DomotiQGIS log)</source>
-        <translation>Erreur d'affichage : {error} (détails dans le journal DomotiQGIS)</translation>
+        <source>Display error: {error} (details in the HomeQGIS log)</source>
+        <translation>Erreur d'affichage : {error} (détails dans le journal HomeQGIS)</translation>
     </message>
     <message>
         <source>updated at {time}</source>
@@ -3540,12 +3540,12 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Le réveiller (Wake-on-LAN) : {mac}</translation>
     </message>
     <message>
-        <source>DomotiQGIS as an app</source>
-        <translation>DomotiQGIS en application</translation>
+        <source>HomeQGIS as an app</source>
+        <translation>HomeQGIS en application</translation>
     </message>
     <message>
-        <source>Creates a launcher that starts QGIS like an app: in a profile of its own, with the robot project, the robot on the map and the DomotiQGIS panel, the other toolbars and panels hidden. Your usual QGIS is not changed.</source>
-        <translation>Crée un lanceur qui démarre QGIS comme une application : dans un profil à part, avec le projet du robot, le robot sur la carte et le panneau DomotiQGIS, les autres barres d'outils et panneaux masqués. Votre QGIS habituel n'est pas modifié.</translation>
+        <source>Creates a launcher that starts QGIS like an app: in a profile of its own, with the robot project, the robot on the map and the HomeQGIS panel, the other toolbars and panels hidden. Your usual QGIS is not changed.</source>
+        <translation>Crée un lanceur qui démarre QGIS comme une application : dans un profil à part, avec le projet du robot, le robot sur la carte et le panneau HomeQGIS, les autres barres d'outils et panneaux masqués. Votre QGIS habituel n'est pas modifié.</translation>
     </message>
     <message>
         <source>The QGIS profile of the app: its plugins and settings are kept apart from your usual QGIS.</source>
@@ -3568,8 +3568,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Entrée dans le menu des applications</translation>
     </message>
     <message>
-        <source>Run this again after changing the settings here to copy them again. In the app, Plugins › DomotiQGIS › App mode shows QGIS's toolbars and panels again.</source>
-        <translation>Relancez ceci après avoir modifié les paramètres ici pour les recopier. Dans l'application, Extensions › DomotiQGIS › Mode application réaffiche les barres d'outils et panneaux de QGIS.</translation>
+        <source>Run this again after changing the settings here to copy them again. In the app, Plugins › HomeQGIS › App mode shows QGIS's toolbars and panels again.</source>
+        <translation>Relancez ceci après avoir modifié les paramètres ici pour les recopier. Dans l'application, Extensions › HomeQGIS › Mode application réaffiche les barres d'outils et panneaux de QGIS.</translation>
     </message>
     <message>
         <source>Create</source>
@@ -3584,8 +3584,8 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Mode application</translation>
     </message>
     <message>
-        <source>Only the map and DomotiQGIS on screen; untick to show QGIS's toolbars and panels.</source>
-        <translation>Seulement la carte et DomotiQGIS à l'écran ; décochez pour afficher les barres d'outils et panneaux de QGIS.</translation>
+        <source>Only the map and HomeQGIS on screen; untick to show QGIS's toolbars and panels.</source>
+        <translation>Seulement la carte et HomeQGIS à l'écran ; décochez pour afficher les barres d'outils et panneaux de QGIS.</translation>
     </message>
     <message>
         <source>The plugin was copied into it (no link possible here): run this again after updating the plugin.</source>
@@ -4230,6 +4230,10 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Return to dock (recorded by the camera)</source>
         <translation>Retour à la base (filmé par la caméra)</translation>
+    </message>
+    <message>
+        <source>The plugin's previous version, DomotiQGIS, is still installed: uninstall it (Plugins › Manage and Install Plugins › Installed). Your settings and projects are kept.</source>
+        <translation>La version précédente de l'extension, DomotiQGIS, est encore installée : désinstallez-la (Extensions › Installer/Gérer les extensions › Installées). Vos réglages et projets sont conservés.</translation>
     </message>
 </context>
 </TS>

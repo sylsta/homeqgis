@@ -15,11 +15,11 @@ from .settings import load_settings
 class AppLauncherDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(tr("DomotiQGIS as an app"))
+        self.setWindowTitle(tr("HomeQGIS as an app"))
         layout = QVBoxLayout(self)
         intro = QLabel(tr(
             "Creates a launcher that starts QGIS like an app: in a profile of its own, with "
-            "the robot project, the robot on the map and the DomotiQGIS panel, the other "
+            "the robot project, the robot on the map and the HomeQGIS panel, the other "
             "toolbars and panels hidden. Your usual QGIS is not changed."))
         intro.setWordWrap(True)
         layout.addWidget(intro)
@@ -46,7 +46,7 @@ class AppLauncherDialog(QDialog):
             box.setChecked(True)
             layout.addWidget(box)
         note = QLabel(tr("Run this again after changing the settings here to copy them "
-                         "again. In the app, Plugins › DomotiQGIS › App mode shows QGIS's "
+                         "again. In the app, Plugins › HomeQGIS › App mode shows QGIS's "
                          "toolbars and panels again."))
         note.setWordWrap(True)
         note.setStyleSheet("color: palette(mid);")

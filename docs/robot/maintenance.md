@@ -47,5 +47,5 @@ and port are in the robot's server settings.
 After a reboot, or with **⋮ › Watch robot boot** (e.g. after the power button), the
 plugin follows the startup and times each stage: offline, network up, Valetudo
 answers, firmware ready, camera available, then the total and the end of
-Valetudo's own log. Lines go to the *Boot log* section and to the *DomotiQGIS* tab
+Valetudo's own log. Lines go to the *Boot log* section and to the *HomeQGIS* tab
 of the QGIS *Log Messages* panel.

@@ -91,7 +91,7 @@ def held_script(command, close_prompt):
 
 def write_script(command, close_prompt):
     """Write the script (readable and runnable by this user only); return its path."""
-    handle, path = tempfile.mkstemp(prefix="domotiqgis_ssh_", suffix=".sh")
+    handle, path = tempfile.mkstemp(prefix="homeqgis_ssh_", suffix=".sh")
     with os.fdopen(handle, "w", encoding="utf-8") as script:
         script.write(held_script(command, close_prompt))
     os.chmod(path, stat.S_IRWXU)

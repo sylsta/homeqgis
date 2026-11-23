@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Compile valetudo_qgis/i18n/*.ts into .qm files loaded by the plugin.
+# Compile homeqgis/i18n/*.ts into .qm files loaded by the plugin.
 # Needs Qt's lrelease (Debian/Ubuntu: qttools5-dev-tools or qt6-l10n-tools;
 # Windows/OSGeo4W: shipped with the Qt tools).
 set -eu
@@ -18,6 +18,6 @@ if [ -z "$LRELEASE" ]; then
     exit 1
 fi
 
-for ts in valetudo_qgis/i18n/*.ts; do
+for ts in homeqgis/i18n/*.ts; do
     "$LRELEASE" "$ts" -qm "${ts%.ts}.qm"
 done

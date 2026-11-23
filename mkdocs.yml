@@ -1,4 +1,4 @@
-site_name: DomotiQGIS — user manual
+site_name: HomeQGIS — user manual
 site_description: A home control centre in QGIS — Valetudo robot, Home Assistant, servers
 site_url: https://sylsta.github.io/qgis-valetudo/
 repo_url: https://github.com/sylsta/qgis-valetudo
@@ -64,7 +64,7 @@ nav:
       - On the map: map.md
   - The home: home.md
   - The servers: servers.md
-  - DomotiQGIS as an app: app.md
+  - HomeQGIS as an app: app.md
   - Settings: settings.md
   - Files: files.md
   - Extras:

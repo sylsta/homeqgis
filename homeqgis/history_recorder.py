@@ -27,7 +27,7 @@ ACTIVE_POLL_MS = 2_000
 WRITE_EVERY_S = 10
 WIFI_EVERY = 3           # active polls: the Wi-Fi signal every 6 s
 STATISTICS_EVERY = 5     # active polls: the area cleaned every 10 s
-LOG_TAG = "DomotiQGIS"
+LOG_TAG = "HomeQGIS"
 
 # plugin command (client.commandSent key) -> activity it starts
 COMMAND_ACTIVITY = {"start": "cleaning", "segments": "cleaning", "zone": "cleaning",

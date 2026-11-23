@@ -21,8 +21,8 @@ and this manual included.
 
 1. On the [repository's *Actions* page](https://github.com/sylsta/qgis-valetudo/actions),
    open the latest successful **Build plugin** run.
-2. Download the **valetudo_qgis** artifact and unzip it once: you get
-   `valetudo_qgis.zip`.
+2. Download the **homeqgis** artifact and unzip it once: you get
+   `homeqgis.zip`.
 3. In QGIS: *Plugins › Manage and Install Plugins › Install from ZIP*, choose that
    file, then **Install Plugin**.
 
@@ -30,11 +30,11 @@ and this manual included.
 
 1. In QGIS: *Settings › User Profiles › Open Active Profile Folder*.
 2. Go to `python/plugins/` (create it if needed).
-3. Copy the `valetudo_qgis` folder of the repository there, or better, make a
+3. Copy the `homeqgis` folder of the repository there, or better, make a
    symbolic link to it, so that every `git pull` is picked up.
 4. Optional, for the French interface: `scripts/compile_translations.sh` (needs
    Qt's `lrelease`).
-5. Restart QGIS and enable **DomotiQGIS** in *Plugins › Manage and Install Plugins ›
+5. Restart QGIS and enable **HomeQGIS** in *Plugins › Manage and Install Plugins ›
    Installed*.
 
 !!! tip
@@ -50,7 +50,7 @@ mkdocs-material):
 |---|---|
 | `make` | lists the commands, with the version |
 | `make check` | the same checks as GitHub (syntax, names, translations, forms) |
-| `make zip` | `dist/valetudo_qgis-<version>.zip`: checks, French translation, user manual inside |
+| `make zip` | `dist/homeqgis-<version>.zip`: checks, French translation, user manual inside |
 | `make install` | copies the plugin into a QGIS profile (`PROFILE=default`) |
 | `make release` | the zip of a committed and pushed `main`, tagged `v<version>` (raise `version` in `metadata.txt` first) |
 | `make clean` | removes what the build made |
@@ -63,3 +63,10 @@ to a GitHub release.
 Install the new zip the same way: QGIS replaces the plugin. Your settings, room
 groups and history are kept. Before a big update, a
 [configuration backup](settings.md#backup) does no harm.
+
+!!! note "From DomotiQGIS"
+    The plugin was called **DomotiQGIS** (folder `valetudo_qgis`). HomeQGIS is
+    installed beside it, not over it: uninstall DomotiQGIS in *Plugins › Manage and
+    Install Plugins › Installed* (HomeQGIS reminds you while both are there). Your
+    settings, tokens, projects, history and backups are kept. If you used the
+    [app launcher](app.md), create it again: it now uses a *HomeQGIS* profile.

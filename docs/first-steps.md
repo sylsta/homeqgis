@@ -3,7 +3,7 @@
 ## The setup assistant
 
 When QGIS starts and no robot is set, a message offers **Set up…**. The assistant
-(also in *Plugins › DomotiQGIS › Setup assistant…*) asks:
+(also in *Plugins › HomeQGIS › Setup assistant…*) asks:
 
 1. **Your robot's address**, e.g. `http://192.168.1.23`, with a test.
 2. **The other servers you have**: Raspberry Pi, NUC (Linux computer), Home
@@ -16,7 +16,7 @@ settings.
 
 ## Adding the robot by hand
 
-1. *Settings › Options › DomotiQGIS* (or *Plugins › DomotiQGIS › Settings…*).
+1. *Settings › Options › HomeQGIS* (or *Plugins › HomeQGIS › Settings…*).
 2. Tab **Servers**: **Add › Valetudo robot**.
 3. Enter its **Address** (e.g. `http://192.168.1.23`), then **Test connection**: it
    answers with the robot's model.
@@ -26,8 +26,8 @@ See [Settings › Servers](settings.md#servers) for the other server types.
 
 ## Opening the panel
 
-Click the DomotiQGIS button in the toolbar (or *Plugins › DomotiQGIS ›
-DomotiQGIS panel*). The panel docks on the side of QGIS like any panel: drag its
+Click the HomeQGIS button in the toolbar (or *Plugins › HomeQGIS ›
+HomeQGIS panel*). The panel docks on the side of QGIS like any panel: drag its
 title to move it, or float it in its own window.
 
 Then click **🗺 Show on map** in the panel's status strip: the robot's map appears
@@ -49,7 +49,7 @@ The robot's [map](map.md#saved-with-the-project), [history](robot/history.md) an
 so the plugin never loads them into a project that has never been saved.
 
 The first time you click **🗺 Show on map** in such a project, it offers to save it
-as the **robot project** (in a folder of its own, `~/DomotiQGIS/robot.qgz` by
+as the **robot project** (in a folder of its own, `~/HomeQGIS/robot.qgz` by
 default). Once a robot project is set, it offers to open it instead. The robot
 project is shown, and can be changed, in the settings' *Robot* tab, *General*.
 

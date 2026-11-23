@@ -56,11 +56,14 @@ def add_photo_action(layer):
     """An action on the obstacles layer (Identify, attribute table): the photo."""
     from qgis.core import QgsAction
     manager = layer.actions()
-    if any(a.name() == tr("Show the photo") for a in manager.actions()):
-        return
     code = ("from qgis.utils import plugins\n"
             f"p = plugins.get({PLUGIN_PACKAGE!r})\n"
             "if p is not None: p.show_obstacle_photo('[% \"obstacle_id\" %]')")
+    for existing in manager.actions():
+        if existing.name() == tr("Show the photo"):
+            if existing.command() == code:
+                return
+            manager.removeAction(existing.id())   # saved by an older version (its folder)
     action = QgsAction(QgsAction.ActionType.GenericPython, tr("Show the photo"), code,
                        "", False, "", {"Feature", "Canvas"})
     manager.addAction(action)
@@ -404,6 +407,8 @@ class ValetudoLayers:
         rooms = self.layer("rooms")
         if rooms is not None and rooms.featureCount():
             self._signature = rooms.customProperty(SIGNATURE_KEY)
+        if self.layer("obstacles") is not None:
+            add_photo_action(self.layer("obstacles"))   # up to date with this version
 
     def _ensure(self):
         """Find the layers in the project, create the missing ones.

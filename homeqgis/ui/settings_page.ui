@@ -584,7 +584,7 @@
           <bool>true</bool>
          </property>
          <property name="text">
-          <string>Each save writes a new file named with its date and time (valetudo_qgis_config_YYYYMMDD_HHMMSS.json): all the settings of these tabs, the room groups and the panel's choices. Saving first applies the values on screen, as OK does. Loading a file replaces the current configuration at once, without waiting for OK.</string>
+          <string>Each save writes a new file named with its date and time (homeqgis_config_YYYYMMDD_HHMMSS.json): all the settings of these tabs, the room groups and the panel's choices. Saving first applies the values on screen, as OK does. Loading a file replaces the current configuration at once, without waiting for OK.</string>
          </property>
         </widget>
        </item>

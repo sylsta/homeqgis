@@ -20,7 +20,7 @@ LOG_PATH = "/tmp/valetudo.log"
 INITIAL_LINES = 200
 RETRY_MS = 10_000
 STATES = ("connecting", "following", "ssh_missing", "failed", "stopped")
-MARKER = "__valetudo_qgis_log__"   # printed first: the login worked, even if the log is empty
+MARKER = "__homeqgis_log__"   # printed first: the login worked, even if the log is empty
 
 
 COMMAND_PREFIX = "|"   # a "path" starting with it is a command to follow, e.g. "|ha core logs -f"

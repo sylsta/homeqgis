@@ -1,8 +1,8 @@
-# DomotiQGIS: checks, translations, manual and the plugin's zip.
+# HomeQGIS: checks, translations, manual and the plugin's zip.
 #
 #   make            this help
 #   make check      the same checks as the CI (syntax, names, translations, forms)
-#   make zip        dist/valetudo_qgis-<version>.zip, ready for QGIS
+#   make zip        dist/homeqgis-<version>.zip, ready for QGIS
 #                   (Plugins › Manage and Install Plugins › Install from ZIP)
 #   make release    the zip, from a clean and pushed main, tagged v<version>
 #   make install    the plugin into a QGIS profile (PROFILE=default), for testing
@@ -12,7 +12,7 @@
 # with mkdocs-material (pip install "mkdocs>=1.6,<2" "mkdocs-material>=9.5,<10").
 # PyQt5 for the forms check (python3-pyqt5); without it, that check is skipped.
 
-PLUGIN  := valetudo_qgis
+PLUGIN  := homeqgis
 PYTHON  ?= python3
 VERSION := $(shell sed -n 's/^version=//p' $(PLUGIN)/metadata.txt)
 DIST    := dist
@@ -66,7 +66,7 @@ release:
 	@! git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null \
 		|| { echo "Tag v$(VERSION) exists: raise the version in $(PLUGIN)/metadata.txt."; exit 1; }
 	$(MAKE) zip
-	git tag -a "v$(VERSION)" -m "DomotiQGIS $(VERSION)"
+	git tag -a "v$(VERSION)" -m "HomeQGIS $(VERSION)"
 	@echo
 	@echo "Tagged v$(VERSION). To publish it: git push origin v$(VERSION)"
 	@echo "then attach $(ZIP) to a GitHub release (gh release create v$(VERSION) $(ZIP))."

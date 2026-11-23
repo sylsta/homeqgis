@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Add the DomotiQGIS monitors to Uptime Kuma (2.x), on the Raspberry Pi.
+ * Add the HomeQGIS monitors to Uptime Kuma (2.x), on the Raspberry Pi.
  *
  *   node uptime_kuma_monitors.js
  *

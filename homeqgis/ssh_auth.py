@@ -39,11 +39,11 @@ def askpass_script():
     """Path of the helper (written once per session, without the password)."""
     folder = tempfile.gettempdir()
     if sys.platform.startswith("win"):
-        path = os.path.join(folder, "valetudo_qgis_askpass.cmd")
+        path = os.path.join(folder, "homeqgis_askpass.cmd")
         content = ("@powershell -NoProfile -NonInteractive -Command "
                    f"\"[Console]::Out.WriteLine($env:{PASSWORD_ENV})\"\r\n")
     else:
-        path = os.path.join(folder, f"valetudo_qgis_askpass_{os.getuid()}.sh")
+        path = os.path.join(folder, f"homeqgis_askpass_{os.getuid()}.sh")
         content = f"#!/bin/sh\nprintf '%s\\n' \"${PASSWORD_ENV}\"\n"
     try:
         with open(path, encoding="utf-8") as existing:

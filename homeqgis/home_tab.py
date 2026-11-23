@@ -223,10 +223,10 @@ class HomeTab(QWidget):
                     self.detail.reload()   # the selected device's graphs too
             except Exception as exc:   # shown, rather than refreshing no more silently
                 import traceback
-                QgsMessageLog.logMessage(traceback.format_exc(), "DomotiQGIS",
+                QgsMessageLog.logMessage(traceback.format_exc(), "HomeQGIS",
                                          Qgis.MessageLevel.Warning)
                 self.lbl_status.setText(tr("Display error: {error} (details in the "
-                                           "DomotiQGIS log)").format(error=exc))
+                                           "HomeQGIS log)").format(error=exc))
 
         def failed(error):
             self._busy = False

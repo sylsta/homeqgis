@@ -1,5 +1,5 @@
 """The servers the plugin works with: a list built in Settings › Options ›
-DomotiQGIS, tab Servers. Each has a type, which says what the plugin can do
+HomeQGIS, tab Servers. Each has a type, which says what the plugin can do
 with it:
 
     valetudo   a robot running Valetudo (one is active at a time)

@@ -1,4 +1,4 @@
-"""Plugin settings, stored in QgsSettings (edited in Settings › Options › DomotiQGIS).
+"""Plugin settings, stored in QgsSettings (edited in Settings › Options › HomeQGIS).
 
 Passwords are never stored in clear text: credentials go through the QGIS
 authentication manager (QgsAuthConfigSelect), which encrypts them.
@@ -9,7 +9,7 @@ from qgis.core import QgsSettings
 
 from . import servers as servers_model
 
-PLUGIN_NAME = "DomotiQGIS"   # shown in menus, titles and messages (not translated)
+PLUGIN_NAME = "HomeQGIS"   # shown in menus, titles and messages (not translated)
 
 # -- the plugin's options ---------------------------------------------------------------
 KEY_INTERVAL = "valetudo/interval_s"

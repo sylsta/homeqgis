@@ -66,6 +66,7 @@ KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
 KEY_ROBOT_SURVEY_DIR = "valetudo/robot_survey_dir"   # set once the survey is on the robot
 MIN_ZONE_SIZE_CM = 20  # smaller rectangles are treated as accidental clicks
 WATCH_INTERVAL_MS = 60_000  # background check of the dock station, panel open or not
+OLD_PLUGIN_FOLDER = "valetudo_qgis"   # the plugin's folder when it was called DomotiQGIS
 PI_WARNING_S = 20   # a Wi-Fi map from the Pi that could not be loaded: shown this long
 LIVE_AT_START_DELAY_MS = 3_000   # after QGIS has opened a project given at launch
 LIVE_AT_START_WINDOW_MS = 60_000  # robot answering later than that: no automatic start
@@ -247,7 +248,7 @@ class ValetudoPlugin:
         # In the app's profile only: QGIS's other toolbars and panels hidden, or not
         if QgsSettings().contains(KEY_APP_MODE):
             self._new_action("app_mode", tr("App mode"), self._on_app_mode, checkable=True)
-            self.act["app_mode"].setToolTip(tr("Only the map and DomotiQGIS on screen; "
+            self.act["app_mode"].setToolTip(tr("Only the map and HomeQGIS on screen; "
                                                "untick to show QGIS's toolbars and panels."))
             self.act["app_mode"].setChecked(QgsSettings().value(KEY_APP_MODE, True, type=bool))
         self._new_action("dust_age", tr("Days since each place was cleaned…"),
@@ -338,8 +339,8 @@ class ValetudoPlugin:
         self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
         self.panel.hide()
         # The dock's own toggle keeps its title: QGIS lists it in View › Panels and adds
-        # "panel" itself ("DomotiQGIS panel panel" otherwise). Ours, for the menu and
-        # the toolbar, says "DomotiQGIS panel" and follows it.
+        # "panel" itself ("HomeQGIS panel panel" otherwise). Ours, for the menu and
+        # the toolbar, says "HomeQGIS panel" and follows it.
         self.panel.setWindowTitle(PLUGIN_NAME)
         dock_toggle = self.panel.toggleViewAction()
         action = QAction(tr("{name} panel").format(name=PLUGIN_NAME), win)
@@ -431,6 +432,7 @@ class ValetudoPlugin:
         self._live_at_start = False
         QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._start_live_at_start)
         self._job_survey_warned = False   # see _on_job_started
+        QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._warn_old_plugin)
         self._drive = None   # the remote control window, while open
         self._pending_item = None   # the "new map?" question, while shown
 
@@ -838,6 +840,20 @@ class ValetudoPlugin:
                     canvas.refresh()
                 return
 
+    def _warn_old_plugin(self):
+        """The plugin was called DomotiQGIS, in a "valetudo_qgis" folder: if that one is
+        still installed, both run (two panels, two toolbars, the robot polled twice)."""
+        from qgis.utils import plugins
+        old = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           OLD_PLUGIN_FOLDER)
+        if self._unloaded or (OLD_PLUGIN_FOLDER not in plugins and not os.path.isdir(old)):
+            return
+        self.iface.messageBar().pushMessage(
+            PLUGIN_NAME, tr("The plugin's previous version, DomotiQGIS, is still installed: "
+                            "uninstall it (Plugins › Manage and Install Plugins › Installed). "
+                            "Your settings and projects are kept."),
+            level=Qgis.MessageLevel.Warning, duration=0)
+
     # -- the robot project ------------------------------------------------------------
 
     @staticmethod
@@ -907,7 +923,7 @@ class ValetudoPlugin:
 
     def _save_as_robot_project(self, current=""):
         # A folder of its own: map/, history/ and wifi/ are created next to the project
-        start = current or os.path.join(os.path.expanduser("~"), "DomotiQGIS", "robot.qgz")
+        start = current or os.path.join(os.path.expanduser("~"), "HomeQGIS", "robot.qgz")
         folder = os.path.dirname(start)
         made = not os.path.isdir(folder)
         if made:
@@ -1347,7 +1363,7 @@ class ValetudoPlugin:
         if not result["launchers"]:
             lines.append(tr("No launcher: start it with {command}").format(
                 command=" ".join(result["command"])))
-        QMessageBox.information(self.iface.mainWindow(), tr("DomotiQGIS as an app"),
+        QMessageBox.information(self.iface.mainWindow(), tr("HomeQGIS as an app"),
                                 "\n".join(lines))
 
     def _on_app_mode(self, checked):

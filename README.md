@@ -1,4 +1,4 @@
-# DomotiQGIS
+# HomeQGIS
 
 *Domotique* + QGIS: a home control centre in QGIS. It started as a learning
 project to display and control a [Valetudo](https://valetudo.cloud) robot vacuum
@@ -11,14 +11,14 @@ Available in English and French (the UI follows the QGIS interface language).
 
 **From a build (recommended):** each push to `main` builds a ready-to-install zip,
 with compiled translations, in the *Actions* tab of this repository (artifact
-`valetudo_qgis`). Unzip the downloaded artifact once to get `valetudo_qgis.zip`,
+`homeqgis`). Unzip the downloaded artifact once to get `homeqgis.zip`,
 then in QGIS: *Plugins > Manage and Install Plugins > Install from ZIP*.
 
 **For development:**
 
 1. In QGIS: *Settings > User Profiles > Open Active Profile Folder*.
 2. Go to `python/plugins/` (create it if needed).
-3. Copy the `valetudo_qgis` folder of this repository there, or better, symlink it
+3. Copy the `homeqgis` folder of this repository there, or better, symlink it
    so that every `git pull` is picked up directly.
 4. Optional, for the French UI: run `scripts/compile_translations.sh`
    (needs Qt's `lrelease`).
@@ -27,14 +27,14 @@ then in QGIS: *Plugins > Manage and Install Plugins > Install from ZIP*.
 Tip: install the **Plugin Reloader** plugin to reload the code after each change
 without restarting QGIS.
 
-**Building the zip:** `make zip` gives `dist/valetudo_qgis-<version>.zip` (checks,
+**Building the zip:** `make zip` gives `dist/homeqgis-<version>.zip` (checks,
 French translation and manual included); `make` lists the other commands
 (`check`, `install`, `release`, `clean`).
 
 ## User manual
 
 **[sylsta.github.io/qgis-valetudo](https://sylsta.github.io/qgis-valetudo/)**, also
-inside the plugin: *Plugins › DomotiQGIS › User manual*, or *User manual* in the
+inside the plugin: *Plugins › HomeQGIS › User manual*, or *User manual* in the
 panel's ⋮ menu. Its sources are the Markdown files of [`docs/`](docs/), built with
 [MkDocs](https://www.mkdocs.org/) (Material theme) by the CI, which publishes them and
 puts them in the plugin zip.
@@ -129,12 +129,12 @@ lists them; replace a placeholder PNG with the real one under the same name.
 | `ui/settings_page.ui`        | Layout of the settings page (Qt Designer)               |
 | `ui/status_panel.ui`         | Layout of the status panel (Qt Designer)                |
 | `i18n.py`                    | `tr()` helper and translator loading                    |
-| `i18n/valetudo_qgis_fr.ts`   | French translation (Qt Linguist format)                 |
+| `i18n/homeqgis_fr.ts`   | French translation (Qt Linguist format)                 |
 
 ## Editing the forms
 
 The settings page and the status panel are laid out in Qt Designer files
-(`valetudo_qgis/ui/*.ui`); open them with Qt Designer, or with *QGIS Designer*
+(`homeqgis/ui/*.ui`); open them with Qt Designer, or with *QGIS Designer*
 (shipped with QGIS, it knows the QGIS widgets). The Python code only fills them
 at run time (rooms, consumables, dock components, the command buttons) and wires
 them.
@@ -151,17 +151,17 @@ them.
 ## Translations
 
 - Every user-facing string is written in English and wrapped in `tr("...")`
-  (from `valetudo_qgis/i18n.py`), with a string literal as argument, or typed in a
+  (from `homeqgis/i18n.py`), with a string literal as argument, or typed in a
   Qt Designer form.
   Use named placeholders and `.format()`: `tr("Command “{command}” sent.").format(command=...)`.
-- Add each new string to `valetudo_qgis/i18n/valetudo_qgis_fr.ts` (by hand or with
+- Add each new string to `homeqgis/i18n/homeqgis_fr.ts` (by hand or with
   Qt Linguist).
 - `python3 scripts/check_translations.py` lists missing translations (also run in CI).
 - `python3 scripts/check_names.py` reports undefined names, e.g. a missing import
   (also run in CI).
 - `scripts/compile_translations.sh` builds the `.qm` files. They are not committed.
 
-To add a language, copy the `.ts` file to `valetudo_qgis_<lang>.ts`, set its
+To add a language, copy the `.ts` file to `homeqgis_<lang>.ts`, set its
 `language` attribute and translate the entries.
 
 ## Roadmap

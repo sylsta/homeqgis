@@ -8,7 +8,7 @@ from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.PyQt.QtWidgets import QApplication
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), "icons")
-APP_ICON = "domotiqgis"   # the plugin's own icon: Plugin Manager, menu, panel, Options, About
+APP_ICON = "homeqgis"   # the plugin's own icon: Plugin Manager, menu, panel, Options, About
 LOGO = "valetudo_logo_small"   # Valetudo's: the robot (status strip, Status tab)
 RPI_LOGO = "rpi_logo"   # Raspberry Pi: the official logo, cropped to the berry
 HA_LOGO = "HA-lockup-stacked-color-on-dark"   # Home Assistant, in the panel's strip

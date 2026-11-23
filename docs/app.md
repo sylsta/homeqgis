@@ -1,19 +1,19 @@
-# DomotiQGIS as an app
+# HomeQGIS as an app
 
-DomotiQGIS can start like an app of its own: a desktop shortcut opens QGIS in a
+HomeQGIS can start like an app of its own: a desktop shortcut opens QGIS in a
 **profile of its own**, with the [robot project](first-steps.md#the-robot-project),
-the robot on the map and the DomotiQGIS panel. QGIS's other toolbars and panels are
+the robot on the map and the HomeQGIS panel. QGIS's other toolbars and panels are
 hidden. Your usual QGIS, its plugins and settings are not changed.
 
 It is still QGIS underneath: QGIS must be installed, and it starts as fast as QGIS.
 
 ## Create the launcher
 
-*Plugins › DomotiQGIS › Create the app launcher…*:
+*Plugins › HomeQGIS › Create the app launcher…*:
 
 - **Robot project**: the project the app opens (the robot project of the settings,
   else the current one).
-- **Profile**: the QGIS profile of the app, `DomotiQGIS` by default.
+- **Profile**: the QGIS profile of the app, `HomeQGIS` by default.
 - **Copy the settings**: servers, options and room groups, as they are now.
 - **Share the tokens and passwords**: the app uses the authentication database of
   your usual profile itself (QGIS's `--authdbdirectory`), so they stay in step, and
@@ -26,16 +26,16 @@ What it creates:
 
 | | |
 |---|---|
-| Profile | `…/QGIS3/profiles/DomotiQGIS/`, with the plugin enabled in it |
+| Profile | `…/QGIS3/profiles/HomeQGIS/`, with the plugin enabled in it |
 | Plugin | a link to the plugin of your usual profile, so that it stays up to date (a copy where a link is not possible: then run the command again after updating the plugin) |
-| Linux | `DomotiQGIS` launchers (`.desktop`) on the desktop and in `~/.local/share/applications` |
-| Windows | `DomotiQGIS` shortcuts on the desktop and in the Start menu |
-| macOS | a small `DomotiQGIS.app` on the desktop and in `~/Applications` |
+| Linux | `HomeQGIS` launchers (`.desktop`) on the desktop and in `~/.local/share/applications` |
+| Windows | `HomeQGIS` shortcuts on the desktop and in the Start menu |
+| macOS | a small `HomeQGIS.app` on the desktop and in `~/Applications` |
 
 The launcher runs:
 
 ```
-qgis --profile DomotiQGIS --profiles-path <QGIS folder> --nologo
+qgis --profile HomeQGIS --profiles-path <QGIS folder> --nologo
      --authdbdirectory <usual profile> --project <robot project>
 ```
 
@@ -44,14 +44,14 @@ run the command again from it.
 
 ## In the app
 
-- Only the map, the DomotiQGIS panel and toolbar, and the map navigation toolbar
+- Only the map, the HomeQGIS panel and toolbar, and the map navigation toolbar
   are shown. The menus stay.
 - The robot project opens and **Show on map** turns on once the robot answers.
 - QGIS remembers the last profile used and opens it when started on its own; it
   writes it when it exits. Once the app has exited, a small background task gives
   it back to the profile you used before starting the app, so that starting QGIS
   normally opens it again, not the app's.
-- *Plugins › DomotiQGIS › **App mode*** (only in the app's profile): untick it to
+- *Plugins › HomeQGIS › **App mode*** (only in the app's profile): untick it to
   show QGIS's toolbars and the Layers and Browser panels again; tick it to hide them.
 
 !!! tip "On Linux"

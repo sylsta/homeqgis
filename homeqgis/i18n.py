@@ -1,7 +1,7 @@
 """Internationalisation helpers.
 
 Source strings are written in English and wrapped in ``tr()``. Translations
-live in ``i18n/valetudo_qgis_<lang>.ts`` and are compiled to ``.qm`` files
+live in ``i18n/homeqgis_<lang>.ts`` and are compiled to ``.qm`` files
 (see ``scripts/compile_translations.sh``).
 """
 
@@ -34,7 +34,7 @@ def install_translator():
     Returns the QTranslator (keep a reference to it), or None if no
     translation is available, in which case the English source is shown.
     """
-    path = os.path.join(I18N_DIR, f"valetudo_qgis_{ui_language()}.qm")
+    path = os.path.join(I18N_DIR, f"homeqgis_{ui_language()}.qm")
     if not os.path.exists(path):
         return None
     translator = QTranslator()

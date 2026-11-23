@@ -18,7 +18,7 @@ import types
 import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PLUGIN = ROOT / "valetudo_qgis"
+PLUGIN = ROOT / "homeqgis"
 CONTEXT = "ValetudoQgis"
 
 
@@ -115,7 +115,7 @@ def main():
             print(f"{path.name}: OK ({len(required.get(path.name, []))} names checked)")
     for form in required:
         if not (PLUGIN / "ui" / form).exists():
-            print(f"{form}: loaded by the code but not found in valetudo_qgis/ui/")
+            print(f"{form}: loaded by the code but not found in homeqgis/ui/")
             ok = False
     return 0 if ok else 1
 

@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check Python syntax
-        run: python3 -m compileall -q valetudo_qgis scripts pi
+        run: python3 -m compileall -q homeqgis scripts pi
 
       - name: Check undefined names
         run: python3 scripts/check_names.py
@@ -36,7 +36,7 @@ jobs:
           pip install -q "mkdocs>=1.6,<2" "mkdocs-material>=9.5,<10"
           mkdocs build --strict -d site
           # also inside the plugin, opened by its "User manual" entry
-          rm -rf valetudo_qgis/doc && cp -r site valetudo_qgis/doc
+          rm -rf homeqgis/doc && cp -r site homeqgis/doc
 
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -46,13 +46,13 @@ jobs:
       - name: Package plugin
         run: |
           mkdir -p dist
-          zip -r dist/valetudo_qgis.zip valetudo_qgis \
-            -x '*__pycache__*' 'valetudo_qgis/i18n/*.ts'
+          zip -r dist/homeqgis.zip homeqgis \
+            -x '*__pycache__*' 'homeqgis/i18n/*.ts'
 
       - uses: actions/upload-artifact@v4
         with:
-          name: valetudo_qgis
-          path: dist/valetudo_qgis.zip
+          name: homeqgis
+          path: dist/homeqgis.zip
 
   # The manual on GitHub Pages: https://sylsta.github.io/qgis-valetudo/
   pages:

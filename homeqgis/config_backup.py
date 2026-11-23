@@ -27,7 +27,8 @@ from .settings import (HA_SSH_PASSWORD_SETTING, HA_TOKEN_SETTING, KODI_PASSWORD_
 FORMAT = "valetudo-qgis-config"
 VERSION = 1
 GROUP = "valetudo"
-PREFIX = "valetudo_qgis_config_"
+PREFIX = "homeqgis_config_"
+LEGACY_PREFIXES = ("valetudo_qgis_config_",)   # backups made before the plugin's renaming
 KEY_BACKUP_DIR = "valetudo/backup_dir"
 LEGACY_SECRET_KEYS = (HA_TOKEN_SETTING, HA_SSH_PASSWORD_SETTING, KODI_PASSWORD_SETTING)
 
@@ -52,7 +53,7 @@ def folder():
 
 
 def file_name(now=None):
-    """valetudo_qgis_config_20261118_211500.json"""
+    """homeqgis_config_20261118_211500.json"""
     now = now or QDateTime.currentDateTime()
     return f"{PREFIX}{now.toString('yyyyMMdd_HHmmss')}.json"
 
@@ -123,8 +124,9 @@ def backups(target_folder):
         return []
     found = []
     for name in names:
-        if name.startswith(PREFIX) and name.endswith(".json"):
-            stamp = QDateTime.fromString(name[len(PREFIX):len(PREFIX) + 15], "yyyyMMdd_HHmmss")
+        prefix = next((p for p in (PREFIX, *LEGACY_PREFIXES) if name.startswith(p)), None)
+        if prefix is not None and name.endswith(".json"):
+            stamp = QDateTime.fromString(name[len(prefix):len(prefix) + 15], "yyyyMMdd_HHmmss")
             if stamp.isValid():
                 found.append((os.path.join(target_folder, name), stamp))
     return sorted(found, key=lambda entry: entry[1].toMSecsSinceEpoch(), reverse=True)

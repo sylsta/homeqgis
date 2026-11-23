@@ -1,13 +1,13 @@
-# DomotiQGIS
+# HomeQGIS
 
 *Domotique* + QGIS: a home control centre inside QGIS.
 
-DomotiQGIS started as a way to show and drive a [Valetudo](https://valetudo.cloud)
+HomeQGIS started as a way to show and drive a [Valetudo](https://valetudo.cloud)
 robot vacuum from QGIS, locally and without any cloud. It now also watches and
 drives the home around it: Home Assistant and its devices, a Raspberry Pi, Linux and
 Windows computers, Kodi and any web service.
 
-![The DomotiQGIS panel next to the robot's map](images/overview.png)
+![The HomeQGIS panel next to the robot's map](images/overview.png)
 
 ## What it does
 

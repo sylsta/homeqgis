@@ -1,20 +1,20 @@
-"""DomotiQGIS as an app: QGIS started with a profile of its own, the robot project
+"""HomeQGIS as an app: QGIS started with a profile of its own, the robot project
 and only what the plugin needs on screen.
 
 create() sets up, from the profile in use:
 
-    <profiles>/DomotiQGIS/                     the profile (QGIS treats any folder there as one)
-        python/plugins/valetudo_qgis           the plugin: a link to this one (a copy where
+    <profiles>/HomeQGIS/                     the profile (QGIS treats any folder there as one)
+        python/plugins/homeqgis           the plugin: a link to this one (a copy where
                                                links are not possible)
         QGIS/QGIS3.ini                         the plugin enabled, "app mode" on, the robot
                                                project opened with the map; the plugin's
                                                settings copied, if asked
-        domotiqgis.png / .ico                  the launcher's icon
+        homeqgis.png / .ico                  the launcher's icon
 
 and a launcher: a .desktop file (Linux), a .lnk shortcut (Windows) or a small .app
 (macOS), on the desktop and in the applications menu. It runs
 
-    qgis --profile DomotiQGIS --profiles-path <path> --nologo
+    qgis --profile HomeQGIS --profiles-path <path> --nologo
          --authdbdirectory <this profile> --project <robot project>
 
 (--authdbdirectory: the tokens and passwords of this profile, shared if asked.)
@@ -36,8 +36,8 @@ from qgis.core import QgsApplication, QgsSettings
 
 from .icons import APP_ICON, icon
 
-APP_NAME = "DomotiQGIS"
-DEFAULT_PROFILE = "DomotiQGIS"
+APP_NAME = "HomeQGIS"
+DEFAULT_PROFILE = "HomeQGIS"
 PLUGIN_FOLDER = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
 # This profile is the app: only the plugin on screen. Outside "valetudo/", so that it
 # is never copied to another profile nor saved in a configuration backup.
@@ -226,7 +226,7 @@ def _location(kind):
 
 def _write_icons(folder):
     pixmap = icon(APP_ICON).pixmap(256, 256)
-    png, ico = os.path.join(folder, "domotiqgis.png"), os.path.join(folder, "domotiqgis.ico")
+    png, ico = os.path.join(folder, "homeqgis.png"), os.path.join(folder, "homeqgis.ico")
     pixmap.save(png, "PNG")
     if platform.system() == "Windows" and not pixmap.save(ico, "ICO"):
         ico = ""
@@ -257,7 +257,7 @@ def _launchers(folder, command, png, ico):
         return [_windows_shortcut(os.path.join(folder, f"{APP_NAME}.lnk"), command, ico)]
     if system == "Darwin":
         return [_mac_app(os.path.join(folder, f"{APP_NAME}.app"), command)]
-    path = os.path.join(folder, "domotiqgis.desktop")
+    path = os.path.join(folder, "homeqgis.desktop")
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(desktop_entry(command, png))
     os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -302,7 +302,7 @@ def _mac_app(path, command):
             '<plist version="1.0"><dict>'
             f"<key>CFBundleName</key><string>{APP_NAME}</string>"
             f"<key>CFBundleExecutable</key><string>{APP_NAME}</string>"
-            "<key>CFBundleIdentifier</key><string>io.github.sylsta.domotiqgis</string>"
+            "<key>CFBundleIdentifier</key><string>io.github.sylsta.homeqgis</string>"
             "<key>CFBundlePackageType</key><string>APPL</string>"
             "</dict></plist>\n")
     return path

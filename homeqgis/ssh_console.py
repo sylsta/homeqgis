@@ -26,8 +26,8 @@ from qgis.PyQt.QtCore import QObject, QProcess, pyqtSignal
 from . import ssh_auth
 from .ssh_reboot import CONNECT_TIMEOUT_S
 
-DONE_MARKER = "__valetudo_qgis_done__"
-CWD_MARKER = "__valetudo_qgis_cwd__"
+DONE_MARKER = "__homeqgis_done__"
+CWD_MARKER = "__homeqgis_cwd__"
 DONE_RE = re.compile(rf"^{DONE_MARKER} (\d+)$")
 CWD_RE = re.compile(rf"^{CWD_MARKER} (.*)$")
 STATES = ("connecting", "ready", "busy", "ssh_missing", "failed", "closed")
