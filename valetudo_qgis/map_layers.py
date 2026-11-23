@@ -559,6 +559,31 @@ class ValetudoLayers:
         lyr.triggerRepaint()
         return len(found)
 
+    def show_other_map(self, map_json, label):
+        """Another map of the robot (a snapshot), in a layer of its own over this one."""
+        default_ps = map_json.get("pixelSize", 5)
+        records = []
+        for layer in map_json.get("layers", []):
+            meta = layer.get("metaData") or {}
+            geom = _layer_geometry(layer, layer.get("pixelSize", default_ps))
+            if not geom.isEmpty():
+                records.append((geom, {
+                    "type": layer.get("type"),
+                    "segment_id": (str(meta["segmentId"]) if meta.get("segmentId") is not None
+                                   else None),
+                    "name": meta.get("name")}))
+        segment_ids = {r[1]["segment_id"] for r in records if r[1]["segment_id"]}
+        lyr = self._extra_layer("map/snapshot", tr("Map snapshot of {date}").format(date=label),
+                                "Polygon", [QgsField("type", STR), QgsField("segment_id", STR),
+                                            QgsField("name", STR)],
+                                _rooms_renderer(segment_ids))
+        lyr.setLabeling(_room_labeling())
+        lyr.setLabelsEnabled(True)
+        lyr.setOpacity(0.6)
+        replace_features(lyr, records)
+        lyr.triggerRepaint()
+        return len(records)
+
     def draw_wall_lines(self):
         """The walls as lines, kept in the map's file once the project is saved.
         Returns how many lines."""

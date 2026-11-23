@@ -28,7 +28,7 @@ from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
-from . import drive_dialog, map_changes
+from . import drive_dialog, map_admin, map_changes
 from .map_layers import ValetudoLayers, map_folder
 from .map_overlay import MapOverlay
 from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
@@ -90,6 +90,9 @@ REQUIRED_CAPABILITY = {
     "wifi_survey": "WifiConfigurationCapability",
     "wifi_scan": "WifiScanCapability",
     "drive": "HighResolutionManualControlCapability",
+    "map_snapshots": "MapSnapshotCapability",
+    "mapping_pass": "MappingPassCapability",
+    "map_reset": "MapResetCapability",
 }
 
 
@@ -101,8 +104,10 @@ MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
 ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
                     "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
-MENU = ["status_panel", "settings", "setup", "map_changes", "wall_lines", "app_launcher",
-        "app_mode", "manual"]
+MENU = ["status_panel", "settings", "setup", "map_changes", "wall_lines", "map_snapshots",
+        "mapping_pass", "map_reset", "app_launcher", "app_mode", "manual"]
+# Not shown at all (rather than greyed out) when the robot does not have them
+HIDDEN_UNSUPPORTED = {"map_snapshots", "mapping_pass", "map_reset"}
 APP_TOOLBARS = ("ValetudoToolbar", "mMapNavToolBar")   # kept on screen in app mode
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
@@ -242,6 +247,9 @@ class ValetudoPlugin:
         self._new_action("map_changes", tr("Compare the map with an earlier day…"),
                          self.compare_map)
         self._new_action("wall_lines", tr("Draw the walls as lines"), self.draw_wall_lines)
+        self._new_action("map_snapshots", tr("Map snapshots…"), self.show_map_snapshots)
+        self._new_action("mapping_pass", tr("New mapping pass…"), self.start_mapping_pass)
+        self._new_action("map_reset", tr("Reset the map…"), self.reset_map)
         self._new_action("manual", tr("User manual"), lambda *_: open_manual())
         self.act["manual"].setIcon(QgsApplication.getThemeIcon("/mActionHelpContents.svg"))
         # The settings are a page of Settings › Options; "Settings…" opens it.
@@ -407,6 +415,7 @@ class ValetudoPlugin:
         QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._start_live_at_start)
         self._job_survey_warned = False   # see _on_job_started
         self._drive = None   # the remote control window, while open
+        self._pending_item = None   # the "new map?" question, while shown
 
         # Setting up the panel and its layers' watchers can mark the empty start-up
         # project as modified: QGIS, opening a project given at launch (--project, as
@@ -621,6 +630,8 @@ class ValetudoPlugin:
             if not ok and action.isChecked():
                 self.iface.actionPan().trigger()   # leave a map tool that became unsupported
             action.setEnabled(ok)
+            if key in HIDDEN_UNSUPPORTED:
+                action.setVisible(ok and self.capabilities is not None)
             hint = self._goto_hint() if key == "goto" else command_hints().get(key, action.text())
             action.setToolTip(hint if ok else
                               f"{action.text()} — {tr('Not supported by this robot.')}")
@@ -689,6 +700,7 @@ class ValetudoPlugin:
     def _watch_tick(self):
         if self._unloaded:
             return
+        self._check_pending_map()
         if not load_settings()["notify_dock"]:
             return
         client = self._get_client(prompt=False)
@@ -1120,6 +1132,88 @@ class ValetudoPlugin:
             return
         self._message(tr("{n} wall line(s) drawn, from the outline of the floor.").format(
             n=count), Qgis.MessageLevel.Success)
+
+    # -- the robot's map itself (map_admin.py) ---------------------------------------
+
+    def show_map_snapshots(self, *_):
+        client = self._get_client()
+        if not client:
+            return
+
+        def show(map_json, label):
+            if not self._ensure_project():
+                return
+            self._prepare_project()
+            self.layers.show_other_map(map_json, label)
+            self._message(tr("Map snapshot of {date} shown over the current map.").format(
+                date=label), Qgis.MessageLevel.Success)
+
+        map_admin.SnapshotsDialog(client, show, self.iface.mainWindow()).show()
+
+    def start_mapping_pass(self, *_):
+        client = self._get_client()
+        if client and map_admin.confirm_mapping_pass(self.iface.mainWindow()):
+            client.put_json(map_admin.API + map_admin.MAPPING_PASS,
+                            {"action": "start_mapping"},
+                            lambda *_: self._message(tr("Mapping pass started."),
+                                                     Qgis.MessageLevel.Success),
+                            lambda e: self._message(tr("Refused by the robot: {error}").format(
+                                error=e), Qgis.MessageLevel.Warning))
+
+    def reset_map(self, *_):
+        client = self._get_client()
+        if client and map_admin.confirm_map_reset(self.iface.mainWindow()):
+            client.put_json(map_admin.API + map_admin.RESET, {"action": "reset"},
+                             lambda *_: (self._message(tr("Map deleted on the robot."),
+                                                       Qgis.MessageLevel.Success),
+                                         client.fetch_map()),
+                             lambda e: self._message(tr("Refused by the robot: {error}").format(
+                                 error=e), Qgis.MessageLevel.Warning))
+
+    def _check_pending_map(self):
+        """The robot found a changed home and asks whether to keep its new map."""
+        caps = self.capabilities or set()
+        client = self.client
+        if client is None or map_admin.PENDING not in caps:
+            return
+        client.get_json(map_admin.API + map_admin.PENDING, self._on_pending_map)
+
+    def _on_pending_map(self, data):
+        pending = bool((data or {}).get("pending"))
+        bar = self.iface.messageBar()
+        if not pending:
+            if self._pending_item is not None:
+                try:
+                    bar.popWidget(self._pending_item)
+                except RuntimeError:
+                    pass
+                self._pending_item = None
+            return
+        if self._pending_item is not None:
+            return   # already asked
+        item = bar.createMessage(PLUGIN_NAME, tr(
+            "The robot found that the home has changed and drew a new map. Keep it?"))
+        for text, action in ((tr("Keep the new map"), "accept"),
+                             (tr("Keep the old one"), "reject")):
+            button = QPushButton(text)
+            button.clicked.connect(lambda _=False, a=action: self._answer_pending_map(a))
+            item.layout().addWidget(button)
+        self._pending_item = item
+        bar.pushWidget(item, Qgis.MessageLevel.Warning, 0)
+
+    def _answer_pending_map(self, action):
+        if self._pending_item is not None:
+            try:
+                self.iface.messageBar().popWidget(self._pending_item)
+            except RuntimeError:
+                pass
+            self._pending_item = None
+        if self.client is not None:
+            self.client.put_json(map_admin.API + map_admin.PENDING, {"action": action},
+                                 lambda *_: self.client and self.client.fetch_map(),
+                                 lambda e: self._message(tr("Refused by the robot: {error}")
+                                                         .format(error=e),
+                                                         Qgis.MessageLevel.Warning))
 
     # -- obstacles -------------------------------------------------------------------
 

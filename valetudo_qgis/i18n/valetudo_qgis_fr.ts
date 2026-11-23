@@ -4027,5 +4027,113 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Cold air</source>
         <translation>Air froid</translation>
     </message>
+    <message>
+        <source>Reset the map</source>
+        <translation>Réinitialiser la carte</translation>
+    </message>
+    <message>
+        <source>Delete the robot's map? Its rooms and their names, the no-go zones and virtual walls, and the schedules that clean given rooms are lost. The robot draws a new map at its next cleaning or mapping pass.</source>
+        <translation>Supprimer la carte du robot ? Ses pièces et leurs noms, les zones interdites et murs virtuels, et les programmations qui nettoient des pièces données sont perdus. Le robot dessine une nouvelle carte à son prochain nettoyage ou passage de cartographie.</translation>
+    </message>
+    <message>
+        <source>The robot keeps copies of its map. Restoring one replaces the current map, its rooms and their names.</source>
+        <translation>Le robot garde des copies de sa carte. En restaurer une remplace la carte actuelle, ses pièces et leurs noms.</translation>
+    </message>
+    <message>
+        <source>Asking the robot…</source>
+        <translation>Demande au robot…</translation>
+    </message>
+    <message>
+        <source>Show on the map</source>
+        <translation>Afficher sur la carte</translation>
+    </message>
+    <message>
+        <source>Restore…</source>
+        <translation>Restaurer…</translation>
+    </message>
+    <message>
+        <source>Restore the map</source>
+        <translation>Restaurer la carte</translation>
+    </message>
+    <message>
+        <source>Restoring…</source>
+        <translation>Restauration…</translation>
+    </message>
+    <message>
+        <source>New mapping pass</source>
+        <translation>Nouveau passage de cartographie</translation>
+    </message>
+    <message>
+        <source>The robot explores the home to draw its map again, without cleaning. Keep the doors open and the floor clear. Start?</source>
+        <translation>Le robot explore le logement pour redessiner sa carte, sans nettoyer. Laissez les portes ouvertes et le sol dégagé. Démarrer ?</translation>
+    </message>
+    <message>
+        <source>Really delete the map? This cannot be undone.</source>
+        <translation>Vraiment supprimer la carte ? C'est irréversible.</translation>
+    </message>
+    <message>
+        <source>The robot has no snapshot.</source>
+        <translation>Le robot n'a aucune copie de carte.</translation>
+    </message>
+    <message>
+        <source>The robot did not answer: {error}</source>
+        <translation>Le robot n'a pas répondu : {error}</translation>
+    </message>
+    <message>
+        <source>Replace the robot's map with the one of {date}? Its rooms, their names and the zones drawn since may change.</source>
+        <translation>Remplacer la carte du robot par celle du {date} ? Ses pièces, leurs noms et les zones dessinées depuis peuvent changer.</translation>
+    </message>
+    <message>
+        <source>Map restored.</source>
+        <translation>Carte restaurée.</translation>
+    </message>
+    <message>
+        <source>{n} snapshot(s).</source>
+        <translation>{n} copie(s).</translation>
+    </message>
+    <message>
+        <source>Map snapshot of {date}</source>
+        <translation>Copie de la carte du {date}</translation>
+    </message>
+    <message>
+        <source>Map snapshots…</source>
+        <translation>Copies de la carte…</translation>
+    </message>
+    <message>
+        <source>New mapping pass…</source>
+        <translation>Nouveau passage de cartographie…</translation>
+    </message>
+    <message>
+        <source>Reset the map…</source>
+        <translation>Réinitialiser la carte…</translation>
+    </message>
+    <message>
+        <source>The robot found that the home has changed and drew a new map. Keep it?</source>
+        <translation>Le robot a constaté que le logement a changé et a dessiné une nouvelle carte. La garder ?</translation>
+    </message>
+    <message>
+        <source>Keep the new map</source>
+        <translation>Garder la nouvelle carte</translation>
+    </message>
+    <message>
+        <source>Keep the old one</source>
+        <translation>Garder l'ancienne</translation>
+    </message>
+    <message>
+        <source>Map snapshot of {date} shown over the current map.</source>
+        <translation>Copie de la carte du {date} affichée par-dessus la carte actuelle.</translation>
+    </message>
+    <message>
+        <source>Mapping pass started.</source>
+        <translation>Passage de cartographie démarré.</translation>
+    </message>
+    <message>
+        <source>Map deleted on the robot.</source>
+        <translation>Carte supprimée sur le robot.</translation>
+    </message>
+    <message>
+        <source>Refused by the robot: {error}</source>
+        <translation>Refusé par le robot : {error}</translation>
+    </message>
 </context>
 </TS>

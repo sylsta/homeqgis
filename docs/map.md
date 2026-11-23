@@ -118,6 +118,22 @@ simplified, in *Valetudo - wall lines*: the walls as seen from inside the rooms,
 with their length in m, for plans and measurements. It is kept in
 `map/robot_map.gpkg` once the project is saved; run it again after a new map.
 
+## The robot's map itself
+
+In *Plugins › DomotiQGIS*, shown only for robots that offer them:
+
+- **Map snapshots…** — the copies of its map the robot keeps (some Roborock
+  robots): **Show on the map** draws one over the current map, in a *Map snapshot
+  of …* layer, and **Restore…** puts it back on the robot (asked first).
+- **New mapping pass…** — the robot explores the home to draw its map again,
+  without cleaning (Eureka J15, some Midea, Dreame and Roborock robots).
+- **Reset the map…** — deletes the robot's map, with its rooms and their names,
+  the no-go zones and the schedules that clean given rooms (asked twice).
+
+When the robot finds that the home has changed and draws a new map (some Dreame
+robots), a message asks whether to **keep the new map** or **keep the old one**.
+*Compare the map with an earlier day* helps to see what changed.
+
 ## Saved with the project
 
 Once the project is saved:
