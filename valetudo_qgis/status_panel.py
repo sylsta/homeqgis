@@ -152,6 +152,8 @@ def _on_port(url, port):
 
 # A job starts when the robot goes from one of AT_REST_STATES to one of JOB_STATES
 JOB_STATES = ("cleaning", "moving")
+RUNNING_STATES = ("cleaning", "moving", "returning", "manual_control")   # recorded
+STOP_IDLE_MS = 10 * 60_000   # paused or idle away from the dock this long: recording ends
 DOCK_TASKS = ("cleaning", "washing", "drying", "emptying", "pause", "error")
 AT_REST_STATES = ("docked", "idle", "error")
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
@@ -514,6 +516,12 @@ class ValetudoPanel(QgsDockWidget):
         self.camera_page = self.tab_camera
         self.camera = CameraWidget()
         self._away_while_recording = False   # see _follow_recording
+        self._auto_recording = False         # the recording under way was started by us
+        self._recording_declined = False     # stopped by hand: not again before the dock
+        self._idle_stop = QTimer(self)
+        self._idle_stop.setSingleShot(True)
+        self._idle_stop.setInterval(STOP_IDLE_MS)
+        self._idle_stop.timeout.connect(self._stop_idle_recording)
         self.camera_layout.insertWidget(0, self.camera)
         # Coming back to the tab soon after leaving it shows the video at once,
         # instead of reconnecting and waiting for the robot's next full image.
@@ -2285,25 +2293,47 @@ class ValetudoPanel(QgsDockWidget):
             combo.setCurrentIndex(max(0, combo.findData(current)))
 
     def _follow_recording(self, state, flag, previous=None, previous_flag=None):
-        """A job that starts (scheduled or sent by hand: the robot leaves its dock to
-        clean or to go somewhere) is recorded, if set. A recording stops once the robot
-        is back on its dock at the end of its job. A return in the middle of the job
-        (washing the mops, clean water, emptying: Valetudo then says "docked" with the
-        "resumable" flag) neither stops one nor starts a new one, nor does starting a
-        recording by hand while the robot is on its dock."""
+        """While the robot runs (cleaning, going somewhere, returning, driven by hand),
+        the camera records, if set: from the first state seen running, QGIS started
+        mid-job included. A recording stops once the robot is back on its dock at the
+        end of its job, or after STOP_IDLE_MS paused or idle away from it (a new one
+        starts when it runs again). A return in the middle of the job (washing the
+        mops, clean water: "docked" with the "resumable" flag) does not stop it. One
+        stopped by hand while the robot runs is not started again before it docks."""
         if state in JOB_STATES and previous in AT_REST_STATES and previous_flag != "resumable":
-            self.jobStarted.emit()
-            if not self.camera.is_recording() and load_settings()["record_jobs"]:
+            self.jobStarted.emit()   # a new job (the Wi-Fi recorder is checked)
+        recording = self.camera.is_recording()
+        if self._auto_recording and not recording and state != "docked":
+            self._auto_recording, self._recording_declined = False, True   # stopped by hand
+        if state in RUNNING_STATES:
+            self._idle_stop.stop()
+            if (not recording and not self._recording_declined
+                    and load_settings()["record_jobs"]):
                 self._record_job()
-        if not self.camera.is_recording():
+                recording = self._auto_recording = True
+        elif state in ("paused", "idle") and recording and self._auto_recording:
+            if not self._idle_stop.isActive():
+                self._idle_stop.start()   # still not running then: the recording ends
+        if not recording:
             self._away_while_recording = False
-            return
-        if state != "docked":
+        elif state != "docked":
             self._away_while_recording = True
         elif flag != "resumable" and self._away_while_recording:
-            self._away_while_recording = False
+            self._end_recording()
+        if state == "docked" and flag != "resumable":
+            self._recording_declined = False   # the job is over: the next one is recorded
+
+    def _end_recording(self):
+        self._away_while_recording = self._auto_recording = False
+        self._idle_stop.stop()
+        if self.camera.is_recording():
             self.camera.stop_recording()
-            self._update_camera()   # the stream stops too if the Camera tab is not shown
+        self._update_camera()   # the stream stops too if the Camera tab is not shown
+
+    def _stop_idle_recording(self):
+        """Paused or idle away from the dock for STOP_IDLE_MS: the recording ends."""
+        if self._state in ("paused", "idle") and self._auto_recording:
+            self._end_recording()
 
     def _record_job(self):
         """Start the camera (if it is not playing) and record into the videos folder."""

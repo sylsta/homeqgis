@@ -86,7 +86,7 @@ and set a username and password (port 8080 by default).
   project, open the robot project and show the robot on the map; **advanced
   tools**; *Edit room groups…*.
 - **Camera**: stream URL (empty: `tcp://<robot>:8555`), ffmpeg path, video width;
-  *Record the camera during each job* (on by default, see [Camera](robot/camera.md)).
+  *Record the camera whenever the robot runs* (on by default, see [Camera](robot/camera.md)).
 - **Notifications**: warn when a dock tank is empty, full or missing.
 - **History**: record the robot's outings.
 

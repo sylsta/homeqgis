@@ -3624,10 +3624,6 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <translation>Partager les jetons et mots de passe avec ce profil (même base d'authentification)</translation>
     </message>
     <message>
-        <source>Record the camera during each job, until the robot is back on its dock (videos folder next to the project)</source>
-        <translation>Enregistrer la caméra pendant chaque tâche, jusqu'au retour du robot sur sa base (dossier videos à côté du projet)</translation>
-    </message>
-    <message>
         <source>No map of all runs on the Pi yet (it builds one after its next run): {loaded}</source>
         <translation>Pas encore de carte de tous les passages sur le Pi (il en construit une après son prochain passage) : {loaded}</translation>
     </message>
@@ -4222,6 +4218,10 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>Place what the camera sees on the map, every metre, while it plays and the robot is out (views folder next to the project)</source>
         <translation>Placer ce que voit la caméra sur la carte, tous les mètres, quand elle tourne et que le robot est sorti (dossier views à côté du projet)</translation>
+    </message>
+    <message>
+        <source>Record the camera whenever the robot runs, until it is back on its dock (videos folder next to the project)</source>
+        <translation>Enregistrer la caméra dès que le robot roule, jusqu'à son retour sur la base (dossier videos à côté du projet)</translation>
     </message>
 </context>
 </TS>
