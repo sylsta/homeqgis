@@ -17,6 +17,7 @@ KEY_CAMERA_URL = "valetudo/camera_url"
 KEY_FFMPEG = "valetudo/ffmpeg"
 KEY_CAMERA_WIDTH = "valetudo/camera_width"
 KEY_RECORD_JOBS = "valetudo/record_jobs"   # record the camera during each job
+KEY_CAMERA_VIEWS = "valetudo/camera_views"   # camera frames placed on the map
 KEY_NOTIFY_DOCK = "valetudo/notify_dock"
 KEY_LIVE_AT_START = "valetudo/live_at_start"   # "Show on map" when QGIS starts
 KEY_ROBOT_PROJECT = "valetudo/robot_project"   # the QGIS project of the robot (.qgz)
@@ -164,6 +165,7 @@ def _stored_settings():
         "camera_url": s.value(KEY_CAMERA_URL, "", type=str),
         "ffmpeg": s.value(KEY_FFMPEG, "", type=str),
         "record_jobs": s.value(KEY_RECORD_JOBS, True, type=bool),
+        "camera_views": s.value(KEY_CAMERA_VIEWS, True, type=bool),
         "camera_width": s.value(KEY_CAMERA_WIDTH, 640, type=int),
         "notify_dock": s.value(KEY_NOTIFY_DOCK, True, type=bool),
         "live_at_start": s.value(KEY_LIVE_AT_START, True, type=bool),

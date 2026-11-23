@@ -94,6 +94,42 @@ the Identify tool, or in the attribute table) asks the robot for it.
 The robot does not see everything with its lidar as obstacles: only what it
 recognised. Its raw lidar scans are not available (Valetudo does not have them).
 
+## Obstacle diary
+
+The map only shows the obstacles of the moment. The plugin keeps every one the
+robot reports in *Obstacle diary* (`map/obstacle_diary.gpkg`, once the project is
+saved): type, confidence, first and last seen, and its photo, downloaded once into
+`map/obstacles/`. The points are semi-transparent: where things are often left on
+the floor, they pile up and darken. Hover one (map tips on, *View › Show Map Tips*)
+to see the photo, or use its action *Open the photo*. Filter the table on `kind`
+("Sock", "Cable"…) or on a date to find something.
+
+## Camera views
+
+While the camera plays and the robot is out — every recorded job does it — the
+plugin keeps a frame every metre, in *Camera views* (`views/` next to the
+project): a small triangle where the robot was, pointing where it looked. Hover
+it (map tips on) to see the image; its action *Open the image* opens it. A
+street view of your home, at robot height. Untick *Place what the camera sees on
+the map* in the settings (*Robot* tab, camera) to stop it; a job of a few hundred
+metres keeps some hundreds of small images.
+
+## What the history tells
+
+From *Plugins › DomotiQGIS*, over the last days you choose (30 by default):
+
+- **Days since each place was cleaned…** — the floor coloured by how long since
+  the robot last cleaned it: green today, then yellow, orange, red, and hatched
+  dark red where it did not clean at all in those days. Its paths are widened to
+  the strip it cleans (about 32 cm). The corners it never reaches show at once.
+- **Where the robot has trouble…** — orange circles where it got stuck (it stayed
+  within 30 cm for 45 s or more while working) and red crosses where it went
+  into error. Where the circles pile up, something is in the way: a cable, a chair,
+  the edge of a rug.
+
+Both need the history, recorded by the plugin while QGIS runs (see
+[History](robot/history.md)).
+
 ## Map changes
 
 The plugin keeps the first map of each day in `map/versions/` (once the project

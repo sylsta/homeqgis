@@ -4135,5 +4135,93 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Refused by the robot: {error}</source>
         <translation>Refusé par le robot : {error}</translation>
     </message>
+    <message>
+        <source>Open the image</source>
+        <translation>Ouvrir l'image</translation>
+    </message>
+    <message>
+        <source>Camera views</source>
+        <translation>Vues de la caméra</translation>
+    </message>
+    <message>
+        <source>Yesterday</source>
+        <translation>Hier</translation>
+    </message>
+    <message>
+        <source>2 days ago</source>
+        <translation>Il y a 2 jours</translation>
+    </message>
+    <message>
+        <source>3 to 6 days</source>
+        <translation>3 à 6 jours</translation>
+    </message>
+    <message>
+        <source>7 to 13 days</source>
+        <translation>7 à 13 jours</translation>
+    </message>
+    <message>
+        <source>14 days or more</source>
+        <translation>14 jours ou plus</translation>
+    </message>
+    <message>
+        <source>Stuck</source>
+        <translation>Bloqué</translation>
+    </message>
+    <message>
+        <source>Not in {days} days</source>
+        <translation>Pas depuis {days} jours</translation>
+    </message>
+    <message>
+        <source>Open the photo</source>
+        <translation>Ouvrir la photo</translation>
+    </message>
+    <message>
+        <source>Obstacle diary</source>
+        <translation>Journal des obstacles</translation>
+    </message>
+    <message>
+        <source>Days since each place was cleaned…</source>
+        <translation>Jours depuis le dernier nettoyage de chaque endroit…</translation>
+    </message>
+    <message>
+        <source>Where the robot has trouble…</source>
+        <translation>Où le robot a des difficultés…</translation>
+    </message>
+    <message>
+        <source>Over the last … days:</source>
+        <translation>Sur les … derniers jours :</translation>
+    </message>
+    <message>
+        <source>Days since each place was cleaned</source>
+        <translation>Jours depuis le dernier nettoyage de chaque endroit</translation>
+    </message>
+    <message>
+        <source>Days since cleaned</source>
+        <translation>Jours depuis le nettoyage</translation>
+    </message>
+    <message>
+        <source>Where the robot has trouble</source>
+        <translation>Où le robot a des difficultés</translation>
+    </message>
+    <message>
+        <source>Trouble spots</source>
+        <translation>Points difficiles</translation>
+    </message>
+    <message>
+        <source>Save the project first: the history is kept next to it.</source>
+        <translation>Enregistrez d'abord le projet : l'historique est rangé à côté.</translation>
+    </message>
+    <message>
+        <source>Floor coloured by days since it was last cleaned; {m2} m² not cleaned in {days} days.</source>
+        <translation>Sol coloré selon les jours depuis son dernier nettoyage ; {m2} m² non nettoyés en {days} jours.</translation>
+    </message>
+    <message>
+        <source>{stuck} time(s) stuck and {errors} error(s) in {days} days: where the circles pile up, something is in the way.</source>
+        <translation>{stuck} blocage(s) et {errors} erreur(s) en {days} jours : là où les cercles s'accumulent, quelque chose gêne.</translation>
+    </message>
+    <message>
+        <source>Place what the camera sees on the map, every metre, while it plays and the robot is out (views folder next to the project)</source>
+        <translation>Placer ce que voit la caméra sur la carte, tous les mètres, quand elle tourne et que le robot est sorti (dossier views à côté du projet)</translation>
+    </message>
 </context>
 </TS>

@@ -77,7 +77,7 @@ def surfaces(features):
     return _union(floor), _union(walls)
 
 
-def _parts(geometry, min_area):
+def parts(geometry, min_area):
     """The polygons of a geometry, at least min_area each."""
     if geometry is None or geometry.isEmpty():
         return []
@@ -91,8 +91,8 @@ def _gained(now, before, min_area):
     if now.isEmpty():
         return []
     if before.isEmpty():
-        return _parts(now, min_area)
-    return _parts(now.difference(before.buffer(TOLERANCE_CM, 4)), min_area)
+        return parts(now, min_area)
+    return parts(now.difference(before.buffer(TOLERANCE_CM, 4)), min_area)
 
 
 def compare(current, earlier):
@@ -116,7 +116,7 @@ def wall_lines(features):
     if floor.isEmpty():
         return []
     lines = []
-    for part in _parts(floor, 0):
+    for part in parts(floor, 0):
         for ring in part.asPolygon():
             line = QgsGeometry.fromPolylineXY(ring).simplify(SIMPLIFY_CM)
             if line.length() >= MIN_LINE_CM:

@@ -12,8 +12,13 @@ history/
 map/
     robot_map.gpkg               the robot's current map (rooms, zones)
     robot_map_a3f9c2e1.gpkg      one per version of the map
+    obstacle_diary.gpkg          every obstacle reported
+    obstacles/<id>.jpg           their photos
     versions/
         robot_map_2026-11-23.gpkg   the first map of each day (map changes)
+views/
+    2026-11-23/093512_431.jpg    what the camera saw, every metre (camera views)
+    camera_views.gpkg
 videos/
     valetudo_job_20261122_093012.mp4   the camera, during each job
 wifi/

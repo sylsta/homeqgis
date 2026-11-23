@@ -105,6 +105,49 @@ def make_permanent(layer, path, layer_name):
     return True
 
 
+def kept_layer(project, role, name, geometry, fields, folder, file_name, layer_name,
+               setup=None):
+    """A layer of ours kept in folder/file_name (once the project is saved): found again
+    by its role, or created (memory, then the file) at the top of the "Valetudo" group.
+    setup(layer) styles a new one. Returns the layer."""
+    from qgis.core import Qgis, QgsVectorLayer
+    types = {"Point": Qgis.GeometryType.Point, "LineString": Qgis.GeometryType.Line,
+             "Polygon": Qgis.GeometryType.Polygon}
+    layer = adopt(project, role, {name}, types[geometry])
+    path = os.path.join(folder, file_name) if folder is not None else None
+    if layer is None and path is not None and os.path.exists(path):
+        # Removed from the project but still in its file: reopen it (not overwrite it)
+        layer = QgsVectorLayer(f"{path}|layername={layer_name}", name, "ogr")
+        if not layer.isValid():
+            layer = None
+        else:
+            layer.setCrs(robot_crs())
+            tag(layer, role)
+            if setup is not None:
+                setup(layer)
+            project.addMapLayer(layer, False)
+            root = project.layerTreeRoot()
+            (root.findGroup("Valetudo") or root.insertGroup(0, "Valetudo")).insertLayer(0, layer)
+    if layer is None:
+        layer = QgsVectorLayer(geometry, name, "memory")
+        layer.setCrs(robot_crs())
+        layer.dataProvider().addAttributes(fields)
+        layer.updateFields()
+        tag(layer, role)
+        if setup is not None:
+            setup(layer)
+        project.addMapLayer(layer, False)
+        root = project.layerTreeRoot()
+        group = root.findGroup("Valetudo") or root.insertGroup(0, "Valetudo")
+        group.insertLayer(0, layer)
+    if folder is not None and layer.providerType() == "memory":
+        try:
+            make_permanent(layer, os.path.join(folder, file_name), layer_name)
+        except OSError:
+            pass   # stays in memory; tried again next time
+    return layer
+
+
 def replace_features(layer, records):
     """Replace all features: records are (geometry, {field: value}); values are set by
     field name (a GeoPackage layer also has its "fid" column)."""

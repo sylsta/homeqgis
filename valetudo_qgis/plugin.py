@@ -8,7 +8,7 @@ enabled/checked state can never disagree.
 import datetime
 import os
 
-from qgis.PyQt.QtCore import QFileSystemWatcher, QLocale, Qt, QTimer, QUrl
+from qgis.PyQt.QtCore import QFileSystemWatcher, QLocale, QMetaType, Qt, QTimer, QUrl
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import (
     QAction, QApplication, QCheckBox, QDialog, QDockWidget, QFileDialog, QInputDialog,
@@ -16,7 +16,7 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.core import (
     QgsApplication,
-    Qgis, QgsMessageLog, QgsPointXY, QgsProject, QgsSettings,
+    Qgis, QgsField, QgsMessageLog, QgsPointXY, QgsProject, QgsSettings,
 )
 
 from . import room_groups
@@ -28,7 +28,11 @@ from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
-from . import drive_dialog, map_admin, map_changes
+from . import drive_dialog, floor_insights, map_admin, map_changes
+from .camera_views import CameraViews
+from .insight_styles import dust_class, dust_renderer, trouble_renderer
+from .obstacle_diary import ObstacleDiary
+from .project_layers import replace_features
 from .map_layers import ValetudoLayers, map_folder
 from .map_overlay import MapOverlay
 from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
@@ -39,8 +43,9 @@ from . import app_launcher
 from .app_launcher import KEY_APP_MODE
 from .manual import open_manual
 from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import (KEY_ADVANCED, KEY_ROBOT_PROJECT, PLUGIN_NAME, TOOLBAR_CHOICES, follow_robot,
-                       has_ha_token, load_settings, toolbar_keys)
+from .settings import (KEY_ADVANCED, KEY_CAMERA_VIEWS, KEY_ROBOT_PROJECT, PLUGIN_NAME,
+                       TOOLBAR_CHOICES, follow_robot, has_ha_token, load_settings,
+                       toolbar_keys)
 from .sensors import SensorManager
 from .quiet_travel import QUIET_PRESETS, QuietTravel
 from .ssh_reboot import SshReboot
@@ -104,7 +109,8 @@ MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
 ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
                     "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
-MENU = ["status_panel", "settings", "setup", "map_changes", "wall_lines", "map_snapshots",
+MENU = ["status_panel", "settings", "setup", "dust_age", "trouble_spots", "map_changes",
+        "wall_lines", "map_snapshots",
         "mapping_pass", "map_reset", "app_launcher", "app_mode", "manual"]
 # Not shown at all (rather than greyed out) when the robot does not have them
 HIDDEN_UNSUPPORTED = {"map_snapshots", "mapping_pass", "map_reset"}
@@ -244,6 +250,10 @@ class ValetudoPlugin:
             self.act["app_mode"].setToolTip(tr("Only the map and DomotiQGIS on screen; "
                                                "untick to show QGIS's toolbars and panels."))
             self.act["app_mode"].setChecked(QgsSettings().value(KEY_APP_MODE, True, type=bool))
+        self._new_action("dust_age", tr("Days since each place was cleaned…"),
+                         self.show_dust_age)
+        self._new_action("trouble_spots", tr("Where the robot has trouble…"),
+                         self.show_trouble_spots)
         self._new_action("map_changes", tr("Compare the map with an earlier day…"),
                          self.compare_map)
         self._new_action("wall_lines", tr("Draw the walls as lines"), self.draw_wall_lines)
@@ -298,6 +308,12 @@ class ValetudoPlugin:
         self._update_robot_survey_actions()
         self.survey = WifiSurvey(QgsProject.instance())
         self.survey.sampleAdded.connect(self._on_wifi_sample)
+        # What the robot saw (camera frames on the map) and every obstacle it reported
+        self.views = CameraViews(QgsProject.instance(),
+                                 lambda: self.panel is not None
+                                 and self.panel._state not in (None, "docked"),
+                                 lambda: QgsSettings().value(KEY_CAMERA_VIEWS, True, type=bool))
+        self.diary = ObstacleDiary(QgsProject.instance(), lambda: self.client)
         self.goto_emulator = GoToEmulator()
         self.goto_emulator.finished.connect(self._on_goto_finished)
         self.quiet_travel = QuietTravel()
@@ -314,6 +330,7 @@ class ValetudoPlugin:
 
         # Panels: hidden by default; their toggle actions follow their visibility.
         self.panel = ValetudoPanel(win)
+        self.panel.camera.stream.jpegReady.connect(self.views.on_jpeg)
         self.panel.clientRequested.connect(self._on_panel_needs_client)
         self.panel.history_tab.importRequested.connect(
             lambda: self._import_robot_history(auto=False))
@@ -579,6 +596,9 @@ class ValetudoPlugin:
         self.client.reachable.connect(self._on_reachable)
         self.client.commandDone.connect(self._on_command_done)
         self.client.mapReceived.connect(self._on_map)
+        for signal in (self.client.mapReceived, self.client.mapPeeked):
+            signal.connect(self.views.on_map)
+            signal.connect(self.diary.on_map)
         self.client.capabilitiesReceived.connect(self._on_capabilities)
         self.client.restrictionsReceived.connect(self._on_restrictions)
         self.client.attributesReceived.connect(self._on_attributes)
@@ -1082,6 +1102,63 @@ class ValetudoPlugin:
         self._update_map_tool_entries()
         if self.panel is not None:
             self.panel.set_advanced(on)
+
+    # -- what the history tells (floor_insights.py) ----------------------------------
+
+    def _history_days(self, title):
+        """How many days back (asked), or None. Needs the map and a saved history."""
+        if not self._map_shown():
+            return None
+        if history_folder() is None:
+            self._message(tr("Save the project first: the history is kept next to it."),
+                          Qgis.MessageLevel.Info)
+            return None
+        days, ok = QInputDialog.getInt(self.iface.mainWindow(), title,
+                                       tr("Over the last … days:"), 30, 1, 365)
+        return days if ok else None
+
+    def show_dust_age(self, *_):
+        days = self._history_days(tr("Days since each place was cleaned"))
+        if days is None:
+            return
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            found = floor_insights.dust_age(history_folder(),
+                                            list(self.layers.layer("rooms").getFeatures()),
+                                            days)
+        finally:
+            QApplication.restoreOverrideCursor()
+        records = [(g, dict(v, age=dust_class(v["days"]))) for g, v in found]
+        lyr = self.layers.extra_layer(
+            "insights/dust_age", tr("Days since cleaned"), "Polygon",
+            [QgsField("days", QMetaType.Type.Int),
+             QgsField("last_cleaned", QMetaType.Type.QString),
+             QgsField("age", QMetaType.Type.Int)], dust_renderer(days))
+        replace_features(lyr, records)
+        lyr.triggerRepaint()
+        never = sum(g.area() for g, v in found if v["days"] is None) / 10000
+        self._message(tr("Floor coloured by days since it was last cleaned; {m2} m² not "
+                         "cleaned in {days} days.").format(m2=f"{never:.1f}", days=days),
+                      Qgis.MessageLevel.Success)
+
+    def show_trouble_spots(self, *_):
+        days = self._history_days(tr("Where the robot has trouble"))
+        if days is None:
+            return
+        found = floor_insights.trouble_spots(history_folder(), days)
+        lyr = self.layers.extra_layer(
+            "insights/trouble", tr("Trouble spots"), "Point",
+            [QgsField("kind", QMetaType.Type.QString),
+             QgsField("time", QMetaType.Type.QString),
+             QgsField("duration_s", QMetaType.Type.Int),
+             QgsField("outing", QMetaType.Type.QString)], trouble_renderer())
+        replace_features(lyr, found)
+        lyr.triggerRepaint()
+        stuck = sum(1 for _g, v in found if v["kind"] == "stuck")
+        self._message(tr("{stuck} time(s) stuck and {errors} error(s) in {days} days: where "
+                         "the circles pile up, something is in the way.").format(
+            stuck=stuck, errors=len(found) - stuck, days=days),
+            Qgis.MessageLevel.Success if found else Qgis.MessageLevel.Info)
 
     # -- what the map tells (map_changes.py) -----------------------------------------
 

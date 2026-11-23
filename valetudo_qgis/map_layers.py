@@ -529,7 +529,7 @@ class ValetudoLayers:
         if rooms is not None and rooms.featureCount() and not os.path.exists(path):
             write_gpkg(rooms, path, map_changes.SNAPSHOT_LAYER)
 
-    def _extra_layer(self, role, name, geometry, fields, renderer):
+    def extra_layer(self, role, name, geometry, fields, renderer):
         """A layer of ours outside ROLES (changes, wall lines): found again or created
         at the top of the Valetudo group."""
         lyr = adopt(self.project, role, {name}, GEOMETRY[geometry])
@@ -552,7 +552,7 @@ class ValetudoLayers:
         if rooms is None or not earlier.isValid():
             raise OSError(snapshot)
         found = map_changes.compare(list(rooms.getFeatures()), list(earlier.getFeatures()))
-        lyr = self._extra_layer("map/changes", tr("Map changes since {day}").format(
+        lyr = self.extra_layer("map/changes", tr("Map changes since {day}").format(
             day=day_label), "Polygon",
             [QgsField("change", STR), QgsField("area_m2", DBL)], _changes_renderer())
         replace_features(lyr, found)
@@ -573,7 +573,7 @@ class ValetudoLayers:
                                    else None),
                     "name": meta.get("name")}))
         segment_ids = {r[1]["segment_id"] for r in records if r[1]["segment_id"]}
-        lyr = self._extra_layer("map/snapshot", tr("Map snapshot of {date}").format(date=label),
+        lyr = self.extra_layer("map/snapshot", tr("Map snapshot of {date}").format(date=label),
                                 "Polygon", [QgsField("type", STR), QgsField("segment_id", STR),
                                             QgsField("name", STR)],
                                 _rooms_renderer(segment_ids))
@@ -591,7 +591,7 @@ class ValetudoLayers:
         if rooms is None:
             return 0
         lines = map_changes.wall_lines(list(rooms.getFeatures()))
-        lyr = self._extra_layer("map/wall_lines", tr("Valetudo - wall lines"), "LineString",
+        lyr = self.extra_layer("map/wall_lines", tr("Valetudo - wall lines"), "LineString",
                                 [QgsField("length_m", DBL)], _wall_lines_renderer())
         replace_features(lyr, lines)
         folder = map_folder()
