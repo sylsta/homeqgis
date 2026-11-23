@@ -1,7 +1,7 @@
 # On the map
 
 The robot's map is shown as real QGIS layers, in the robot's own frame (in
-centimetres, no CRS), in a *Valetudo* group:
+centimetres), in a *Valetudo* group:
 
 | Layer | What |
 |---|---|
@@ -39,6 +39,18 @@ While it is on:
   [UI configuration](settings.md#ui-configuration));
 - a small **status card** (state, battery, job) sits in the map's top right corner,
   so you can follow the robot with the panel closed.
+
+## Measuring
+
+The robot's frame is a coordinate system of its own, in centimetres (a transverse
+Mercator centred on 0,0, exact to well under a millimetre over a home), and the
+project measures on the plane (*Project › Properties › General*, ellipsoid *None*).
+So QGIS's measure tool, the scale bar, `$length` and `$area` give real distances and
+areas: choose metres in the measure tool. The plugin sets this when it shows the
+map; layers made before it had no coordinate system and get this one.
+
+Do not put an online base map (OpenStreetMap…) under it: the home would appear off
+the coast of Africa, where 0,0 is. The robot's map is not georeferenced.
 
 ## Map tools
 

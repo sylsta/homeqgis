@@ -13,7 +13,6 @@ from qgis.PyQt.QtGui import QColor
 from qgis.core import (
     Qgis,
     QgsCategorizedSymbolRenderer,
-    QgsCoordinateReferenceSystem,
     QgsExpression,
     QgsFillSymbol,
     QgsField,
@@ -31,7 +30,7 @@ from qgis.core import (
     QgsVectorLayerSimpleLabeling,
 )
 
-from .coords import v2q
+from .coords import robot_crs, v2q
 from .history_logic import map_fingerprint
 from .i18n import tr
 from . import map_changes
@@ -318,7 +317,7 @@ def _signature(map_json):
 
 def _memory_layer(geom_type, name, fields):
     lyr = QgsVectorLayer(geom_type, name, "memory")
-    lyr.setCrs(QgsCoordinateReferenceSystem())
+    lyr.setCrs(robot_crs())
     lyr.dataProvider().addAttributes(fields)
     lyr.updateFields()
     return lyr
@@ -436,7 +435,7 @@ class ValetudoLayers:
         group = root.findGroup(GROUP_NAME) or root.insertGroup(0, GROUP_NAME)
         roles = list(ROLES)
         for role, lyr in created.items():
-            lyr.setCrs(QgsCoordinateReferenceSystem())     # undo any default CRS
+            lyr.setCrs(robot_crs())     # the robot's frame (not the default CRS)
             # Above the first existing layer of a role further down the list
             index = len(group.children())
             for lower in roles[roles.index(role) + 1:]:

@@ -16,13 +16,13 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.core import (
     QgsApplication,
-    Qgis, QgsCoordinateReferenceSystem, QgsMessageLog, QgsPointXY, QgsProject, QgsSettings,
+    Qgis, QgsMessageLog, QgsPointXY, QgsProject, QgsSettings,
 )
 
 from . import room_groups
 from .boot_monitor import BootMonitor
 from .client import ValetudoClient
-from .coords import q2v, v2q
+from .coords import q2v, robot_crs, v2q
 from .history_recorder import HistoryRecorder
 from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
@@ -434,6 +434,8 @@ class ValetudoPlugin:
         self.restrictions._adopt()
         if self.survey is not None:
             self.survey.layer()   # takes over a survey layer of the project
+        if self.layers.layer("rooms") is not None:
+            self._prepare_project()   # a project of the robot: measured in metres
         self._persist_layers()   # e.g. a project saved by an older version
 
     def _persist_layers(self, *_):
@@ -2063,10 +2065,13 @@ class ValetudoPlugin:
             self._center_on_robot(map_json)   # keep the robot in view, if asked
 
     def _prepare_project(self):
-        """Switch the project to "No CRS", silently: we work in the robot's own frame."""
+        """Switch the project to the robot's frame (coords.robot_crs: centimetres),
+        silently, and measure on the plane: the measure tool then gives metres."""
         project = QgsProject.instance()
-        if project.crs().isValid():
-            project.setCrs(QgsCoordinateReferenceSystem())
+        if project.crs() != robot_crs():
+            project.setCrs(robot_crs())
+        if project.ellipsoid() != "NONE":
+            project.setEllipsoid("NONE")
 
     def _on_error(self, msg):
         self._message(msg, Qgis.MessageLevel.Warning)

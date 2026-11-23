@@ -5,7 +5,7 @@ with three layers:
     segments  (lines)   one per continuous activity within an outing
     points    (points)  the readings
 
-Same local frame as the robot's map layers (centimetres, no CRS). The records
+Same local frame as the robot's map layers (centimetres, coords.robot_crs()). The records
 come from history_logic.OutingTracker. An outing that crosses midnight is
 written to the file of the day it started.
 """
@@ -14,9 +14,11 @@ import os
 from datetime import datetime, timedelta
 
 from qgis.PyQt.QtCore import QDateTime, QMetaType
-from qgis.core import (Qgis, QgsCoordinateReferenceSystem, QgsFeature, QgsFeatureRequest,
+from qgis.core import (Qgis, QgsFeature, QgsFeatureRequest,
                        QgsField, QgsFields, QgsGeometry, QgsPointXY, QgsProject, QgsVectorFileWriter,
                        QgsVectorLayer)
+
+from .coords import robot_crs
 
 FOLDER = "history"
 PREFIX = "robot_"
@@ -88,7 +90,7 @@ class HistoryStore:
                 QgsVectorFileWriter.ActionOnExistingFile.CreateOrOverwriteFile if index == 0
                 else QgsVectorFileWriter.ActionOnExistingFile.CreateOrOverwriteLayer)
             writer = QgsVectorFileWriter.create(path, _fields(spec), geometry,
-                                                QgsCoordinateReferenceSystem(), context, options)
+                                                robot_crs(), context, options)
             if writer.hasError() != QgsVectorFileWriter.WriterError.NoError:
                 raise OSError(writer.errorMessage())
             del writer   # closes the file

@@ -18,11 +18,11 @@ import tarfile
 
 from qgis.PyQt.QtCore import QDateTime, QMetaType
 from qgis.core import (
-    QgsApplication, QgsCoordinateReferenceSystem, QgsFeature, QgsField, QgsGeometry,
+    QgsApplication, QgsFeature, QgsField, QgsGeometry,
     QgsRasterLayer, QgsVectorLayer,
 )
 
-from .coords import v2q
+from .coords import robot_crs, v2q
 from .i18n import tr
 from .wifi_survey import style_wifi_points, style_wifi_raster
 
@@ -93,7 +93,7 @@ def unpack(data):
 def points_layer(csv_path, name, cfg):
     """Readings of the CSV as a memory point layer, in the plugin's frame."""
     lyr = QgsVectorLayer("Point", name, "memory")
-    lyr.setCrs(QgsCoordinateReferenceSystem())
+    lyr.setCrs(robot_crs())
     lyr.dataProvider().addAttributes([
         QgsField("signal", QMetaType.Type.Int),
         QgsField("frequency", QMetaType.Type.QString),
@@ -133,7 +133,7 @@ def add_to_project(project, run, tif, csv_path, cfg):
     raster = QgsRasterLayer(tif, tr("Wi-Fi {run}").format(run=label))
     if not raster.isValid():
         raise ValueError("bad_map")
-    raster.setCrs(QgsCoordinateReferenceSystem())
+    raster.setCrs(robot_crs())
     style_wifi_raster(raster, cfg)
     project.addMapLayer(raster, False)
     group.insertLayer(0, raster)

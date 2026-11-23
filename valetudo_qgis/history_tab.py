@@ -20,6 +20,7 @@ from qgis.core import (
     QgsVectorLayer,
 )
 
+from .coords import robot_crs
 from .history_logic import format_duration, period_days, summarize, week_key
 from .history_store import day_path, history_folder, read_outings
 from .i18n import tr
@@ -373,6 +374,8 @@ class HistoryTab(QWidget):
                                    f"{title} {day:%d/%m}", "ogr")
             if not layer.isValid():
                 continue
+            if not layer.crs().isValid():   # a day recorded before the frame had a CRS
+                layer.setCrs(robot_crs())
             layer.setCustomProperty(LAYER_KEY, f"{day.isoformat()} {name}")
             _style(layer, name)
             project.addMapLayer(layer, False)

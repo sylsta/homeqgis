@@ -15,7 +15,6 @@ from qgis.PyQt.QtCore import QMetaType
 from qgis.core import (
     Qgis,
     QgsCategorizedSymbolRenderer,
-    QgsCoordinateReferenceSystem,
     QgsDefaultValue,
     QgsEditorWidgetSetup,
     QgsFeature,
@@ -27,7 +26,7 @@ from qgis.core import (
     QgsVectorLayer,
 )
 
-from .coords import q2v, v2q
+from .coords import q2v, robot_crs, v2q
 from .i18n import tr
 from .project_layers import adopt, tag
 
@@ -47,7 +46,7 @@ def zone_type_labels():
 
 def _new_layer(geom_type, name, fields):
     lyr = QgsVectorLayer(geom_type, name, "memory")
-    lyr.setCrs(QgsCoordinateReferenceSystem())
+    lyr.setCrs(robot_crs())
     lyr.dataProvider().addAttributes(fields)
     lyr.updateFields()
     return lyr
@@ -134,7 +133,7 @@ class RestrictionLayers:
         root = self.project.layerTreeRoot()
         group = root.findGroup(GROUP_NAME) or root.insertGroup(0, GROUP_NAME)
         for lyr in (walls, zones):
-            lyr.setCrs(QgsCoordinateReferenceSystem())
+            lyr.setCrs(robot_crs())
             group.insertLayer(0, lyr)   # on top of the map layers
         tag(zones, "restrictions/zones")
         tag(walls, "restrictions/walls")

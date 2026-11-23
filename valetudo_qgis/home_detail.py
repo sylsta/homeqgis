@@ -22,10 +22,11 @@ from datetime import date, datetime, timedelta
 from qgis.PyQt.QtCore import QDateTime, QMetaType, Qt, pyqtSignal
 from qgis.PyQt.QtWidgets import (QFileDialog, QHBoxLayout, QLabel, QMenu, QSizePolicy,
                                  QToolButton, QVBoxLayout, QWidget)
-from qgis.core import (QgsCoordinateReferenceSystem, QgsFeature, QgsField, QgsFillSymbol,
+from qgis.core import (QgsFeature, QgsField, QgsFillSymbol,
                        QgsProject, QgsProperty, QgsSettings, QgsSymbolLayer, QgsVectorLayer,
                        QgsPalLayerSettings, QgsVectorLayerSimpleLabeling, Qgis)
 
+from .coords import robot_crs
 from . import ha_history, ha_home
 from .charts import ChartWidget
 from .history_logic import format_duration
@@ -415,7 +416,7 @@ class DetailPane(QWidget):
         step = 3600 if end - start <= 2 * 86400 else 3 * 3600
         layer = QgsVectorLayer("Polygon", tr("{kind} by room").format(
             kind=kind_labels().get(kind, kind)), "memory")
-        layer.setCrs(QgsCoordinateReferenceSystem())
+        layer.setCrs(robot_crs())
         layer.dataProvider().addAttributes([
             QgsField("room", QMetaType.Type.QString), QgsField("value", QMetaType.Type.Double),
             QgsField("start", QMetaType.Type.QDateTime),

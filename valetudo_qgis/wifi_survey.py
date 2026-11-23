@@ -16,12 +16,12 @@ import time
 from qgis.PyQt.QtCore import QDateTime, QMetaType, QObject, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.core import (
-    Qgis, QgsColorRampShader, QgsCoordinateReferenceSystem, QgsFeatureRequest, QgsField, QgsGeometry,
+    Qgis, QgsColorRampShader, QgsFeatureRequest, QgsField, QgsGeometry,
     QgsProperty, QgsRasterLayer, QgsRasterShader, QgsSingleBandPseudoColorRenderer,
     QgsSymbol, QgsSymbolLayer, QgsVectorLayer,
 )
 
-from .coords import v2q
+from .coords import robot_crs, v2q
 from .i18n import tr
 from .project_layers import adopt, make_permanent, new_feature, project_folder, tag
 
@@ -127,7 +127,7 @@ class WifiSurvey(QObject):
         if lyr is not None:
             return lyr
         lyr = QgsVectorLayer("Point", layer_names()["networks"], "memory")
-        lyr.setCrs(QgsCoordinateReferenceSystem())
+        lyr.setCrs(robot_crs())
         lyr.dataProvider().addAttributes([
             QgsField("ssid", QMetaType.Type.QString),
             QgsField("bssid", QMetaType.Type.QString),
@@ -139,7 +139,7 @@ class WifiSurvey(QObject):
         style_wifi_points(lyr, self.cfg)
         self.project.addMapLayer(lyr, False)
         self.project.layerTreeRoot().insertLayer(0, lyr)
-        lyr.setCrs(QgsCoordinateReferenceSystem())
+        lyr.setCrs(robot_crs())
         self._networks_id = lyr.id()
         try:
             self.persist()
@@ -167,7 +167,7 @@ class WifiSurvey(QObject):
             style_wifi_points(lyr, self.cfg)   # thresholds may have changed
             return lyr
         lyr = QgsVectorLayer("Point", layer_names()["points"], "memory")
-        lyr.setCrs(QgsCoordinateReferenceSystem())
+        lyr.setCrs(robot_crs())
         lyr.dataProvider().addAttributes([
             QgsField("signal", QMetaType.Type.Int),
             QgsField("frequency", QMetaType.Type.QString),
@@ -179,7 +179,7 @@ class WifiSurvey(QObject):
         style_wifi_points(lyr, self.cfg)
         self.project.addMapLayer(lyr, False)
         self.project.layerTreeRoot().insertLayer(0, lyr)
-        lyr.setCrs(QgsCoordinateReferenceSystem())   # undo any default CRS
+        lyr.setCrs(robot_crs())   # the robot's frame (not the default CRS)
         self._layer_id = lyr.id()
         try:
             self.persist()
@@ -337,7 +337,7 @@ def build_wifi_map(points, rooms, cfg, project):
     if points.selectedFeatureCount() > 0:
         source = points.materialize(
             QgsFeatureRequest().setFilterFids(points.selectedFeatureIds()))
-        source.setCrs(QgsCoordinateReferenceSystem())
+        source.setCrs(robot_crs())
         project.addMapLayer(source, False)   # Processing finds layers through the project
     try:
         if source.featureCount() < 3:
@@ -378,7 +378,7 @@ def build_wifi_map(points, rooms, cfg, project):
     raster = QgsRasterLayer(output, layer_names()["map"])
     if not raster.isValid():
         raise RuntimeError(output)
-    raster.setCrs(QgsCoordinateReferenceSystem())
+    raster.setCrs(robot_crs())
     style_wifi_raster(raster, cfg)
     style_wifi_points(points, cfg)
     project.addMapLayer(raster, False)

@@ -14,8 +14,10 @@ layer tree unchanged).
 
 import os
 
-from qgis.core import (QgsCoordinateReferenceSystem, QgsFeature, QgsProject,
+from qgis.core import (QgsFeature, QgsProject,
                        QgsVectorFileWriter, QgsVectorLayer)
+
+from .coords import robot_crs
 
 ROLE_KEY = "domotiqgis/role"
 
@@ -49,6 +51,8 @@ def adopt(project, role, names=(), geometry_type=None):
     if extra:
         project.removeMapLayers(extra)
     tag(keep, role)
+    if not keep.crs().isValid():   # saved before the robot's frame had a CRS (coords.py)
+        keep.setCrs(robot_crs())
     return keep
 
 
@@ -97,7 +101,7 @@ def make_permanent(layer, path, layer_name):
         raise OSError(f"cannot open {path} ({layer_name})")
     if renderer is not None:
         layer.setRenderer(renderer)
-    layer.setCrs(QgsCoordinateReferenceSystem())
+    layer.setCrs(robot_crs())
     return True
 
 
