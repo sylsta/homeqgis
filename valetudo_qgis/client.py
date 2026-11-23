@@ -287,7 +287,8 @@ class ValetudoClient(QObject):
         for reply in list(self._replies):
             try:
                 reply.finished.disconnect()
-                reply.abort()
+                if not reply.isFinished():   # (aborting an ended one ends it twice)
+                    reply.abort()
                 reply.deleteLater()
             except (TypeError, RuntimeError):   # already finished or deleted
                 pass

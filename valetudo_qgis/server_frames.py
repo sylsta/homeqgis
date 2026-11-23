@@ -134,7 +134,12 @@ class WebBlock(QObject):
         url = self._url()
         if not url or self._reply is not None:
             return
-        request = QNetworkRequest(QUrl(url if "://" in url else "http://" + url))
+        qurl = QUrl(url if "://" in url else "http://" + url)
+        if qurl.scheme().lower() not in ("http", "https"):   # not checked over the web
+            self.ok, self.error = False, f"{qurl.scheme()}: not a web address (http, https)"
+            self.render()
+            return
+        request = QNetworkRequest(qurl)
         request.setTransferTimeout(8000)
         reply = self._reply = QgsNetworkAccessManager.instance().get(request)
 

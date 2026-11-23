@@ -55,7 +55,9 @@ class HomeAssistantClient(QObject):
     def close(self):
         """Abort the requests under way (their callbacks are not called)."""
         for reply in list(self._replies):
-            if not sip.isdeleted(reply):
+            # Not one that has already ended (timed out, failed): aborting it would end
+            # it a second time (Qt: "this method must only be called once")
+            if not sip.isdeleted(reply) and not reply.isFinished():
                 reply.abort()
         self._replies.clear()
 
