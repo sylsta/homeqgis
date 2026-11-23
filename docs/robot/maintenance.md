@@ -4,7 +4,8 @@ The robot's details, what wears, the dock station and statistics.
 
 ![The Maintenance tab](../images/maintenance.png)
 
-- **Robot**: state, dock, attachments (mop, water tank…), position, and the system
+- **Robot**: state, dock (what it is doing: idle, washing mops, drying, emptying,
+  paused, error), attachments (mop, water tank…), position, and the system
   commands (reboot, boot watch…).
 - **Consumables**: time or percentage left for brushes, filters, mops… A worn one
   shows in the ⚠.

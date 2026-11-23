@@ -164,10 +164,6 @@
         <translation>Séchage</translation>
     </message>
     <message>
-        <source>Washing</source>
-        <translation>Lavage</translation>
-    </message>
-    <message>
         <source>Rooms</source>
         <translation>Pièces</translation>
     </message>
@@ -3634,6 +3630,10 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
     <message>
         <source>No map of all runs on the Pi yet (it builds one after its next run): {loaded}</source>
         <translation>Pas encore de carte de tous les passages sur le Pi (il en construit une après son prochain passage) : {loaded}</translation>
+    </message>
+    <message>
+        <source>Washing mops</source>
+        <translation>Lavage des serpillières</translation>
     </message>
 </context>
 </TS>

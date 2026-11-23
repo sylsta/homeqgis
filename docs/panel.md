@@ -26,7 +26,10 @@ The panel holds everything; the QGIS menu and toolbar stay minimal.
 Always visible, at the top:
 
 - **The robot**: its logo, its state as a coloured label (*Cleaning*, *Docked*,
-  *Returning*…), the battery, and while it works the time and area of the job.
+  *Returning*…), the battery, and while it works the time and area of the job. On
+  its dock, the label says what is going on there: a dock task first (*Docked ·
+  Washing mops*, *Drying*, *Emptying*), else the charge (*Docked · Charging*,
+  *Charged*). The status card over the map says the same.
 - **⚠** when something needs you: a dock tank empty or full, a worn consumable, a
   robot error, a server with a wrong clock, Home Assistant devices unavailable or
   with a battery to change. Hover it for the list; click it to open the right tab.

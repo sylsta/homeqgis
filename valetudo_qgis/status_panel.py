@@ -150,6 +150,7 @@ def _on_port(url, port):
 
 # A job starts when the robot goes from one of AT_REST_STATES to one of JOB_STATES
 JOB_STATES = ("cleaning", "moving")
+DOCK_TASKS = ("cleaning", "washing", "drying", "emptying", "pause", "error")
 AT_REST_STATES = ("docked", "idle", "error")
 CAMERA_GRACE_MS = 60_000   # the stream keeps running this long after the tab is left
 ACTIVE_STATES = {"cleaning", "returning", "moving", "manual_control"}
@@ -174,9 +175,15 @@ def _state_labels():
         "idle": tr("Idle"), "cleaning": tr("Cleaning"), "returning": tr("Returning to dock"),
         "docked": tr("Docked"), "paused": tr("Paused"), "error": tr("Error"),
         "manual_control": tr("Manual control"), "moving": tr("Moving"),
-        # dock status values
-        "pause": tr("Paused"), "emptying": tr("Emptying"), "drying": tr("Drying"),
-        "washing": tr("Washing"),
+    }
+
+
+def _dock_labels():
+    """DockStatusStateAttribute values: what the dock is doing."""
+    return {
+        "idle": tr("Idle"), "pause": tr("Paused"), "emptying": tr("Emptying"),
+        "cleaning": tr("Washing mops"), "washing": tr("Washing mops"), "drying": tr("Drying"),
+        "error": tr("Error"),
     }
 
 
@@ -456,6 +463,8 @@ class ValetudoPanel(QgsDockWidget):
         # -- the big button: Start / Pause / Resume, after the robot's state ------------
         self._state = None
         self._flag = None
+        self._dock_value = None     # DockStatusStateAttribute
+        self._battery_flag = None   # charging, charged, discharging
         self.btn_primary.clicked.connect(self._on_primary)
         self._update_primary()
 
@@ -639,10 +648,24 @@ class ValetudoPanel(QgsDockWidget):
         box.collapsedStateChanged.connect(
             lambda collapsed: QgsSettings().setValue(settings_key, not collapsed))
 
+    def _docked_detail(self):
+        """On the dock: what it is doing (a dock task first, else the charge), or ""."""
+        if self._state != "docked":
+            return ""
+        if self._dock_value in DOCK_TASKS:
+            return _label(_dock_labels(), self._dock_value)
+        if self._battery_flag in ("charging", "charged"):
+            return _label(_flag_labels(), self._battery_flag)
+        return ""
+
     def _set_badge(self, state):
-        """Coloured pill with the robot state, readable at a glance."""
+        """Coloured pill with the robot state (on the dock: what it is doing there),
+        readable at a glance."""
         color = STATE_COLORS.get(state, "#757575")
         text = _label(_state_labels(), state) if state else tr("Unknown")
+        detail = self._docked_detail() if state else ""
+        if detail:
+            text = f"{text} · {detail}"
         for badge in (self.lbl_badge, self.lbl_badge_details):
             badge.setText(text)
             badge.setStyleSheet(
@@ -1009,7 +1032,11 @@ class ValetudoPanel(QgsDockWidget):
             self.summaryChanged.emit("")
             return
         color = STATE_COLORS.get(state, "#757575")
-        parts = [f"<b style='color:{color}'>{html.escape(_label(_state_labels(), state))}</b>"]
+        label = _label(_state_labels(), state)
+        detail = self._docked_detail()
+        if detail:
+            label = f"{label} · {detail}"
+        parts = [f"<b style='color:{color}'>{html.escape(label)}</b>"]
         battery = getattr(self, "_battery", None)
         if battery is not None:
             parts.append(f"{battery} %")
@@ -2274,7 +2301,7 @@ class ValetudoPanel(QgsDockWidget):
             elif cls == "BatteryStateAttribute":
                 level = int(attr.get("level") or 0)
                 flag = attr.get("flag")
-                self._battery = level
+                self._battery, self._battery_flag = level, flag
                 suffix = f" · {_label(flags, flag)}" if flag and flag != "none" else ""
                 for bar in (self.bar_battery, self.bar_battery_details):
                     bar.setEnabled(True)
@@ -2296,7 +2323,9 @@ class ValetudoPanel(QgsDockWidget):
                 components[attr.get("type")] = attr.get("value")
 
         _set_row_visible(self.status_form, self.lbl_dock, dock_value is not None)
-        self.lbl_dock.setText(_label(states, dock_value))
+        self.lbl_dock.setText(_label(_dock_labels(), dock_value))
+        self._dock_value = dock_value
+        self._set_badge(self._state)   # docked: with what it is doing
         self.lbl_error.setVisible(bool(error_text))
         self.lbl_error.setText(f"⚠ {error_text}" if error_text else "")
         self._set_problem("error", error_text or None)
