@@ -30,8 +30,10 @@ map in `wifi/robot_wifi_signal.tif`, next to the project.
 
 ## The other Wi-Fi networks
 
-Robots that can scan (Valetudo's Wi-Fi scan, on most Dreame, Roborock, Viomi and
-Midea robots) list every network they see, with its signal. During a survey, the
+Robots that can scan (Valetudo's Wi-Fi scan: most Dreame, Roborock and Viomi
+robots, the Eureka J15 Max Ultra; not the J15 Pro Ultra, where a scan takes
+minutes) list every network they see, with its signal. On the others, the button
+is not shown. During a survey, the
 plugin asks for a scan every 15 s once the robot has moved, and adds a point per
 network in *Wi-Fi networks seen* (`ssid`, `bssid` — one per access point or
 band —, `signal`, `time`). **Scan Wi-Fi networks here** (Wi-Fi tab) does one scan
