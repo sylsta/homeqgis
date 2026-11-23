@@ -7,6 +7,17 @@ The robot's details, what wears, the dock station and statistics.
 - **Robot**: state, dock (what it is doing: idle, washing mops, drying, emptying,
   paused, error), attachments (mop, water tank…), position, and the system
   commands (reboot, boot watch…).
+- **Robot settings** (folded at first): the robot's own settings, those it offers —
+  child lock, obstacle and pet waste avoidance, carpet mode and what to do on
+  carpets, mop extension and twist, mop wash water and drying time, automatic
+  drying, auto-empty, cleaning route, speaker volume (with a test sound), *Do not
+  disturb* hours, and the robot's *quirks* (options Valetudo describes itself, with
+  its own explanation on hover). A change is sent at once; one the robot refuses
+  is put back, with its reason.
+- **Valetudo** (folded at first): its version, how long it has been running (and
+  whether it had to restart itself), the robot's time sync, and its updates:
+  *Check for updates*, then *Download* and *Install…* (asked first: Valetudo
+  restarts, the robot is unreachable for a minute).
 - **Consumables**: time or percentage left for brushes, filters, mops… A worn one
   shows in the ⚠.
 - **Dock station**: tanks and bag, and its commands when the robot has them

@@ -245,6 +245,17 @@ class ValetudoClient(QObject):
         self._track(self.nam.put(self._request(f"/robot/capabilities/{capability}"), body),
                     on_done, quiet=True, on_error=on_error)
 
+    def get_json(self, path, on_done, on_error=None):
+        """GET <api>/path quietly: on_done(data), or on_error(message)."""
+        self._track(self.nam.get(self._request(path)), on_done, quiet=True,
+                    on_error=on_error)
+
+    def put_json(self, path, payload, on_done=None, on_error=None):
+        """PUT <api>/path quietly: on_done(answer), or on_error(message)."""
+        body = QByteArray(json.dumps(payload).encode())
+        self._track(self.nam.put(self._request(path), body), on_done, quiet=True,
+                    on_error=on_error)
+
     def fetch_wifi_scan(self, quiet=True):
         """The Wi-Fi networks the robot sees (WifiScanCapability). Valetudo answers
         within about 2 s, with the last finished scan if a new one takes longer."""

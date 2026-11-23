@@ -3795,5 +3795,237 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Hold the arrow keys (or W A S D, Z Q S D), or the buttons. The robot stops when you let go, and stays where it is when this window closes.</source>
         <translation>Maintenez les flèches (ou Z Q S D, W A S D), ou les boutons. Le robot s'arrête quand vous relâchez, et reste où il est quand cette fenêtre se ferme.</translation>
     </message>
+    <message>
+        <source>Carpet mode (more suction)</source>
+        <translation>Mode tapis (plus d'aspiration)</translation>
+    </message>
+    <message>
+        <source>Follow the floor's direction (wood)</source>
+        <translation>Suivre le sens du sol (parquet)</translation>
+    </message>
+    <message>
+        <source>Mop extension (edges)</source>
+        <translation>Extension des serpillières (bords)</translation>
+    </message>
+    <message>
+        <source>On carpets</source>
+        <translation>Sur les tapis</translation>
+    </message>
+    <message>
+        <source>Mop wash water</source>
+        <translation>Eau de lavage des serpillières</translation>
+    </message>
+    <message>
+        <source>Auto-empty</source>
+        <translation>Vidage automatique</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>Rapide</translation>
+    </message>
+    <message>
+        <source>Intensive</source>
+        <translation>Intensif</translation>
+    </message>
+    <message>
+        <source>Deep</source>
+        <translation>En profondeur</translation>
+    </message>
+    <message>
+        <source>Avoid carpets</source>
+        <translation>Éviter les tapis</translation>
+    </message>
+    <message>
+        <source>Lift the mops</source>
+        <translation>Relever les serpillières</translation>
+    </message>
+    <message>
+        <source>Leave the mops in the dock</source>
+        <translation>Laisser les serpillières à la base</translation>
+    </message>
+    <message>
+        <source>Cold</source>
+        <translation>Froide</translation>
+    </message>
+    <message>
+        <source>Warm</source>
+        <translation>Tiède</translation>
+    </message>
+    <message>
+        <source>Hot</source>
+        <translation>Chaude</translation>
+    </message>
+    <message>
+        <source>Very hot</source>
+        <translation>Très chaude</translation>
+    </message>
+    <message>
+        <source>Boiling</source>
+        <translation>Bouillante</translation>
+    </message>
+    <message>
+        <source>2 h</source>
+        <translation>2 h</translation>
+    </message>
+    <message>
+        <source>3 h</source>
+        <translation>3 h</translation>
+    </message>
+    <message>
+        <source>4 h</source>
+        <translation>4 h</translation>
+    </message>
+    <message>
+        <source>5 h</source>
+        <translation>5 h</translation>
+    </message>
+    <message>
+        <source>Quiet</source>
+        <translation>Silencieux</translation>
+    </message>
+    <message>
+        <source>Automatic</source>
+        <translation>Automatique</translation>
+    </message>
+    <message>
+        <source>Short</source>
+        <translation>Court</translation>
+    </message>
+    <message>
+        <source>Long</source>
+        <translation>Long</translation>
+    </message>
+    <message>
+        <source>Infrequent</source>
+        <translation>Peu fréquent</translation>
+    </message>
+    <message>
+        <source>Frequent</source>
+        <translation>Fréquent</translation>
+    </message>
+    <message>
+        <source>Robot settings</source>
+        <translation>Réglages du robot</translation>
+    </message>
+    <message>
+        <source>Saved on the robot.</source>
+        <translation>Enregistré sur le robot.</translation>
+    </message>
+    <message>
+        <source>Test</source>
+        <translation>Tester</translation>
+    </message>
+    <message>
+        <source>The robot did not accept it: {error}</source>
+        <translation>Le robot ne l'a pas accepté : {error}</translation>
+    </message>
+    <message>
+        <source>Waiting for the first synchronisation</source>
+        <translation>En attente de la première synchronisation</translation>
+    </message>
+    <message>
+        <source>Off (the robot's own clock)</source>
+        <translation>Désactivée (horloge du robot)</translation>
+    </message>
+    <message>
+        <source>Synchronised</source>
+        <translation>Synchronisée</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <source>Running for</source>
+        <translation>Fonctionne depuis</translation>
+    </message>
+    <message>
+        <source>Time sync</source>
+        <translation>Synchro de l'heure</translation>
+    </message>
+    <message>
+        <source>Updates</source>
+        <translation>Mises à jour</translation>
+    </message>
+    <message>
+        <source>Asked…</source>
+        <translation>Demandé…</translation>
+    </message>
+    <message>
+        <source>Not checked yet</source>
+        <translation>Pas encore vérifié</translation>
+    </message>
+    <message>
+        <source>Check for updates</source>
+        <translation>Vérifier les mises à jour</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>À jour</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>Vérifier à nouveau</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Télécharger</translation>
+    </message>
+    <message>
+        <source>Install…</source>
+        <translation>Installer…</translation>
+    </message>
+    <message>
+        <source>Off in Valetudo's settings</source>
+        <translation>Désactivées dans les réglages de Valetudo</translation>
+    </message>
+    <message>
+        <source>Checking…</source>
+        <translation>Vérification…</translation>
+    </message>
+    <message>
+        <source>Synchronised (offset {ms} ms)</source>
+        <translation>Synchronisée (écart {ms} ms)</translation>
+    </message>
+    <message>
+        <source>{n} days</source>
+        <translation>{n} jours</translation>
+    </message>
+    <message>
+        <source>Update Valetudo</source>
+        <translation>Mettre à jour Valetudo</translation>
+    </message>
+    <message>
+        <source>restarted itself {n} time(s) after a problem</source>
+        <translation>redémarré seul {n} fois après un problème</translation>
+    </message>
+    <message>
+        <source>Version {v} available</source>
+        <translation>Version {v} disponible</translation>
+    </message>
+    <message>
+        <source>Downloading version {v}…</source>
+        <translation>Téléchargement de la version {v}…</translation>
+    </message>
+    <message>
+        <source>Version {v} downloaded</source>
+        <translation>Version {v} téléchargée</translation>
+    </message>
+    <message>
+        <source>Error: {m}</source>
+        <translation>Erreur : {m}</translation>
+    </message>
+    <message>
+        <source>Install Valetudo {v} on the robot? Valetudo restarts: the robot is unreachable for a minute or so. Do not do it during a cleaning.</source>
+        <translation>Installer Valetudo {v} sur le robot ? Valetudo redémarre : le robot est injoignable une minute environ. Ne le faites pas pendant un nettoyage.</translation>
+    </message>
+    <message>
+        <source>Cold air</source>
+        <translation>Air froid</translation>
+    </message>
 </context>
 </TS>

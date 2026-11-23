@@ -40,6 +40,8 @@ except ImportError:
 from qgis.gui import QgsDockWidget
 
 from .camera_widget import CameraWidget, job_videos_folder
+from .robot_settings import RobotSettingsBox
+from .valetudo_box import ValetudoBox
 from . import room_groups
 from .i18n import tr
 from . import host_info
@@ -639,6 +641,30 @@ class ValetudoPanel(QgsDockWidget):
                     self.box_dock):
             box.setVisible(False)   # shown once the robot reports them
         _set_row_visible(self.status_form, self.lbl_attachments, False)
+        self._build_robot_sections()
+
+    def _build_robot_sections(self):
+        """Maintenance: the robot's own settings and Valetudo itself, after the robot."""
+        self.box_robot_settings = RobotSettingsBox()
+        self.box_valetudo = ValetudoBox()
+        layout = self.box_status.parentWidget().layout()
+        index = layout.indexOf(self.box_status)
+        for offset, (box, key) in enumerate(((self.box_robot_settings, "robot_settings"),
+                                             (self.box_valetudo, "valetudo"))):
+            layout.insertWidget(index + 1 + offset, box)
+            self._remember_section(box, key, open_default=False)
+            box.collapsedStateChanged.connect(lambda *_: self._update_maintenance())
+        self.box_valetudo.setVisible(False)   # once a robot is set
+
+    def _update_maintenance(self):
+        """The Maintenance tab in front: read the robot's settings and Valetudo's state."""
+        if not self.isVisible() or self.client is None:
+            return
+        if self._page_shown(self._tab_pages.get("maintenance")):
+            if not self.box_robot_settings.isCollapsed():
+                self.box_robot_settings.load()
+            if not self.box_valetudo.isCollapsed():
+                self.box_valetudo.load()
 
     @staticmethod
     def _remember_section(box, key, open_default=True):
@@ -676,6 +702,7 @@ class ValetudoPanel(QgsDockWidget):
     def _on_tab_changed(self, index):
         if 0 <= index < len(self._tab_keys):
             QgsSettings().setValue(KEY_TAB, self._tab_keys[index])
+        self._update_maintenance()
         self._update_camera()
         self._update_console()
         self._update_schedule()
@@ -931,6 +958,7 @@ class ValetudoPanel(QgsDockWidget):
         self._update_console()
         self._update_schedule()
         self._update_home()
+        self._update_maintenance()
 
     def _update_home(self):
         self.home_tab.set_active(self.isVisible()
@@ -1278,6 +1306,9 @@ class ValetudoPanel(QgsDockWidget):
         self.capabilities = None
         self._reachable = None
         self._update_console()
+        self.box_robot_settings.set_robot(client, [])
+        self.box_valetudo.set_client(client)
+        self.box_valetudo.setVisible(client is not None)
         if client is None:
             self._timer.stop()
             self._show_disconnected()
@@ -2234,6 +2265,8 @@ class ValetudoPanel(QgsDockWidget):
         if "CameraLightControlCapability" in caps:
             self.client.fetch_toggle("CameraLightControlCapability")
         self.lbl_features.setText("\n".join(lines))
+        self.box_robot_settings.set_robot(self.client, caps)
+        self._update_maintenance()
         self._update_rooms_button()
         if self.isVisible():   # nothing is fetched while the panel is hidden
             self.refresh()
