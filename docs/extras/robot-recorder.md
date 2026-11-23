@@ -21,8 +21,13 @@ In the Wi-Fi tab, *Recorder on the robot* says whether it is installed and where
 - The script and its readings go to the first writable folder among `/data`,
   `/mnt/UDISK`, `/mnt/data`, `/userdata` and `/tmp` (the install message says which).
   In `/tmp` they are lost at each reboot.
+- **Each job checks it**: when the robot leaves its dock for a job (scheduled or
+  sent by hand), the plugin checks over SSH that the recorder runs on the robot,
+  starts it if not, and installs it (without asking) if it is not on the robot.
+  Nothing is said when it was already running. QGIS must be running, with SSH to
+  the robot set up.
 - The robot does not start it at boot by itself: the plugin starts it again each
-  time it connects. To have it start with the robot, add this line to the robot's own
+  time it connects, and at each job. To have it start with the robot, add this line to the robot's own
   boot script, the one that starts Valetudo (with the folder given at install):
 
     ```sh

@@ -364,6 +364,7 @@ class ValetudoPlugin:
         self._build_toolbar()
         self.overlay = MapOverlay(canvas)
         self.panel.summaryChanged.connect(self.overlay.set_html)
+        self.panel.jobStarted.connect(self._on_job_started)
         self.act["live"].toggled.connect(self._on_live_toggled)
 
         self._apply_capabilities()
@@ -378,6 +379,7 @@ class ValetudoPlugin:
         # "Show on map" at start-up, if set and the robot answers (never prompts).
         self._live_at_start = False
         QTimer.singleShot(LIVE_AT_START_DELAY_MS, self._start_live_at_start)
+        self._job_survey_warned = False   # see _on_job_started
 
         # Setting up the panel and its layers' watchers can mark the empty start-up
         # project as modified: QGIS, opening a project given at launch (--project, as
@@ -1538,6 +1540,30 @@ class ValetudoPlugin:
             self._message(tr("Installing the Wi-Fi recorder on the robot…"),
                           Qgis.MessageLevel.Info)
 
+    def _on_job_started(self):
+        """A job starts: the Wi-Fi recorder on the robot must be running, so that the
+        job is recorded. Started if it is not; installed (without asking) if it is not
+        on the robot. Quiet unless something was done or went wrong."""
+        if self._ssh_target() is None or self.robot_survey.is_busy():
+            return   # no SSH to the robot: nothing can be checked
+        directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
+        cfg = self._ssh_target()[3]
+        if directory:
+            self._robot_survey_run("ensure_job", robot_survey.ensure_command(
+                directory, cfg["wifi_interval_s"], cfg["wifi_min_step_cm"]))
+        else:
+            self._install_robot_survey_quietly()
+
+    def _install_robot_survey_quietly(self):
+        cfg = self._ssh_target()[3]
+        with open(robot_survey.SCRIPT_PATH, "rb") as f:
+            script = f.read()
+        if self._robot_survey_run("install", robot_survey.install_command(
+                cfg["wifi_interval_s"], cfg["wifi_min_step_cm"]), script):
+            self._quiet_install = True
+            self._message(tr("Job started: installing the Wi-Fi recorder on the robot…"),
+                          Qgis.MessageLevel.Info)
+
     def _ensure_robot_survey(self):
         directory = QgsSettings().value(KEY_ROBOT_SURVEY_DIR, "", type=str)
         target = self._ssh_target()
@@ -1622,6 +1648,20 @@ class ValetudoPlugin:
             self._message(tr("ssh not found: install an SSH client."), Qgis.MessageLevel.Critical)
             return
         values = robot_survey.parse_keys(output)
+        if operation == "ensure_job":   # a job started
+            if values.get("missing"):   # removed from the robot by other means
+                QgsSettings().remove(KEY_ROBOT_SURVEY_DIR)
+                QTimer.singleShot(0, self._install_robot_survey_quietly)
+            elif ok and values.get("started"):
+                self._message(tr("Job started: the Wi-Fi recorder was not running on the "
+                                 "robot; started."), Qgis.MessageLevel.Info)
+            elif not ok and not self._job_survey_warned:
+                self._job_survey_warned = True   # once per session: every job would say it
+                self._message(tr("Job started, but the Wi-Fi recorder on the robot could not "
+                                 "be checked: {detail}").format(
+                    detail=values.get("error") or detail), Qgis.MessageLevel.Warning)
+            self._update_robot_survey_actions()
+            return
         if operation == "ensure":
             if values.get("missing"):   # removed from the robot by other means
                 QgsSettings().remove(KEY_ROBOT_SURVEY_DIR)
@@ -1631,6 +1671,14 @@ class ValetudoPlugin:
             return   # quiet: runs at each connection
         if operation == "history":
             self._on_robot_history(ok, output, values, detail)
+            return
+        quiet, self._quiet_install = getattr(self, "_quiet_install", False), False
+        if not ok and operation == "install" and quiet:   # at a job's start: once a session
+            if not self._job_survey_warned:
+                self._job_survey_warned = True
+                self._message(tr("Job started, but the Wi-Fi recorder could not be installed "
+                                 "on the robot: {detail}").format(
+                    detail=values.get("error") or detail), Qgis.MessageLevel.Warning)
             return
         if not ok and operation != "import":
             self.iface.messageBar().pushMessage(

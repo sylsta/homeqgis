@@ -3635,5 +3635,21 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Washing mops</source>
         <translation>Lavage des serpillières</translation>
     </message>
+    <message>
+        <source>Job started: installing the Wi-Fi recorder on the robot…</source>
+        <translation>Tâche démarrée : installation de l'enregistreur Wi-Fi sur le robot…</translation>
+    </message>
+    <message>
+        <source>Job started: the Wi-Fi recorder was not running on the robot; started.</source>
+        <translation>Tâche démarrée : l'enregistreur Wi-Fi ne tournait pas sur le robot ; démarré.</translation>
+    </message>
+    <message>
+        <source>Job started, but the Wi-Fi recorder on the robot could not be checked: {detail}</source>
+        <translation>Tâche démarrée, mais l'enregistreur Wi-Fi du robot n'a pas pu être vérifié : {detail}</translation>
+    </message>
+    <message>
+        <source>Job started, but the Wi-Fi recorder could not be installed on the robot: {detail}</source>
+        <translation>Tâche démarrée, mais l'enregistreur Wi-Fi n'a pas pu être installé sur le robot : {detail}</translation>
+    </message>
 </context>
 </TS>

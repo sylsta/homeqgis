@@ -379,6 +379,7 @@ class ValetudoPanel(QgsDockWidget):
     segmentsChanged = pyqtSignal(list)      # [(room id, name)] known on the robot
     piMapRequested = pyqtSignal(bool)       # Wi-Fi tab: load the Pi's map (True: full map)
     summaryChanged = pyqtSignal(str)        # one-line status (HTML) for the map overlay
+    jobStarted = pyqtSignal()               # the robot leaves its dock for a job
     advancedChanged = pyqtSignal(bool)      # the ⋮ menu's "Advanced tools" was toggled
 
     def __init__(self, parent=None):
@@ -2252,10 +2253,10 @@ class ValetudoPanel(QgsDockWidget):
         (washing the mops, clean water, emptying: Valetudo then says "docked" with the
         "resumable" flag) neither stops one nor starts a new one, nor does starting a
         recording by hand while the robot is on its dock."""
-        if (state in JOB_STATES and previous in AT_REST_STATES
-                and previous_flag != "resumable" and not self.camera.is_recording()
-                and load_settings()["record_jobs"]):
-            self._record_job()
+        if state in JOB_STATES and previous in AT_REST_STATES and previous_flag != "resumable":
+            self.jobStarted.emit()
+            if not self.camera.is_recording() and load_settings()["record_jobs"]:
+                self._record_job()
         if not self.camera.is_recording():
             self._away_while_recording = False
             return
