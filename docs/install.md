@@ -41,6 +41,23 @@ and this manual included.
     The **Plugin Reloader** plugin reloads the code after a change without
     restarting QGIS.
 
+## Building the zip yourself
+
+From the repository, with `python3`, `zip`, Qt's `lrelease` and mkdocs (with
+mkdocs-material):
+
+| Command | What it does |
+|---|---|
+| `make` | lists the commands, with the version |
+| `make check` | the same checks as GitHub (syntax, names, translations, forms) |
+| `make zip` | `dist/valetudo_qgis-<version>.zip`: checks, French translation, user manual inside |
+| `make install` | copies the plugin into a QGIS profile (`PROFILE=default`) |
+| `make release` | the zip of a committed and pushed `main`, tagged `v<version>` (raise `version` in `metadata.txt` first) |
+| `make clean` | removes what the build made |
+
+`make release` tags locally; it then says how to push the tag and attach the zip
+to a GitHub release.
+
 ## Updating
 
 Install the new zip the same way: QGIS replaces the plugin. Your settings, room

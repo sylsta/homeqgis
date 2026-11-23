@@ -27,6 +27,10 @@ then in QGIS: *Plugins > Manage and Install Plugins > Install from ZIP*.
 Tip: install the **Plugin Reloader** plugin to reload the code after each change
 without restarting QGIS.
 
+**Building the zip:** `make zip` gives `dist/valetudo_qgis-<version>.zip` (checks,
+French translation and manual included); `make` lists the other commands
+(`check`, `install`, `release`, `clean`).
+
 ## User manual
 
 **[sylsta.github.io/qgis-valetudo](https://sylsta.github.io/qgis-valetudo/)**, also
