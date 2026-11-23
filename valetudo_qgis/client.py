@@ -107,7 +107,8 @@ class ValetudoClient(QObject):
     def _track(self, reply, callback, on_finish=None, quiet=False, on_error=None, raw=False):
         """quiet=True: background request, failures only emit reachable(False).
 
-        on_error(message) is called on failure; raw=True passes the body as text.
+        on_error(message) is called on failure; raw=True passes the body as text,
+        raw="bytes" as it is (an image).
         """
         self._replies.add(reply)
 
@@ -135,7 +136,9 @@ class ValetudoClient(QObject):
                     return
                 self.reachable.emit(True)
                 body = bytes(reply.readAll()) if reply.isOpen() else b""
-                if raw:
+                if raw == "bytes":
+                    data = body
+                elif raw:
                     data = body.decode("utf-8", "replace")
                 elif not body.strip():
                     data = None
@@ -272,6 +275,12 @@ class ValetudoClient(QObject):
         self._peek_pending = True
         self._get("/robot/state/map", self.mapPeeked.emit,
                   on_finish=lambda: setattr(self, "_peek_pending", False), quiet=True)
+
+    def fetch_obstacle_image(self, obstacle_id, on_image, on_error):
+        """The photo of an obstacle (ObstacleImagesCapability): on_image(bytes)."""
+        path = f"/robot/capabilities/ObstacleImagesCapability/img/{obstacle_id}"
+        self._track(self.nam.get(self._request(path)), on_image, quiet=True,
+                    on_error=on_error, raw="bytes")
 
     def fetch_map(self, quiet=False):
         if self._map_pending:  # do not pile up requests if the robot is slow

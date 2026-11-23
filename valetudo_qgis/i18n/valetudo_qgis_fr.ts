@@ -3651,5 +3651,97 @@ Double-cliquez sur un créneau, ou déposez ici un groupe de pièces.</translati
         <source>Job started, but the Wi-Fi recorder could not be installed on the robot: {detail}</source>
         <translation>Tâche démarrée, mais l'enregistreur Wi-Fi n'a pas pu être installé sur le robot : {detail}</translation>
     </message>
+    <message>
+        <source>Valetudo - obstacles</source>
+        <translation>Valetudo - obstacles</translation>
+    </message>
+    <message>
+        <source>Obstacle (photo)</source>
+        <translation>Obstacle (photo)</translation>
+    </message>
+    <message>
+        <source>Show the photo</source>
+        <translation>Voir la photo</translation>
+    </message>
+    <message>
+        <source>Asking the robot for the photo…</source>
+        <translation>Demande de la photo au robot…</translation>
+    </message>
+    <message>
+        <source>The robot has no photo of this obstacle.</source>
+        <translation>Le robot n'a pas de photo de cet obstacle.</translation>
+    </message>
+    <message>
+        <source>No photo: {error}</source>
+        <translation>Pas de photo : {error}</translation>
+    </message>
+    <message>
+        <source>Wall or furniture: new</source>
+        <translation>Mur ou meuble : nouveau</translation>
+    </message>
+    <message>
+        <source>Wall or furniture: gone</source>
+        <translation>Mur ou meuble : disparu</translation>
+    </message>
+    <message>
+        <source>Floor: now reached</source>
+        <translation>Sol : désormais atteint</translation>
+    </message>
+    <message>
+        <source>Floor: no longer reached</source>
+        <translation>Sol : plus atteint</translation>
+    </message>
+    <message>
+        <source>Map changes since {day}</source>
+        <translation>Changements de la carte depuis le {day}</translation>
+    </message>
+    <message>
+        <source>Valetudo - wall lines</source>
+        <translation>Valetudo - murs (lignes)</translation>
+    </message>
+    <message>
+        <source>Compare the map with an earlier day…</source>
+        <translation>Comparer la carte avec un jour précédent…</translation>
+    </message>
+    <message>
+        <source>Draw the walls as lines</source>
+        <translation>Tracer les murs en lignes</translation>
+    </message>
+    <message>
+        <source>Show the map first (Show on map).</source>
+        <translation>Affichez d'abord la carte (Afficher sur la carte).</translation>
+    </message>
+    <message>
+        <source>No earlier map yet: the plugin keeps the first map of each day next to the project, from today on.</source>
+        <translation>Pas encore de carte précédente : l'extension garde la première carte de chaque jour à côté du projet, à partir d'aujourd'hui.</translation>
+    </message>
+    <message>
+        <source>(this morning)</source>
+        <translation>(ce matin)</translation>
+    </message>
+    <message>
+        <source>Map changes</source>
+        <translation>Changements de la carte</translation>
+    </message>
+    <message>
+        <source>Compare the map with the one of:</source>
+        <translation>Comparer la carte avec celle du :</translation>
+    </message>
+    <message>
+        <source>Map of that day unreadable: {error}</source>
+        <translation>Carte de ce jour illisible : {error}</translation>
+    </message>
+    <message>
+        <source>{n} change(s) since {day}: new walls or furniture in red, gone in blue, floor reached in green, no longer reached in orange.</source>
+        <translation>{n} changement(s) depuis le {day} : murs ou meubles nouveaux en rouge, disparus en bleu, sol atteint en vert, plus atteint en orange.</translation>
+    </message>
+    <message>
+        <source>Wall lines not saved: {error}</source>
+        <translation>Murs en lignes non enregistrés : {error}</translation>
+    </message>
+    <message>
+        <source>{n} wall line(s) drawn, from the outline of the floor.</source>
+        <translation>{n} ligne(s) de murs tracée(s), d'après le contour du sol.</translation>
+    </message>
 </context>
 </TS>

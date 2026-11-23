@@ -12,6 +12,8 @@ history/
 map/
     robot_map.gpkg               the robot's current map (rooms, zones)
     robot_map_a3f9c2e1.gpkg      one per version of the map
+    versions/
+        robot_map_2026-11-23.gpkg   the first map of each day (map changes)
 videos/
     valetudo_job_20261122_093012.mp4   the camera, during each job
 wifi/

@@ -24,6 +24,7 @@ from qgis.core import (
     QgsProperty,
     QgsRectangle,
     QgsRendererCategory,
+    QgsSingleSymbolRenderer,
     QgsTextBufferSettings,
     QgsTextFormat,
     QgsVectorLayer,
@@ -33,12 +34,14 @@ from qgis.core import (
 from .coords import v2q
 from .history_logic import map_fingerprint
 from .i18n import tr
+from . import map_changes
 from .project_layers import (adopt, make_permanent, new_feature, project_folder,
                              replace_features, tag, write_gpkg)
 
 GROUP_NAME = "Valetudo"
 AREA_ENTITIES = {"no_go_area", "no_mop_area", "active_zone"}
-POINT_ENTITIES = {"robot_position", "charger_location", "go_to_target", "obstacle"}
+POINT_ENTITIES = {"robot_position", "charger_location", "go_to_target"}
+OBSTACLE = "obstacle"   # its own layer: what it is, how sure, its photo
 
 # Valetudo's robot angle is in degrees, clockwise on screen (our Y flip keeps the
 # on-screen orientation). If the arrow points the wrong way, adjust this offset.
@@ -46,6 +49,22 @@ ROBOT_ANGLE_OFFSET = 0
 
 STR = QMetaType.Type.QString
 DBL = QMetaType.Type.Double
+INT = QMetaType.Type.Int
+PLUGIN_PACKAGE = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
+
+
+def add_photo_action(layer):
+    """An action on the obstacles layer (Identify, attribute table): the photo."""
+    from qgis.core import QgsAction
+    manager = layer.actions()
+    if any(a.name() == tr("Show the photo") for a in manager.actions()):
+        return
+    code = ("from qgis.utils import plugins\n"
+            f"p = plugins.get({PLUGIN_PACKAGE!r})\n"
+            "if p is not None: p.show_obstacle_photo('[% \"obstacle_id\" %]')")
+    action = QgsAction(QgsAction.ActionType.GenericPython, tr("Show the photo"), code,
+                       "", False, "", {"Feature", "Canvas"})
+    manager.addAction(action)
 
 
 def layer_names():
@@ -56,6 +75,7 @@ def layer_names():
         "lines": tr("Valetudo - lines"),
         "robot": tr("Valetudo - robot"),
         "sensors": tr("Valetudo - sensors"),
+        "obstacles": tr("Valetudo - obstacles"),
     }
 
 
@@ -75,8 +95,6 @@ def _points_renderer():
         QgsRendererCategory("go_to_target", marker(
             name="cross", color="#1f78b4", outline_color="#1f78b4",
             outline_width=0.8, size=5), tr("Go-to target")),
-        QgsRendererCategory("obstacle", marker(
-            name="triangle", color="#ff7f00", outline_color="black", size=3), tr("Obstacle")),
     ]
     return QgsCategorizedSymbolRenderer("type", categories)
 
@@ -161,6 +179,65 @@ def _room_labeling():
     settings.setFormat(fmt)
     settings.centroidInside = True    # label inside the room, even for odd shapes
     return QgsVectorLayerSimpleLabeling(settings)
+
+
+def _obstacles_renderer():
+    """Orange triangles; outlined in white when the robot took a photo."""
+    return QgsCategorizedSymbolRenderer("photo", [
+        QgsRendererCategory(1, QgsMarkerSymbol.createSimple(
+            {"name": "triangle", "color": "#ff7f00", "outline_color": "white",
+             "outline_width": "0.6", "size": "4"}), tr("Obstacle (photo)")),
+        QgsRendererCategory(0, QgsMarkerSymbol.createSimple(
+            {"name": "triangle", "color": "#ff7f00", "outline_color": "black",
+             "size": "3.5"}), tr("Obstacle")),
+    ])
+
+
+def _obstacle_labeling():
+    settings = QgsPalLayerSettings()
+    settings.fieldName = "kind"
+    buffer = QgsTextBufferSettings()
+    buffer.setEnabled(True)
+    buffer.setSize(0.6)
+    buffer.setColor(QColor("white"))
+    fmt = QgsTextFormat()
+    fmt.setSize(7)
+    fmt.setColor(QColor("#bf360c"))
+    fmt.setBuffer(buffer)
+    settings.setFormat(fmt)
+    settings.dist = 1.5
+    return QgsVectorLayerSimpleLabeling(settings)
+
+
+def parse_obstacle(meta):
+    """Valetudo's obstacle metaData: label "Shoe (85%)", id, image (when it has a
+    photo) -> kind, confidence (%), obstacle_id, photo (0/1)."""
+    label = str(meta.get("label") or "").strip()
+    kind, confidence = label, None
+    if label.endswith("%)") and " (" in label:
+        kind, _, rest = label.rpartition(" (")
+        try:
+            confidence = int(float(rest[:-2]))
+        except ValueError:
+            kind, confidence = label, None
+    return {"kind": kind or None, "confidence": confidence, "label": label or None,
+            "obstacle_id": meta.get("id"), "photo": 1 if meta.get("image") else 0}
+
+
+def _changes_renderer():
+    """One colour per kind of change, half transparent over the map."""
+    kinds = {"wall_added": ("211,47,47", tr("Wall or furniture: new")),
+             "wall_removed": ("25,118,210", tr("Wall or furniture: gone")),
+             "floor_added": ("67,160,71", tr("Floor: now reached")),
+             "floor_removed": ("251,140,0", tr("Floor: no longer reached"))}
+    return QgsCategorizedSymbolRenderer("change", [
+        QgsRendererCategory(key, _fill(f"{rgb},170", outline=f"{rgb},255", width=0.3), label)
+        for key, (rgb, label) in kinds.items()])
+
+
+def _wall_lines_renderer():
+    return QgsSingleSymbolRenderer(QgsLineSymbol.createSimple(
+        {"line_color": "#000000", "line_width": "0.5", "capstyle": "round"}))
 
 
 SENSOR_COLOR = "#6a3d9a"          # a Home Assistant sensor, placed by the user
@@ -268,6 +345,9 @@ ROLES = {
     "sensors": ("Point", [QgsField("entity_id", STR), QgsField("label", STR),
                           QgsField("value", STR), QgsField("unit", STR),
                           QgsField("available", STR)], None),
+    "obstacles": ("Point", [QgsField("kind", STR), QgsField("confidence", INT),
+                            QgsField("label", STR), QgsField("obstacle_id", STR),
+                            QgsField("photo", INT)], None),
     "robot": ("Point", [QgsField("type", STR), QgsField("angle", DBL)], None),
     "lines": ("LineString", [QgsField("type", STR)], None),
     "areas": ("Polygon", [QgsField("type", STR)], "zones"),
@@ -279,7 +359,7 @@ MAP_FILE = "robot_map.gpkg"
 SIGNATURE_KEY = "domotiqgis/map_signature"
 ENGLISH_NAMES = {"rooms": "Valetudo - map", "areas": "Valetudo - zones",
                  "lines": "Valetudo - lines", "robot": "Valetudo - robot",
-                 "sensors": "Valetudo - sensors"}
+                 "sensors": "Valetudo - sensors", "obstacles": "Valetudo - obstacles"}
 GEOMETRY = {"Point": Qgis.GeometryType.Point, "LineString": Qgis.GeometryType.Line,
             "Polygon": Qgis.GeometryType.Polygon}
 
@@ -367,6 +447,7 @@ class ValetudoLayers:
                     break
             group.insertLayer(index, lyr)
         renderers = {"sensors": _sensors_renderer, "robot": _points_renderer,
+                     "obstacles": _obstacles_renderer,
                      "lines": _lines_renderer, "areas": _areas_renderer,
                      "rooms": lambda: _rooms_renderer([])}
         for role, lyr in created.items():
@@ -374,6 +455,10 @@ class ValetudoLayers:
         if "sensors" in created:
             created["sensors"].setLabeling(_sensor_labeling())
             created["sensors"].setLabelsEnabled(True)
+        if "obstacles" in created:
+            created["obstacles"].setLabeling(_obstacle_labeling())
+            created["obstacles"].setLabelsEnabled(True)
+            add_photo_action(created["obstacles"])
         if "rooms" in created:
             created["rooms"].setLabeling(_room_labeling())
             created["rooms"].setLabelsEnabled(True)
@@ -433,7 +518,63 @@ class ValetudoLayers:
         if map_folder() is not None:
             if not self.persist() and changed:
                 self._archive()
+            self._snapshot()
         return created
+
+    # -- what the map tells beyond the robot (map_changes.py) -------------------------
+
+    def _snapshot(self):
+        """The first map of the day, kept to compare with later."""
+        path = map_changes.snapshot_path(map_folder())
+        rooms = self.layer("rooms")
+        if rooms is not None and rooms.featureCount() and not os.path.exists(path):
+            write_gpkg(rooms, path, map_changes.SNAPSHOT_LAYER)
+
+    def _extra_layer(self, role, name, geometry, fields, renderer):
+        """A layer of ours outside ROLES (changes, wall lines): found again or created
+        at the top of the Valetudo group."""
+        lyr = adopt(self.project, role, {name}, GEOMETRY[geometry])
+        if lyr is None:
+            lyr = _memory_layer(geometry, name, fields)
+            tag(lyr, role)
+            self.project.addMapLayer(lyr, False)
+            root = self.project.layerTreeRoot()
+            group = root.findGroup(GROUP_NAME) or root.insertGroup(0, GROUP_NAME)
+            group.insertLayer(0, lyr)
+        lyr.setName(name)
+        lyr.setRenderer(renderer)
+        return lyr
+
+    def show_changes(self, snapshot, day_label):
+        """The changes since a snapshot, in the "Map changes" layer. Returns how many."""
+        rooms = self.layer("rooms")
+        earlier = QgsVectorLayer(f"{snapshot}|layername={map_changes.SNAPSHOT_LAYER}",
+                                 "snapshot", "ogr")
+        if rooms is None or not earlier.isValid():
+            raise OSError(snapshot)
+        found = map_changes.compare(list(rooms.getFeatures()), list(earlier.getFeatures()))
+        lyr = self._extra_layer("map/changes", tr("Map changes since {day}").format(
+            day=day_label), "Polygon",
+            [QgsField("change", STR), QgsField("area_m2", DBL)], _changes_renderer())
+        replace_features(lyr, found)
+        lyr.triggerRepaint()
+        return len(found)
+
+    def draw_wall_lines(self):
+        """The walls as lines, kept in the map's file once the project is saved.
+        Returns how many lines."""
+        rooms = self.layer("rooms")
+        if rooms is None:
+            return 0
+        lines = map_changes.wall_lines(list(rooms.getFeatures()))
+        lyr = self._extra_layer("map/wall_lines", tr("Valetudo - wall lines"), "LineString",
+                                [QgsField("length_m", DBL)], _wall_lines_renderer())
+        replace_features(lyr, lines)
+        folder = map_folder()
+        if folder is not None:   # (once in the file, the lines above were written there)
+            make_permanent(lyr, os.path.join(folder, MAP_FILE), "wall_lines")
+        lyr.triggerRepaint()
+        return len(lines)
 
     def _update_rooms(self, map_json):
         rooms = self.layer("rooms")
@@ -457,7 +598,8 @@ class ValetudoLayers:
     def _update_entities(self, map_json):
         """Zones, lines, robot and dock. Returns True if the zones changed."""
         areas, lines, robot = self.layer("areas"), self.layer("lines"), self.layer("robot")
-        area_f, line_f, point_f = [], [], []
+        obstacles = self.layer("obstacles")
+        area_f, line_f, point_f, obstacle_f = [], [], [], []
         for ent in map_json.get("entities", []):
             etype = ent.get("type")
             c = ent.get("points", [])
@@ -466,7 +608,10 @@ class ValetudoLayers:
                 continue
             # Only genuine point entities go to the points layer. A path may hold a
             # single point (e.g. right after a start): it is skipped, not shown as a point.
-            if etype in POINT_ENTITIES:
+            if etype == OBSTACLE:
+                obstacle_f.append(new_feature(obstacles, QgsGeometry.fromPointXY(pts[0]),
+                                              parse_obstacle(ent.get("metaData") or {})))
+            elif etype in POINT_ENTITIES:
                 angle = (ent.get("metaData") or {}).get("angle")
                 point_f.append(new_feature(robot, QgsGeometry.fromPointXY(pts[0]),
                                            {"type": etype, "angle": angle}))
@@ -489,6 +634,7 @@ class ValetudoLayers:
             changed = True
         _set_features(lines, line_f)
         _set_features(robot, point_f)
+        _set_features(obstacles, obstacle_f)
         return changed
 
     def update_sensors(self, items):

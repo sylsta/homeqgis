@@ -5,12 +5,14 @@ Valetudo menu and the status panel all show these same objects, so their
 enabled/checked state can never disagree.
 """
 
+import datetime
 import os
 
-from qgis.PyQt.QtCore import QFileSystemWatcher, Qt, QTimer, QUrl
+from qgis.PyQt.QtCore import QFileSystemWatcher, QLocale, Qt, QTimer, QUrl
+from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import (
-    QAction, QApplication, QCheckBox, QDockWidget, QFileDialog, QInputDialog, QMessageBox,
-    QPushButton, QToolBar, QToolButton,
+    QAction, QApplication, QCheckBox, QDialog, QDockWidget, QFileDialog, QInputDialog,
+    QLabel, QMessageBox, QPushButton, QToolBar, QToolButton, QVBoxLayout,
 )
 from qgis.core import (
     QgsApplication,
@@ -26,7 +28,8 @@ from .history_store import history_folder
 from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
 from .i18n import install_translator, remove_translator, tr
 from .icons import APP_ICON, has_icon, icon
-from .map_layers import ValetudoLayers
+from . import map_changes
+from .map_layers import ValetudoLayers, map_folder
 from .map_overlay import MapOverlay
 from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
 from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
@@ -95,7 +98,8 @@ MAP_TOOLS = ["pick_rooms", "place_sensor", "edit_restrictions",
 # Hidden unless "Advanced tools" is on (with the panel's Terminal, recorder and boot log)
 ADVANCED_ACTIONS = ["edit_restrictions", "send_restrictions", "watch_boot",
                     "robot_survey_install", "robot_survey_import", "robot_survey_remove"]
-MENU = ["status_panel", "settings", "setup", "app_launcher", "app_mode", "manual"]
+MENU = ["status_panel", "settings", "setup", "map_changes", "wall_lines", "app_launcher",
+        "app_mode", "manual"]
 APP_TOOLBARS = ("ValetudoToolbar", "mMapNavToolBar")   # kept on screen in app mode
 LOG_TAG = PLUGIN_NAME   # tab of the QGIS "Log Messages" panel
 
@@ -227,6 +231,9 @@ class ValetudoPlugin:
             self.act["app_mode"].setToolTip(tr("Only the map and DomotiQGIS on screen; "
                                                "untick to show QGIS's toolbars and panels."))
             self.act["app_mode"].setChecked(QgsSettings().value(KEY_APP_MODE, True, type=bool))
+        self._new_action("map_changes", tr("Compare the map with an earlier day…"),
+                         self.compare_map)
+        self._new_action("wall_lines", tr("Draw the walls as lines"), self.draw_wall_lines)
         self._new_action("manual", tr("User manual"), lambda *_: open_manual())
         self.act["manual"].setIcon(QgsApplication.getThemeIcon("/mActionHelpContents.svg"))
         # The settings are a page of Settings › Options; "Settings…" opens it.
@@ -991,6 +998,83 @@ class ValetudoPlugin:
         self._update_map_tool_entries()
         if self.panel is not None:
             self.panel.set_advanced(on)
+
+    # -- what the map tells (map_changes.py) -----------------------------------------
+
+    def _map_shown(self):
+        if self.layers.exists() and self.layers.layer("rooms").featureCount():
+            return True
+        self._message(tr("Show the map first (Show on map)."), Qgis.MessageLevel.Info)
+        return False
+
+    def compare_map(self, *_):
+        if not self._map_shown():
+            return
+        folder = map_folder()
+        days = map_changes.snapshots(folder) if folder else []
+        if not days:
+            self._message(tr("No earlier map yet: the plugin keeps the first map of each "
+                             "day next to the project, from today on."),
+                          Qgis.MessageLevel.Info)
+            return
+        today = datetime.date.today()
+        labels = [QLocale().toString(day, QLocale.FormatType.LongFormat)
+                  + (" " + tr("(this morning)") if day == today else "") for day, _p in days]
+        label, ok = QInputDialog.getItem(self.iface.mainWindow(), tr("Map changes"),
+                                         tr("Compare the map with the one of:"), labels, 0,
+                                         False)
+        if not ok:
+            return
+        day, path = days[labels.index(label)]
+        try:
+            count = self.layers.show_changes(path, QLocale().toString(
+                day, QLocale.FormatType.ShortFormat))
+        except OSError as exc:
+            self._message(tr("Map of that day unreadable: {error}").format(error=exc),
+                          Qgis.MessageLevel.Warning)
+            return
+        self._message(tr("{n} change(s) since {day}: new walls or furniture in red, gone in "
+                         "blue, floor reached in green, no longer reached in orange.").format(
+            n=count, day=label), Qgis.MessageLevel.Success if count else Qgis.MessageLevel.Info)
+
+    def draw_wall_lines(self, *_):
+        if not self._map_shown():
+            return
+        try:
+            count = self.layers.draw_wall_lines()
+        except OSError as exc:
+            self._message(tr("Wall lines not saved: {error}").format(error=exc),
+                          Qgis.MessageLevel.Warning)
+            return
+        self._message(tr("{n} wall line(s) drawn, from the outline of the floor.").format(
+            n=count), Qgis.MessageLevel.Success)
+
+    # -- obstacles -------------------------------------------------------------------
+
+    def show_obstacle_photo(self, obstacle_id):
+        """The photo the robot took of an obstacle (the obstacles layer's action)."""
+        client = self._get_client()
+        if not client or not obstacle_id or obstacle_id == "NULL":
+            return
+        self._message(tr("Asking the robot for the photo…"), Qgis.MessageLevel.Info)
+
+        def show(data):
+            pixmap = QPixmap()
+            if not data or not pixmap.loadFromData(data):
+                self._message(tr("The robot has no photo of this obstacle."),
+                              Qgis.MessageLevel.Warning)
+                return
+            dialog = QDialog(self.iface.mainWindow())
+            dialog.setWindowTitle(tr("Obstacle"))
+            layout = QVBoxLayout(dialog)
+            label = QLabel()
+            label.setPixmap(pixmap)
+            layout.addWidget(label)
+            dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+            dialog.show()
+
+        client.fetch_obstacle_image(obstacle_id, show, lambda error: self._message(
+            tr("No photo: {error}").format(error=error), Qgis.MessageLevel.Warning))
 
     # -- the app ------------------------------------------------------------------------
 
