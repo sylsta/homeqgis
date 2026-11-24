@@ -101,7 +101,11 @@ Inside `homeQGIS/`, one subpackage per feature; the data folders (`ui/`, `icons/
 | `ssh_auth.py`, `ssh_host_block.py`, `ssh_console.py`, `ssh_reboot.py` | SSH password helper, a server read over SSH, console, robot reboot |
 | `console_tab.py`, `log_tab.py`, `log_tail.py`, `system_terminal.py` | Terminal tab: consoles and logs; SSH in the system's terminal |
 | `remote_desktop.py`, `wol.py`, `kodi_client.py`, `kodi_block.py` | VNC/RDP, Wake-on-LAN, Kodi |
-| **`panel/`** | `status_panel.py`, `widgets.py`, `charts.py`: the dockable panel and its widgets |
+| **`panel/`** | **The dockable panel** |
+| `status_panel.py` | `ValetudoPanel`: strip, big button, tabs, sections, wiring; built from the mixins below |
+| `clean_tab.py`, `schedule_tab.py`, `wifi_tab.py`, `camera_tab.py`, `terminal_tab.py` | One mixin per tab (the camera's also records the robot whenever it runs) |
+| `servers_section.py`, `robot_state.py` | The servers' frames and buttons; the robot's state as the client reports it |
+| `common.py`, `widgets.py`, `charts.py` | Shared constants and translated labels; small widgets; charts |
 | **`launcher/`** | `app.py`, `dialog.py`: HomeQGIS as an app (its own QGIS profile) |
 
 Outside the plugin: `pi/` (scripts for the Raspberry Pi), `scripts/` (checks),

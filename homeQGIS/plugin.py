@@ -53,17 +53,17 @@ from .core.settings import (KEY_ADVANCED, KEY_CAMERA_VIEWS, KEY_ROBOT_PROJECT, P
 from .home.sensors import SensorManager
 from .valetudo.quiet_travel import QUIET_PRESETS, QuietTravel
 from .servers.ssh_reboot import SshReboot
-from .panel.status_panel import (
+from .panel.common import (
     DOCK_COMPONENT_PROBLEMS,
     KEY_GOTO_QUIET,
     KEY_PI_MAP_FULL,
-    preset_labels,
-    state_label as dock_state_label,
-    ValetudoPanel,
     dock_component_advice,
     dock_component_labels,
     dock_component_values,
+    preset_labels,
+    state_label as dock_state_label,
 )
+from .panel.status_panel import ValetudoPanel
 from .wifi.survey import WifiSurvey, build_wifi_map, layer_names as wifi_layer_names
 
 KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"

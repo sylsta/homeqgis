@@ -121,7 +121,7 @@ class TimerDialog(QDialog):
                 pass
 
     def _on_presets(self, capability, presets):
-        from ..panel.status_panel import preset_labels   # here: status_panel imports this module
+        from ..panel.common import preset_labels   # here: the panel imports this module
         kind = next((k for k, c in schedule.PRE_ACTION_CAPABILITIES.items() if c == capability),
                     None)
         combo = self._preset_combos.get(kind)
@@ -141,7 +141,7 @@ class TimerDialog(QDialog):
         if value is None:
             return
         if combo.findData(value) < 0:
-            from ..panel.status_panel import preset_labels
+            from ..panel.common import preset_labels
             combo.addItem(preset_labels().get(value, value), value)
         combo.setCurrentIndex(combo.findData(value))
 
