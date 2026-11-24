@@ -44,7 +44,14 @@ and this manual included.
 ## Building the zip yourself
 
 From the repository, with `python3`, `zip`, Qt's `lrelease` and mkdocs (with
-mkdocs-material):
+mkdocs-material). On Debian or Ubuntu:
+
+```sh
+sudo apt install zip qttools5-dev-tools python3-pyqt5 pipx
+pipx install mkdocs && pipx inject mkdocs mkdocs-material
+```
+
+(or mkdocs in a virtual environment, given with `make zip MKDOCS=<venv>/bin/mkdocs`).
 
 | Command | What it does |
 |---|---|

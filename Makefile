@@ -9,7 +9,8 @@
 #   make clean      remove what the build makes
 #
 # Needs: python3, zip, Qt's lrelease (qttools5-dev-tools or qt6-l10n-tools), mkdocs
-# with mkdocs-material (pip install "mkdocs>=1.6,<2" "mkdocs-material>=9.5,<10").
+# with mkdocs-material (pipx install mkdocs && pipx inject mkdocs mkdocs-material;
+# or MKDOCS=<path> to a venv's mkdocs: see "make doc").
 # PyQt5 for the forms check (python3-pyqt5); without it, that check is skipped.
 
 PLUGIN  := homeQGIS
@@ -43,8 +44,20 @@ translations:
 	scripts/compile_translations.sh
 
 # The manual, also copied into the plugin (its "User manual" entry opens it)
+# mkdocs: on the PATH, else as a Python module (pip install --user puts it in
+# ~/.local/bin, not always on the PATH); MKDOCS=... to use another one (a venv's).
+MKDOCS ?= $(shell command -v mkdocs 2>/dev/null || { $(PYTHON) -c "import mkdocs" 2>/dev/null && echo "$(PYTHON) -m mkdocs"; })
+
 doc:
-	mkdocs build --strict -q -d site
+	@test -n "$(MKDOCS)" || { \
+		echo "mkdocs not found: the manual (and so the zip) cannot be built. Install it with"; \
+		echo "  pipx install mkdocs && pipx inject mkdocs mkdocs-material"; \
+		echo "or in a virtual environment:"; \
+		echo "  python3 -m venv ~/.venvs/mkdocs"; \
+		echo "  ~/.venvs/mkdocs/bin/pip install 'mkdocs>=1.6,<2' 'mkdocs-material>=9.5,<10'"; \
+		echo "  make release MKDOCS=~/.venvs/mkdocs/bin/mkdocs"; \
+		exit 1; }
+	$(MKDOCS) build --strict -q -d site
 	rm -rf $(PLUGIN)/doc
 	cp -r site $(PLUGIN)/doc
 
