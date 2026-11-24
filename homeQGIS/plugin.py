@@ -19,37 +19,41 @@ from qgis.core import (
     Qgis, QgsField, QgsMessageLog, QgsPointXY, QgsProject, QgsSettings,
 )
 
-from . import room_groups
-from .boot_monitor import BootMonitor
-from .client import ValetudoClient
-from .coords import q2v, robot_crs, v2q
-from .history_recorder import HistoryRecorder
-from .history_store import history_folder
-from .goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
-from .i18n import install_translator, remove_translator, tr
-from .icons import APP_ICON, has_icon, icon
-from . import drive_dialog, floor_insights, map_admin, map_changes
-from .camera_views import CameraViews
-from .insight_styles import dust_class, dust_renderer, trouble_renderer
-from .obstacle_diary import ObstacleDiary
-from .project_layers import replace_features
-from .map_layers import ValetudoLayers, map_folder
-from .map_overlay import MapOverlay
-from .map_tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
-from .restrictions import RestrictionLayers, layer_names as restriction_layer_names
-from . import pi_maps, robot_survey
-from .robot_survey import RobotSurvey
-from . import app_launcher
-from .app_launcher import KEY_APP_MODE
-from .manual import open_manual
-from .options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
-from .settings import (KEY_ADVANCED, KEY_CAMERA_VIEWS, KEY_ROBOT_PROJECT, PLUGIN_NAME,
+from .map import room_groups
+from .valetudo.boot_monitor import BootMonitor
+from .valetudo.client import ValetudoClient
+from .core.coords import q2v, robot_crs, v2q
+from .history.recorder import HistoryRecorder
+from .history.store import history_folder
+from .valetudo.goto_emulation import ZONE_SIZE_CM as GOTO_ZONE_SIZE_CM, GoToEmulator
+from .core.i18n import install_translator, remove_translator, tr
+from .core.icons import APP_ICON, has_icon, icon
+from .valetudo import drive_dialog
+from .map import floor_insights
+from .map import admin as map_admin
+from .map import changes as map_changes
+from .camera.views import CameraViews
+from .map.insight_styles import dust_class, dust_renderer, trouble_renderer
+from .map.obstacle_diary import ObstacleDiary
+from .core.project_layers import replace_features
+from .map.layers import ValetudoLayers, map_folder
+from .map.overlay import MapOverlay
+from .map.tools import GoToMapTool, LineMapTool, RoomPickMapTool, SensorMapTool, ZoneMapTool
+from .map.restrictions import RestrictionLayers, layer_names as restriction_layer_names
+from .wifi import pi_maps
+from .wifi import robot_survey
+from .wifi.robot_survey import RobotSurvey
+from .launcher import app as app_launcher
+from .launcher.app import KEY_APP_MODE
+from .core.manual import open_manual
+from .core.options_page import PAGE_NAME as OPTIONS_PAGE, ValetudoOptionsFactory
+from .core.settings import (KEY_ADVANCED, KEY_CAMERA_VIEWS, KEY_ROBOT_PROJECT, PLUGIN_NAME,
                        TOOLBAR_CHOICES, follow_robot, has_ha_token, load_settings,
                        toolbar_keys)
-from .sensors import SensorManager
-from .quiet_travel import QUIET_PRESETS, QuietTravel
-from .ssh_reboot import SshReboot
-from .status_panel import (
+from .home.sensors import SensorManager
+from .valetudo.quiet_travel import QUIET_PRESETS, QuietTravel
+from .servers.ssh_reboot import SshReboot
+from .panel.status_panel import (
     DOCK_COMPONENT_PROBLEMS,
     KEY_GOTO_QUIET,
     KEY_PI_MAP_FULL,
@@ -60,7 +64,7 @@ from .status_panel import (
     dock_component_labels,
     dock_component_values,
 )
-from .wifi_survey import WifiSurvey, build_wifi_map, layer_names as wifi_layer_names
+from .wifi.survey import WifiSurvey, build_wifi_map, layer_names as wifi_layer_names
 
 KEY_GOTO_ZONE_OK = "valetudo/goto_zone_confirmed"
 KEY_ROBOT_SURVEY_DIR = "valetudo/robot_survey_dir"   # set once the survey is on the robot
@@ -76,7 +80,7 @@ SENSOR_REMOVE_TOLERANCE_CM = 40   # right-click this close to a sensor removes i
 
 # Valetudo capability required by each action (absent: always available).
 # Alternatives: an action is also available with any of these capabilities.
-# "Go here" falls back to a tiny zone clean followed by a pause (see goto_emulation.py).
+# "Go here" falls back to a tiny zone clean followed by a pause (see valetudo/goto_emulation.py).
 ALTERNATIVE_CAPABILITIES = {
     "goto": ["ZoneCleaningCapability"],
     "drive": ["ManualControlCapability"],
@@ -1131,7 +1135,7 @@ class ValetudoPlugin:
         if self.panel is not None:
             self.panel.set_advanced(on)
 
-    # -- what the history tells (floor_insights.py) ----------------------------------
+    # -- what the history tells (map/floor_insights.py) ----------------------------------
 
     def _history_days(self, title):
         """How many days back (asked), or None. Needs the map and a saved history."""
@@ -1188,7 +1192,7 @@ class ValetudoPlugin:
             stuck=stuck, errors=len(found) - stuck, days=days),
             Qgis.MessageLevel.Success if found else Qgis.MessageLevel.Info)
 
-    # -- what the map tells (map_changes.py) -----------------------------------------
+    # -- what the map tells (map/changes.py) -----------------------------------------
 
     def _map_shown(self):
         if self.layers.exists() and self.layers.layer("rooms").featureCount():
@@ -1238,7 +1242,7 @@ class ValetudoPlugin:
         self._message(tr("{n} wall line(s) drawn, from the outline of the floor.").format(
             n=count), Qgis.MessageLevel.Success)
 
-    # -- the robot's map itself (map_admin.py) ---------------------------------------
+    # -- the robot's map itself (map/admin.py) ---------------------------------------
 
     def show_map_snapshots(self, *_):
         client = self._get_client()
@@ -1350,7 +1354,7 @@ class ValetudoPlugin:
     # -- the app ------------------------------------------------------------------------
 
     def create_app_launcher(self, *_):
-        from .app_launcher_dialog import AppLauncherDialog
+        from .launcher.dialog import AppLauncherDialog
         dialog = AppLauncherDialog(self.iface.mainWindow())
         if not dialog.exec():
             return
@@ -1414,7 +1418,7 @@ class ValetudoPlugin:
 
     def run_setup(self, *_):
         """The setup assistant: robot address, other servers; then show the robot."""
-        from .setup_wizard import SetupWizard
+        from .core.setup_wizard import SetupWizard
         wizard = SetupWizard(self.iface.mainWindow())
         if not wizard.exec():
             return

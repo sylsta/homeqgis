@@ -64,72 +64,48 @@ lists them; replace a placeholder PNG with the real one under the same name.
 
 ## Code layout
 
-| File                         | Role                                                    |
-|------------------------------|---------------------------------------------------------|
-| `__init__.py`                | Entry point called by QGIS (`classFactory`)             |
-| `metadata.txt`               | Name, version, QGIS compatibility                       |
-| `plugin.py`                  | Toolbar, menu, wiring between client and layers         |
-| `client.py`                  | Asynchronous HTTP calls to the Valetudo API             |
-| `ha_client.py`               | Calls to the Home Assistant REST API                    |
-| `ssh_auth.py`                | Optional SSH password (SSH_ASKPASS helper)              |
-| `ssh_host_block.py`          | A server read over SSH, in the Status tab (the NUC)     |
-| `kodi_client.py`             | Calls to Kodi's JSON-RPC (HTTP)                         |
-| `kodi_block.py`              | Kodi in the Status tab: state, playback, remote         |
-| `config_backup.py`           | Save and load the configuration (timestamped JSON)      |
-| `about.py`                   | About page (settings tab and ⋮ menu window)             |
-| `system_terminal.py`         | SSH session in the system's terminal window             |
-| `pi/uptime_kuma_monitors.js` | Adds the monitors to Uptime Kuma on the Pi (not part of the plugin) |
-| `camera_recorder.py`         | Camera recording to MP4 (second ffmpeg process)         |
-| `map_layers.py`              | Map JSON -> QGIS layers, incremental updates            |
-| `status_panel.py`            | Dockable status panel with controls                     |
-| `camera.py`                  | H.264 stream decoding through an ffmpeg subprocess      |
-| `camera_widget.py`           | Camera video widget, embedded in the status panel       |
-| `boot_monitor.py`            | Follows and times the robot's boot, stage by stage      |
-| `ssh_reboot.py`              | Robot reboot over SSH (key-based, non-blocking)         |
-| `log_tail.py`                | Follows the robot's Valetudo log over SSH (`tail -f`)   |
-| `ssh_console.py`             | SSH command session (one command at a time)             |
-| `console_tab.py`             | A console tab of the panel (robot, Raspberry Pi)        |
-| `pi_maps.py`                 | Loads the newest Wi-Fi map built on the Pi              |
-| `panel_widgets.py`           | Signal graph, full-screen video, tab badges             |
-| `schedule_view.py`           | Week view of the scheduled cleanings                    |
-| `log_tab.py`                 | A log view of the Terminal tab (tail -F over SSH)       |
-| `map_overlay.py`             | Status card over the map canvas                         |
-| `host_info.py`               | Header lines: address, clock, uptime (robot and Pi)     |
-| `schedule.py`                | Valetudo timers: UTC <-> local days and time            |
-| `timer_dialog.py`            | Editor of one scheduled cleaning (`ui/timer_dialog.ui`) |
-| `rooms_tree.py`              | Checkable rooms tree with room groups (panel, editor)   |
-| `robot_survey.py`            | Installs / starts / reads the Wi-Fi recorder over SSH   |
-| `robot/valetudo_wifi_survey.sh` | Wi-Fi recorder that runs on the robot (BusyBox sh)   |
-| `restrictions.py`            | Editable no-go zones / virtual walls and their payload  |
-| `wifi_survey.py`             | Wi-Fi survey: signal readings as points, IDW map        |
-| `history_logic.py`           | Outings, segments and points from the robot's readings  |
-| `history_store.py`           | Daily GeoPackages of the history (`<project>/history`)  |
-| `history_recorder.py`        | Polls the robot and records its history                 |
-| `history_tab.py`             | History tab: outings by day or week, load, replay       |
-| `goto_emulation.py`          | "Go here" via a tiny zone clean + pause on arrival      |
-| `quiet_travel.py`            | Quiet presets for "Go to", restored afterwards          |
-| `room_groups.py`             | Room groups file (valetudo_room_groups.ini)             |
-| `map_tools.py`               | Map tools: draw a cleaning zone, pick a go-to target    |
-| `project_layers.py`          | Our layers found again in a project, saved next to it   |
-| `servers.py`                 | The servers: types, fields, storage, earlier settings   |
-| `servers_editor.py`          | Servers tab of the settings                             |
-| `remote_desktop.py`          | VNC and RDP in the system's program, SSH tunnel         |
-| `server_frames.py`           | A Status tab frame per server; web and port checks      |
-| `ha_block.py`                | Home Assistant's frame                                  |
-| `ha_home.py`                 | Home Assistant's devices: template, grouping, summaries |
-| `home_tab.py`                | The panel's Home section                                |
-| `ha_history.py`              | Home Assistant's history: series, stats, battery trend  |
-| `charts.py`                  | Curves, timelines and small graphs (QPainter)           |
-| `home_detail.py`             | Home section's detail pane: graphs, compare, export     |
-| `manual.py`                  | Opens the user manual (inside the plugin, else online)  |
-| `coords.py`                  | Frame conversion (the only place that flips the Y axis) |
-| `settings.py`                | Setting keys, defaults and `load_settings()`            |
-| `options_page.py`            | The Valetudo page of *Settings > Options*               |
-| `ui_loader.py`               | Loads the Qt Designer forms of `ui/`                    |
-| `ui/settings_page.ui`        | Layout of the settings page (Qt Designer)               |
-| `ui/status_panel.ui`         | Layout of the status panel (Qt Designer)                |
-| `i18n.py`                    | `tr()` helper and translator loading                    |
-| `i18n/homeqgis_fr.ts`   | French translation (Qt Linguist format)                 |
+Inside `homeQGIS/`, one subpackage per feature; the data folders (`ui/`, `icons/`,
+`i18n/`) stay at the top.
+
+| Path | Role |
+|------|------|
+| `__init__.py`, `plugin.py` | Entry point (`classFactory`); toolbar, menu, wiring between client, layers and panel |
+| `metadata.txt` | Name, version, QGIS compatibility |
+| `ui/`, `icons/`, `i18n/` | Qt Designer forms, icons, French translation (`homeqgis_fr.ts`) |
+| **`core/`** | **Shared plumbing** |
+| `settings.py`, `options_page.py`, `setup_wizard.py` | Setting keys and `load_settings()`; the page in *Settings › Options*; first-start wizard |
+| `i18n.py`, `icons.py`, `ui_loader.py`, `paths.py` | `tr()`, icons, forms of `ui/`, the plugin's folder |
+| `coords.py` | Frame conversion (the only place that flips the Y axis); the robot's CRS in cm |
+| `project_layers.py` | Our layers found again in a project, saved next to it |
+| `config_backup.py`, `about.py`, `manual.py` | Configuration backup (JSON), About page, user manual |
+| **`valetudo/`** | **The robot's API and what is built on it** |
+| `client.py`, `sse.py` | Asynchronous calls to the Valetudo API; live state and map (server-sent events) |
+| `robot_settings.py`, `box.py`, `boot_monitor.py` | Maintenance tab: robot settings, Valetudo itself; boot timing |
+| `goto_emulation.py`, `quiet_travel.py`, `drive_dialog.py` | "Go here" without the capability, quiet go-to, driving by hand |
+| `schedule.py`, `schedule_view.py`, `timer_dialog.py` | Scheduled cleanings: timers, week view, editor |
+| **`map/`** | **The robot's map in QGIS** |
+| `layers.py`, `overlay.py`, `tools.py` | Map JSON → layers; status card over the canvas; zone / go-to / room tools |
+| `restrictions.py`, `rooms_tree.py`, `room_groups.py` | No-go zones and virtual walls; rooms tree and room groups |
+| `admin.py`, `changes.py` | Map snapshots, pending map, mapping pass, reset; map changes and walls |
+| `floor_insights.py`, `insight_styles.py`, `obstacle_diary.py` | Days since cleaned, trouble spots, the obstacle diary |
+| **`camera/`** | **The robot's camera** |
+| `stream.py`, `widget.py`, `recorder.py` | H.264 decoding with ffmpeg, the video widget, MP4 recording |
+| `views.py`, `recordings.py` | Frames along the way on the map; the recordings browser |
+| **`history/`** | `logic.py`, `store.py`, `recorder.py`, `tab.py`: outings computed, stored per day, recorded, browsed |
+| **`wifi/`** | `survey.py`, `robot_survey.py` (+ `valetudo_wifi_survey.sh`, run on the robot), `pi_maps.py`: Wi-Fi maps |
+| **`home/`** | **Home Assistant** |
+| `ha_client.py`, `ha_home.py`, `ha_history.py` | REST client; devices; history and stats (no Qt) |
+| `ha_block.py`, `tab.py`, `detail.py`, `sensors.py` | Status frame, Home tab and its detail pane, sensors on the map |
+| **`servers/`** | **The servers** |
+| `model.py`, `editor.py`, `frames.py`, `host_info.py` | The list of servers, its settings tab, Status frames, header lines |
+| `ssh_auth.py`, `ssh_host_block.py`, `ssh_console.py`, `ssh_reboot.py` | SSH password helper, a server read over SSH, console, robot reboot |
+| `console_tab.py`, `log_tab.py`, `log_tail.py`, `system_terminal.py` | Terminal tab: consoles and logs; SSH in the system's terminal |
+| `remote_desktop.py`, `wol.py`, `kodi_client.py`, `kodi_block.py` | VNC/RDP, Wake-on-LAN, Kodi |
+| **`panel/`** | `status_panel.py`, `widgets.py`, `charts.py`: the dockable panel and its widgets |
+| **`launcher/`** | `app.py`, `dialog.py`: HomeQGIS as an app (its own QGIS profile) |
+
+Outside the plugin: `pi/` (scripts for the Raspberry Pi), `scripts/` (checks),
+`docs/` (the manual, MkDocs).
 
 ## Editing the forms
 

@@ -25,7 +25,7 @@ CONTEXT = "ValetudoQgis"
 def module_constants():
     """Module-level literal assignments of every plugin module: {name: value}."""
     found = {}
-    for path in PLUGIN.glob("*.py"):
+    for path in PLUGIN.glob("**/*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.Assign) and len(node.targets) == 1 \
@@ -52,7 +52,7 @@ def required_names():
     """{form file name: [object names the code needs]}."""
     constants = module_constants()
     required = {}
-    for path in PLUGIN.glob("*.py"):
+    for path in PLUGIN.glob("**/*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         forms = [node.args[0].value for node in ast.walk(tree)
                  if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
