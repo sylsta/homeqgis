@@ -75,6 +75,9 @@ def install_qgis_stand_ins(QtWidgets):
     gui.QgsCollapsibleGroupBox = type("QgsCollapsibleGroupBox", (QtWidgets.QGroupBox,), {})
     gui.QgsAuthConfigSelect = type("QgsAuthConfigSelect", (QtWidgets.QWidget,), {})
     gui.QgsFileWidget = type("QgsFileWidget", (QtWidgets.QWidget,), {})
+    # QGIS's own uic plugin (PyQt5/uic/widget-plugins/qgis_customwidgets.py, installed
+    # with QGIS) lists qgis.gui and removes QgsScrollArea from it: it must exist.
+    gui.QgsScrollArea = type("QgsScrollArea", (QtWidgets.QScrollArea,), {})
     qgis = types.ModuleType("qgis")
     qgis.gui = gui
     sys.modules["qgis"] = qgis
